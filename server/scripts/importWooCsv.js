@@ -200,7 +200,7 @@ const nextProducts = [...products];
 db.products = nextProducts;
 db.categories = categories;
 db.site = db.site || {};
-db.site.featuredCategorySlugs = ['household', 'beauty-health', 'phone-tablet', 'home-office'];
+db.site.featuredCategorySlugs = ['household', 'beauty-health', 'phone-tablet', 'home-office', 'baby-kids'];
 
 for (const u of db.users || []) {
   if (Array.isArray(u.cart)) {

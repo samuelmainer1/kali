@@ -11,6 +11,7 @@ import {
   NAIROBI_ESTATES,
   PICKUP_POINTS,
   DEFAULT_HOME_BLOCKS,
+  FEATURED_CATEGORY_LIMIT,
   DEFAULT_FAQS,
   COMMISSION_RATE,
   listCoupons,
@@ -248,7 +249,11 @@ router.patch('/admin/site/settings', authRequired, requireRole('admin'), (req, r
     }
     if (body.flashEndsAt !== undefined) d.site.flashEndsAt = body.flashEndsAt;
     if (body.whatsapp !== undefined) d.site.whatsapp = String(body.whatsapp);
-    if (body.featuredCategorySlugs) d.site.featuredCategorySlugs = body.featuredCategorySlugs;
+    if (body.featuredCategorySlugs) {
+      d.site.featuredCategorySlugs = [...new Set(body.featuredCategorySlugs.map(String))]
+        .filter(Boolean)
+        .slice(0, FEATURED_CATEGORY_LIMIT);
+    }
     if (body.phone !== undefined) d.site.phone = String(body.phone);
     if (body.emails !== undefined) {
       d.site.emails = Array.isArray(body.emails)

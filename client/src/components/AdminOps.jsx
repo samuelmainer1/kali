@@ -381,8 +381,8 @@ export function CategoriesTab({ categories, featuredSlugs, onChanged, onError, f
 
   async function saveFeatured() {
     try {
-      await api.patch('/admin/site/settings', { featuredCategorySlugs: featured.slice(0, 4) });
-      flash('Homepage four categories saved');
+      await api.patch('/admin/site/settings', { featuredCategorySlugs: featured.slice(0, 5) });
+      flash('Homepage category cards saved');
     } catch (err) {
       onError(err.message);
     }
@@ -391,7 +391,7 @@ export function CategoriesTab({ categories, featuredSlugs, onChanged, onError, f
   function toggleFeat(slug) {
     setFeatured((prev) => {
       if (prev.includes(slug)) return prev.filter((s) => s !== slug);
-      if (prev.length >= 4) return [...prev.slice(1), slug];
+      if (prev.length >= 5) return [...prev.slice(1), slug];
       return [...prev, slug];
     });
   }
@@ -399,8 +399,8 @@ export function CategoriesTab({ categories, featuredSlugs, onChanged, onError, f
   return (
     <div className="mt-8 space-y-6">
       <div className="rounded-2xl border border-ink/5 bg-white p-6 shadow-lift">
-        <h2 className="font-display text-xl font-bold">New on BigDrop (4 tiles)</h2>
-        <p className="text-xs text-ink-mute mt-1">Pick up to four categories for the homepage row.</p>
+        <h2 className="font-display text-xl font-bold">Shop by Category (5 cards)</h2>
+        <p className="text-xs text-ink-mute mt-1">Pick up to five categories for the homepage Shop by Category cards.</p>
         <div className="mt-3 flex flex-wrap gap-2">
           {(categories || []).filter((c) => !c.hidden).map((c) => (
             <button
@@ -416,7 +416,7 @@ export function CategoriesTab({ categories, featuredSlugs, onChanged, onError, f
           ))}
         </div>
         <button type="button" onClick={saveFeatured} className="mt-4 rounded-xl bg-ink px-4 py-2 text-sm font-semibold text-white">
-          Save homepage four
+          Save homepage cards
         </button>
       </div>
 

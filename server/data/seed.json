@@ -22789,10 +22789,11 @@
       "promoBanners": true
     },
     "featuredCategorySlugs": [
-      "power-solar",
-      "furniture",
-      "wine-spirits",
-      "pharmacy"
+      "household",
+      "beauty-health",
+      "phone-tablet",
+      "home-office",
+      "baby-kids"
     ],
     "heroes": [
       {
