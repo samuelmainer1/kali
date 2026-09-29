@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link, useSearchParams, useLocation } from 'react-router-dom';
 import { CheckCircle2, Package, UserPlus, Mail, Smartphone } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { api } from '../lib/api';
 import PageHero from '../components/PageHero';
 import OrderDocuments from '../components/OrderDocuments';
 
@@ -17,6 +18,7 @@ export default function OrderSuccess() {
   const isGuest = params.get('guest') === '1';
   const order = location.state?.order;
   const confirmation = location.state?.confirmation;
+  const [fetchedOrder, setFetchedOrder] = useState(null);
 
   const [wantAccount, setWantAccount] = useState(false);
   const [password, setPassword] = useState('');
@@ -28,7 +30,52 @@ export default function OrderSuccess() {
     window.scrollTo(0, 0);
   }, []);
 
+  useEffect(() => {
+    if (!orderNumber) return undefined;
+    let cancelled = false;
+    (async () => {
+      try {
+        if (user) {
+          const data = await api.get(`/orders/${encodeURIComponent(orderNumber)}`);
+          if (!cancelled) setFetchedOrder(data.order || null);
+          return;
+        }
+        if (!email) return;
+        const data = await api.get(
+          `/orders/${encodeURIComponent(orderNumber)}/documents?email=${encodeURIComponent(email)}`
+        );
+        const invoice = (data.documents || []).find((d) => d.type === 'invoice');
+        if (!cancelled) {
+          setFetchedOrder({
+            orderNumber: invoice?.orderNumber || orderNumber,
+            trackingNumber: track,
+            customerName: name || invoice?.to?.name,
+            customerEmail: email || invoice?.to?.email,
+            customerPhone: phone || invoice?.to?.phone,
+            items: invoice?.items || [],
+            shipping: invoice?.shipping ?? 0,
+            discount: invoice?.discount ?? 0,
+            total: invoice?.total ?? 0,
+            createdAt: invoice?.issuedAt,
+            status: 'confirmed',
+            paymentMethod: invoice?.paymentMethod,
+            paymentRef: invoice?.paymentRef,
+            mpesaReceipt: invoice?.mpesaReceipt,
+            transactionNumber: invoice?.transactionNumber,
+            documents: data.documents || [],
+          });
+        }
+      } catch {
+        if (!cancelled) setFetchedOrder(null);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [orderNumber, user, email, name, phone, track]);
+
   const viewOrder = useMemo(() => {
+    if (fetchedOrder) return fetchedOrder;
     if (order) return order;
     const invoice = confirmation?.invoice;
     if (!invoice && !orderNumber) return null;
@@ -46,7 +93,7 @@ export default function OrderSuccess() {
       status: 'confirmed',
       documents: invoice ? [invoice] : [],
     };
-  }, [order, confirmation, orderNumber, track, name, email, phone]);
+  }, [order, fetchedOrder, confirmation, orderNumber, track, name, email, phone]);
 
   async function createAccount(e) {
     e.preventDefault();

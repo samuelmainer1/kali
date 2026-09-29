@@ -189,9 +189,9 @@ export async function downloadOrderDocumentPdf(doc, order, brandInput) {
   y += sectionH + 5;
 
   const cols = [
-    { key: 'date', label: 'Date', w: 22, align: 'center' },
+    { key: 'date', label: 'Date', w: 26, align: 'center' },
     { key: 'sku', label: 'SKU', w: 32, align: 'center' },
-    { key: 'description', label: 'Description', w: 132, align: 'left' },
+    { key: 'description', label: 'Description', w: 128, align: 'left' },
     { key: 'qty', label: 'Qty', w: 10, align: 'center' },
     { key: 'unitPrice', label: 'Unit Price', w: 34, align: 'center' },
     { key: 'amount', label: 'Amount', w: 0, align: 'center' },
@@ -244,7 +244,7 @@ export async function downloadOrderDocumentPdf(doc, order, brandInput) {
     let x = contentL;
     const textCells = [
       { text: row.date, w: cols[0].w, align: 'center', size: 7.5 },
-      { text: row.sku || '—', w: cols[1].w, align: 'center', size: 7.5 },
+      { text: row.sku || row.code || '—', w: cols[1].w, align: 'center', size: 7.5 },
       { text: row.description, w: cols[2].w, align: 'left', size: 9 },
       { text: String(row.qty), w: cols[3].w, align: 'center', size: 8 },
     ];

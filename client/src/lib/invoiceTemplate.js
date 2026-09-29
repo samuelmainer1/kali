@@ -77,16 +77,32 @@ export function buildInvoiceModel(doc, order, brandInput) {
   const paymentDate = paid ? issuedAt : '';
   const dateLabel = formatTemplateDate(issuedAt);
 
+  const orderItems = order?.items || [];
+  const skuFor = (item) => {
+    const direct = String(item?.sku || item?.code || '').trim();
+    if (direct) return direct;
+    const match = orderItems.find(
+      (other) =>
+        (item?.productId && other.productId === item.productId) ||
+        (item?.name && other.name === item.name)
+    );
+    return String(match?.sku || match?.code || '').trim();
+  };
+
   const rows = items.map((item) => {
     const qty = Number(item.qty || 1);
     const rate = Number(item.price || 0);
+    const sku = skuFor(item);
     return {
       date: dateLabel,
-      sku: item.sku || item.code || '',
+      sku,
+      code: sku,
       description: item.name || 'Item',
       qty,
       unitPrice: rate,
+      rate,
       amount: rate * qty,
+      fare: rate * qty,
     };
   });
 

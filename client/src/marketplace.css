@@ -2495,9 +2495,9 @@ html.dark-mode .compare-table th, html.dark-mode .compare-table td { border-colo
   table-layout: fixed;
   font-size: 0.82rem;
 }
-.bd-inv-col-date { width: 9%; }
-.bd-inv-col-sku { width: 13%; }
-.bd-inv-col-desc { width: 48%; }
+.bd-inv-col-date { width: 12%; }
+.bd-inv-col-sku { width: 14%; }
+.bd-inv-col-desc { width: 44%; }
 .bd-inv-col-qty { width: 5%; }
 .bd-inv-col-price { width: 12.5%; }
 .bd-inv-col-amount { width: 12.5%; }
@@ -2531,10 +2531,15 @@ html.dark-mode .compare-table th, html.dark-mode .compare-table td { border-colo
   padding-right: 4px;
   font-size: 0.74rem;
 }
+.bd-inv-tpl-table td:first-child {
+  white-space: nowrap;
+  font-size: 0.78rem;
+}
 .bd-inv-tpl-table td.bd-inv-sku {
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: 0.75rem;
   letter-spacing: 0.02em;
+  white-space: nowrap;
 }
 .bd-inv-tpl-table td.bd-inv-qty {
   font-weight: 600;

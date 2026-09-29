@@ -160,7 +160,7 @@ function DocumentViewer({ doc, order, onClose, brand }) {
                 row ? (
                   <tr key={`${row.description}-${idx}`}>
                     <td>{row.date}</td>
-                    <td className="bd-inv-sku">{row.sku || '—'}</td>
+                    <td className="bd-inv-sku">{row.sku || row.code || '—'}</td>
                     <td className="bd-inv-desc">{row.description}</td>
                     <td className="bd-inv-qty">{row.qty}</td>
                     <td>
