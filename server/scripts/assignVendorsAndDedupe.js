@@ -61,7 +61,17 @@ function inferredBrand(p) {
     const hit = PHONE_BRANDS.find((b) => lower.startsWith(b.toLowerCase()) || new RegExp(`\\b${b}\\b`, 'i').test(name));
     if (hit) return hit;
   }
-  return p.brand || '';
+  return '';
+}
+
+const CATEGORY_DEFAULT_BRANDS = new Set(["l'oréal", "l'oreal", 'bidco', 'samsung', 'ikea', 'unga']);
+
+function nameMentionsBrand(name, brand) {
+  const needle = String(brand || '')
+    .replace(/[’']/g, "['’]?")
+    .replace(/[éè]/g, '[eéè]');
+  if (!needle) return false;
+  return new RegExp(needle, 'i').test(name || '');
 }
 
 function isChandariaProduct(p) {
@@ -229,12 +239,15 @@ function upsertVendor(users, spec, passwordHash) {
 function assignProducts(products) {
   const counts = { chandaria: 0, bigdrop: 0, phones: 0, brands: 0 };
   for (const p of products) {
-    const brand = inferredBrand(p);
+    const brand = inferredBrand(p) || (nameMentionsBrand(p.name, p.brand) ? p.brand : '');
     if (brand && brand !== p.brand) {
       p.brand = brand;
       counts.brands += 1;
     } else if (brand) {
       p.brand = brand;
+    } else if (CATEGORY_DEFAULT_BRANDS.has(String(p.brand || '').trim().toLowerCase()) && !nameMentionsBrand(p.name, p.brand)) {
+      p.brand = '';
+      counts.brands += 1;
     }
 
     if (isChandariaProduct(p)) {
