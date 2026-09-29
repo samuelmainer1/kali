@@ -1,0 +1,29 @@
+node_modules/
+dist/
+build/
+.env
+.env.local
+client/.env
+server/.env
+*.log
+.DS_Store
+server/data/db.json
+server/uploads/**
+!server/uploads/.gitkeep
+.vite/
+coverage/
+
+# scratch files from one-off maintenance / commit-message steps
+tmp_*
+.cm.txt
+.commit-msg.txt
+
+# snapshot artifacts (not source)
+*.zip
+server/data/db.json.bak
+server/data/db.json.pre-restore
+server/data/*.pre-*
+server/data/backups/
+*-audit.json
+localize-report.json
+image-fix-report.json
