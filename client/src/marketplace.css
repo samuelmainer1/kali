@@ -2477,7 +2477,7 @@ html.dark-mode .compare-table th, html.dark-mode .compare-table td { border-colo
 .bd-inv-tpl-grid dl { margin: 0; }
 .bd-inv-tpl-grid dl > div {
   display: grid;
-  grid-template-columns: 120px 1fr;
+  grid-template-columns: 148px 1fr;
   border-bottom: 1px solid #c5cad3;
   min-height: 26px;
 }
@@ -2488,7 +2488,7 @@ html.dark-mode .compare-table th, html.dark-mode .compare-table td { border-colo
   padding: 5px 8px;
   font-size: 0.78rem;
 }
-.bd-inv-tpl-grid dt { font-weight: 800; }
+.bd-inv-tpl-grid dt { font-weight: 800; white-space: nowrap; }
 .bd-inv-tpl-table {
   width: 100%;
   border-collapse: collapse;
@@ -2561,6 +2561,8 @@ html.dark-mode .compare-table th, html.dark-mode .compare-table td { border-colo
   background: #2f5395;
   color: #fff;
   padding: 7px 10px;
+  width: 100%;
+  box-sizing: border-box;
 }
 .bd-inv-tpl-totals .grand .bd-inv-money em,
 .bd-inv-tpl-totals .grand .bd-inv-money span { color: #fff; }
