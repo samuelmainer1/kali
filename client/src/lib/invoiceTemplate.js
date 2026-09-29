@@ -8,7 +8,7 @@ export const INVOICE_INK = [28, 28, 28];
 
 export const INVOICE_TERMS = [
   '1. Once the payment is done in Any Case it is not Refunded',
-  '2. In Case Goods Get Damaged or Loss, Transport Service Is Not Responsible',
+  '2. Inspect your parcel on delivery. If anything is damaged or missing, tell BigDrop within 24 hours and we will replace it or refund you.',
 ];
 
 export const INVOICE_THANKS = 'THANK YOU FOR YOUR BUSINESS!';
@@ -43,14 +43,25 @@ function billingAddress(order) {
   return [addr.line1, addr.city, addr.county, addr.notes].filter(Boolean).join(', ') || '—';
 }
 
+export function invoiceTransactionId(order, doc) {
+  const existing = [
+    order?.mpesaReceipt,
+    order?.paymentRef,
+    order?.transactionNumber,
+    doc?.transactionNumber,
+    doc?.paymentRef,
+    doc?.mpesaReceipt,
+  ]
+    .map((v) => String(v || '').trim())
+    .find((v) => v && v !== '—');
+  if (existing) return existing;
+  const num = order?.orderNumber || doc?.orderNumber || order?.trackingNumber || doc?.id || order?.id || '';
+  if (!num) return '—';
+  return `TXN-${String(num).replace(/^BD/i, '')}`;
+}
+
 function transactionRef(order, doc) {
-  return (
-    order?.mpesaReceipt ||
-    order?.paymentRef ||
-    doc?.transactionNumber ||
-    doc?.paymentRef ||
-    '—'
-  );
+  return invoiceTransactionId(order, doc);
 }
 
 export function buildInvoiceModel(doc, order, brandInput) {

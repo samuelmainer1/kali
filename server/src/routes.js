@@ -1311,7 +1311,7 @@ router.post('/orders', authOptional, async (req, res) => {
     estate: estate || address.estate || '',
     diaspora: diaspora && diaspora.fromCountry ? diaspora : null,
     mpesaReceipt: verifiedPayment?.receipt || mpesaReceipt || '',
-    paymentRef: verifiedPayment ? verifiedPayment.id : null,
+    paymentRef: verifiedPayment?.id || verifiedPayment?.receipt || mpesaReceipt || '',
     total: afterDiscount + shipping,
     paymentMethod,
     paymentStatus: paymentMethod === 'cod' ? 'pending' : 'paid',
@@ -1323,6 +1323,10 @@ router.post('/orders', authOptional, async (req, res) => {
     createdAt: ts,
     updatedAt: ts,
   };
+  order.transactionNumber =
+    order.mpesaReceipt ||
+    order.paymentRef ||
+    `TXN-${String(order.orderNumber).replace(/^BD/i, '')}`;
 
   // Numbered timeline after payment confirm
   if (paymentMethod !== 'cod') {
@@ -1348,6 +1352,9 @@ router.post('/orders', authOptional, async (req, res) => {
     shipping,
     total: order.total,
     paymentMethod,
+    transactionNumber: order.transactionNumber,
+    paymentRef: order.paymentRef,
+    mpesaReceipt: order.mpesaReceipt,
     note: 'Thank you for shopping with BigDrop Kenya',
   };
   order.documents.push(invoice);

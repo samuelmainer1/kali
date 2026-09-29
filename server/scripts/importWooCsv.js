@@ -157,7 +157,7 @@ for (const row of parsed) {
     brand: row.brand || cat.brands?.[0] || 'BigDrop',
     price: row.price,
     compareAt: row.compareAt,
-    stock: Number.isFinite(row.stock) ? row.stock : 10,
+        stock: Math.max(10, Number.isFinite(row.stock) ? row.stock : 10),
     sku,
     images,
     featured: false,

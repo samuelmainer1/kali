@@ -738,6 +738,9 @@ function buildDemoOrders(productList) {
       shipping,
       total,
       paymentMethod: s.pay,
+      transactionNumber: `TXN-${String(orderNumber).replace(/^BD/i, '')}`,
+      mpesaReceipt: s.pay === 'mpesa' ? `QK${nanoid(8).toUpperCase()}` : '',
+      paymentRef: s.pay === 'cod' ? '' : `TXN-${String(orderNumber).replace(/^BD/i, '')}`,
       note: 'Thank you for shopping with BigDrop Kenya',
     };
     const docs = [invoice];
@@ -752,6 +755,10 @@ function buildDemoOrders(productList) {
         items,
         shipping,
         total,
+        paymentMethod: s.pay,
+        transactionNumber: invoice.transactionNumber,
+        mpesaReceipt: invoice.mpesaReceipt,
+        paymentRef: invoice.paymentRef,
         note: 'Thank you for shopping with BigDrop Kenya',
       });
     }
@@ -770,6 +777,9 @@ function buildDemoOrders(productList) {
       total,
       paymentMethod: s.pay,
       paymentStatus: s.pay === 'cod' ? 'pending' : 'paid',
+      transactionNumber: invoice.transactionNumber,
+      mpesaReceipt: invoice.mpesaReceipt,
+      paymentRef: invoice.paymentRef,
       deliveryOption: 'delivery',
       status: s.status,
       shippingAddress: {
