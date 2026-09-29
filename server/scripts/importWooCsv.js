@@ -188,8 +188,9 @@ for (const p of products) {
 for (const cat of categories) {
   const first = products.find((p) => p.categoryId === cat.id && p.images[0]);
   if (first?.images[0]) cat.image = first.images[0];
-  const count = products.filter((p) => p.categoryId === cat.id).length;
-  cat.hidden = count === 0;
+  // Keep empty catalogue categories visible. Hiding zero-product rows dropped
+  // 5 of the 24 Shop by Category cards after the WooCommerce import.
+  cat.hidden = false;
   const brands = [...new Set(products.filter((p) => p.categoryId === cat.id).map((p) => p.brand).filter(Boolean))];
   if (brands.length) cat.brands = brands.slice(0, 12);
 }
@@ -200,7 +201,7 @@ const nextProducts = [...products];
 db.products = nextProducts;
 db.categories = categories;
 db.site = db.site || {};
-db.site.featuredCategorySlugs = ['household', 'beauty-health', 'phone-tablet', 'home-office', 'baby-kids'];
+db.site.featuredCategorySlugs = ['household', 'beauty-health', 'phone-tablet', 'home-office'];
 
 for (const u of db.users || []) {
   if (Array.isArray(u.cart)) {
@@ -229,9 +230,8 @@ console.log(
   `Imported ${products.length} live products (${withPhotos} with photos). Removed ${keptExisting.length ? 'previous Woo rows and ' : ''}sample catalogue.`
 );
 console.log(
-  'Categories with stock:',
+  'Categories:',
   categories
-    .filter((c) => !c.hidden)
     .map((c) => `${c.name} (${products.filter((p) => p.categoryId === c.id).length})`)
     .join(' | ')
 );

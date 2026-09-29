@@ -161,14 +161,7 @@ export const DEFAULT_HOME_BLOCKS = {
   testimonials: false,
 };
 
-export const FEATURED_CATEGORY_LIMIT = 5;
-export const FEATURED_CATEGORY_SLUGS = [
-  'household',
-  'beauty-health',
-  'phone-tablet',
-  'home-office',
-  'baby-kids',
-];
+export const FEATURED_CATEGORY_SLUGS = ['household', 'beauty-health', 'phone-tablet', 'home-office'];
 
 export const DEFAULT_DELIVERY_COPY = {
   title: 'Nationwide delivery by Globeflight',

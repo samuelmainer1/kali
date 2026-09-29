@@ -178,13 +178,7 @@ export default function Home() {
   const [heroes, setHeroes] = useState(SLIDES);
   const [promoBanners, setPromoBanners] = useState([]);
   const [homeBlocks, setHomeBlocks] = useState({});
-  const [featuredSlugs, setFeaturedSlugs] = useState([
-    'household',
-    'beauty-health',
-    'phone-tablet',
-    'home-office',
-    'baby-kids',
-  ]);
+  const [featuredSlugs, setFeaturedSlugs] = useState(['power-solar', 'furniture', 'wine-spirits', 'pharmacy']);
   const [flashEndsAt, setFlashEndsAt] = useState(null);
   const [slide, setSlide] = useState(0);
   const [seconds, setSeconds] = useState(8 * 3600);
@@ -391,10 +385,10 @@ export default function Home() {
             ))}
           </section>
         )}
-        {show('featuredFour') && !show('shopByCategory') && featuredFour.length > 0 && (
+        {show('featuredFour') && featuredFour.length > 0 && (
           <section className="py-6">
             <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-4">{t('newCategories')}</h2>
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
               {featuredFour.map((c, i) => (
                 <CategoryTile key={c.id} category={c} index={i} tall t={t} />
               ))}
@@ -405,30 +399,11 @@ export default function Home() {
         {show('shopByCategory') && categories.length > 0 && (
           <section className="py-6">
             <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-4">{t('shopByCategory')}</h2>
-            {featuredFour.length > 0 ? (
-              <>
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
-                  {featuredFour.map((c, i) => (
-                    <CategoryTile key={c.id} category={c} index={i} tall t={t} />
-                  ))}
-                </div>
-                {categories.filter((c) => !featuredSlugs.includes(c.slug)).length > 0 && (
-                  <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
-                    {categories
-                      .filter((c) => !featuredSlugs.includes(c.slug))
-                      .map((c, i) => (
-                        <CategoryTile key={c.id} category={c} index={i + featuredFour.length} t={t} />
-                      ))}
-                  </div>
-                )}
-              </>
-            ) : (
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
-                {categories.map((c, i) => (
-                  <CategoryTile key={c.id} category={c} index={i} t={t} />
-                ))}
-              </div>
-            )}
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+              {categories.map((c, i) => (
+                <CategoryTile key={c.id} category={c} index={i} t={t} />
+              ))}
+            </div>
           </section>
         )}
 
