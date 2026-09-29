@@ -127,7 +127,7 @@
       "password": "$2a$10$MQrC1ix8Nt0kpjKTYBlSCe/DKV6johbbiPpF0nAx1C3QLqhE/2HIG",
       "role": "vendor",
       "phone": "+254712345006",
-      "storeName": "Chandaria Supermarket",
+      "storeName": "Chandaria Supermarket 🛒",
       "status": "approved",
       "createdAt": "2026-09-15T12:00:10.812Z",
       "hours": {
@@ -153,6 +153,50 @@
       "wishlist": [],
       "cart": [],
       "createdAt": "2026-09-15T12:00:10.812Z"
+    },
+    {
+      "id": "usr_vendor7",
+      "name": "BigDrop Kenya",
+      "email": "orders@bigdrop.co.ke",
+      "password": "$2a$10$4ZS4u1NUYW0gOmbnbIeToelaey9MCHN7ak7XV8Qh0RVRE6BlLwBMW",
+      "role": "vendor",
+      "phone": "+254722359298",
+      "storeName": "BigDrop Kenya",
+      "status": "approved",
+      "hours": {
+        "open24": false,
+        "mon": "08:00-20:00",
+        "tue": "08:00-20:00",
+        "wed": "08:00-20:00",
+        "thu": "08:00-20:00",
+        "fri": "08:00-20:00",
+        "sat": "08:00-20:00",
+        "sun": "09:00-18:00"
+      },
+      "cart": [],
+      "createdAt": "2026-09-29T17:41:51.408Z"
+    },
+    {
+      "id": "usr_vendor8",
+      "name": "James Kariuki",
+      "email": "phones@bigdrop.co.ke",
+      "password": "$2a$10$4ZS4u1NUYW0gOmbnbIeToelaey9MCHN7ak7XV8Qh0RVRE6BlLwBMW",
+      "role": "vendor",
+      "phone": "+254712345008",
+      "storeName": "Phone & Tablet Hub",
+      "status": "approved",
+      "hours": {
+        "open24": false,
+        "mon": "08:00-20:00",
+        "tue": "08:00-20:00",
+        "wed": "08:00-20:00",
+        "thu": "08:00-20:00",
+        "fri": "08:00-20:00",
+        "sat": "08:00-20:00",
+        "sun": "09:00-18:00"
+      },
+      "cart": [],
+      "createdAt": "2026-09-29T17:41:51.408Z"
     }
   ],
   "categories": [

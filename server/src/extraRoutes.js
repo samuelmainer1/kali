@@ -30,6 +30,8 @@ import {
   normalizeDeliveryCopy,
   normalizeAnnouncement,
   vendorStoreSlug,
+  resolveProductSku,
+  skuTakenSet,
 } from './commerce.js';
 
 const router = Router();
@@ -562,7 +564,7 @@ router.post('/products/bulk', authRequired, requireRole('vendor', 'admin'), asyn
         price,
         compareAt: row.compareAt ? Number(row.compareAt) : null,
         stock: Number(row.stock ?? 10),
-        sku: row.sku || `BD-${nanoid(6).toUpperCase()}`,
+        sku: resolveProductSku(row.sku, skuTakenSet(d.products)),
         images,
         featured: false,
         rating: 0,
@@ -1033,7 +1035,7 @@ router.post('/admin/woocommerce/import', authRequired, requireRole('admin'), asy
           price: row.price,
           compareAt: row.compareAt,
           stock: Number.isFinite(row.stock) ? row.stock : 10,
-          sku: row.sku || `WOO-${nanoid(6).toUpperCase()}`,
+          sku: resolveProductSku(row.sku, skuTakenSet(d.products)),
           images: row.images,
           featured: false,
           rating: 0,

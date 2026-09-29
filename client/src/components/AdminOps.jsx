@@ -100,6 +100,15 @@ export function AdminAddProduct({ categories, vendors, onSaved, onError }) {
         <span className="text-ink-mute">Stock</span>
         <input required type="number" min="0" value={form.stock} onChange={set('stock')} className="mt-1 w-full rounded-xl border border-ink/10 px-3 py-2.5" />
       </label>
+      <label className="block text-sm">
+        <span className="text-ink-mute">SKU (optional)</span>
+        <input
+          value={form.sku}
+          onChange={set('sku')}
+          placeholder="Leave blank — we generate one"
+          className="mt-1 w-full rounded-xl border border-ink/10 px-3 py-2.5"
+        />
+      </label>
       <label className="flex items-center gap-3 rounded-xl border border-ink/10 p-3 bg-mist/50 cursor-pointer">
         <input
           type="checkbox"

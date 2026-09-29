@@ -142,7 +142,12 @@ export default function ProductEditForm({ product, categories = [], vendors = []
           </label>
           <label className="block text-sm">
             <span className="text-ink-mute">SKU</span>
-            <input value={form.sku} onChange={set('sku')} className="mt-1 w-full rounded-xl border border-ink/10 px-3 py-2.5" />
+            <input
+              value={form.sku}
+              onChange={set('sku')}
+              placeholder="Leave blank to auto-generate"
+              className="mt-1 w-full rounded-xl border border-ink/10 px-3 py-2.5"
+            />
           </label>
         </div>
         {allowName && (

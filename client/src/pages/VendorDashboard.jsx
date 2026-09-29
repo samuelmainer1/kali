@@ -537,7 +537,12 @@ export default function VendorDashboard() {
                     </label>
                     <label className="block text-sm">
                       <span className="text-ink-mute">SKU (optional)</span>
-                      <input value={form.sku} onChange={set('sku')} className="mt-1 w-full rounded-xl border border-ink/10 px-3 py-2.5" />
+                      <input
+                        value={form.sku}
+                        onChange={set('sku')}
+                        placeholder="Leave blank — we generate one"
+                        className="mt-1 w-full rounded-xl border border-ink/10 px-3 py-2.5"
+                      />
                     </label>
                   </div>
                   <label className="block text-sm">

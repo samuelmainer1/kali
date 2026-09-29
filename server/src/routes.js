@@ -33,6 +33,8 @@ import {
   normalizeDeliveryCopy,
   normalizeAnnouncement,
   vendorStoreSlug,
+  resolveProductSku,
+  skuTakenSet,
 } from './commerce.js';
 
 const router = Router();
@@ -911,7 +913,7 @@ router.post('/products', authRequired, requireRole('vendor', 'admin'), async (re
     price: Number(price),
     compareAt: compareAt != null && compareAt !== '' ? Number(compareAt) : null,
     stock: Number(stock ?? 0),
-    sku: sku || `BD-${nanoid(6).toUpperCase()}`,
+    sku: resolveProductSku(sku, skuTakenSet(readDb().products)),
     images: imageList,
     featured: Boolean(featured),
     rating: 0,
@@ -992,6 +994,13 @@ router.patch('/products/:id', authRequired, requireRole('vendor', 'admin'), asyn
     } catch (e) {
       return res.status(400).json({ error: e.message || 'Could not save images' });
     }
+  }
+
+  if (req.body.sku !== undefined) {
+    const taken = skuTakenSet(readDb().products.filter((p) => p.id !== product.id));
+    updated.sku = resolveProductSku(updated.sku, taken);
+  } else if (!String(updated.sku || '').trim()) {
+    updated.sku = resolveProductSku('', skuTakenSet(readDb().products.filter((p) => p.id !== product.id)));
   }
 
   const promoOnly = changed.every((f) => ['price', 'compareAt', 'stock', 'images'].includes(f));

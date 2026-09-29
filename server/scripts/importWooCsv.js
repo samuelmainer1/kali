@@ -11,6 +11,7 @@ import { nanoid } from 'nanoid';
 import { parseWooCommerceCsv, slugifyName } from '../src/wooCommerce.js';
 import { downloadRemoteImage, uploadsRoot } from '../src/uploads.js';
 import { dataDir, dbPath } from '../src/db.js';
+import { resolveProductSku, skuTakenSet } from '../src/commerce.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -135,11 +136,12 @@ function resolveCategory(wooName) {
 const vendorId = db.users?.find((u) => u.role === 'admin')?.id || 'usr_admin';
 const now = new Date().toISOString();
 const products = [];
+const taken = skuTakenSet(db.products || []);
 
 for (const row of parsed) {
   const cat = resolveCategory(row.category);
   const images = (row.images || []).map((url) => cache[url]).filter((u) => u && localUploadExists(u));
-  const sku = row.sku || `WOO-${nanoid(6).toUpperCase()}`;
+  const sku = resolveProductSku(row.sku, taken);
   products.push({
     id: 'prd_woo_' + nanoid(10),
     vendorId,

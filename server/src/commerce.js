@@ -1,5 +1,7 @@
 /** Shared marketplace rules: delivery, coupons, hours, variants, specs. */
 
+import { nanoid } from 'nanoid';
+
 export const COUNTY_FEES = {
   Nairobi: 280,
   Kiambu: 350,
@@ -533,6 +535,38 @@ export function defaultVendorHours() {
     sat: '08:00-20:00',
     sun: '09:00-18:00',
   };
+}
+
+const WOO_SKU_RE = /^WOO[-_]/i;
+
+export function skuTakenSet(products = []) {
+  return new Set(
+    products
+      .map((p) => String(p?.sku || '').trim().toUpperCase())
+      .filter(Boolean)
+  );
+}
+
+export function generateProductSku(taken = new Set()) {
+  for (let i = 0; i < 24; i += 1) {
+    const sku = `BD-${nanoid(8).toUpperCase().replace(/[^A-Z0-9]/g, 'X')}`;
+    if (sku.startsWith('WOO') || taken.has(sku.toUpperCase())) continue;
+    taken.add(sku.toUpperCase());
+    return sku;
+  }
+  const fallback = `BD-${Date.now().toString(36).toUpperCase()}`;
+  taken.add(fallback.toUpperCase());
+  return fallback;
+}
+
+/** Blank or leftover WooCommerce fallback SKUs get a BigDrop code (never WOO-). */
+export function resolveProductSku(sku, taken = new Set()) {
+  const value = String(sku || '').trim();
+  if (value && !WOO_SKU_RE.test(value)) {
+    taken.add(value.toUpperCase());
+    return value;
+  }
+  return generateProductSku(taken);
 }
 
 /**

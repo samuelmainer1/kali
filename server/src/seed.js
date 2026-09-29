@@ -16,9 +16,9 @@ const brandsByCat = {
   cat_phones: ['Samsung', 'Apple', 'Tecno', 'Infinix', 'Xiaomi', 'Oppo', 'Nokia', 'Huawei'],
   cat_food: ['Nestlé', 'Coca-Cola', 'Del Monte', 'Bidco', 'Brookside', 'Cadbury', 'Kericho Gold'],
   cat_computers: ['HP', 'Dell', 'Lenovo', 'Apple', 'Asus', 'Acer', 'Logitech'],
-  cat_beauty: ["L'Oréal", 'Nivea', 'Maybelline', 'Garnier', 'CeraVe', 'The Ordinary', 'No7'],
-  cat_home: ['IKEA', 'Godrej', 'Homey', 'Meko', 'Ashley', 'Local Craft'],
-  cat_groceries: ['Unga', 'Bidco', 'Pembe', 'Brookside', 'Menengai', 'Safaricom Fresh'],
+  cat_beauty: ["L'Oréal", 'CeraVe', 'Nivea', 'Maybelline', 'Garnier', 'The Ordinary', 'No7'],
+  cat_home: ['Ziploc', 'IKEA', 'Godrej', 'Homey', 'Meko', 'Ashley', 'Local Craft'],
+  cat_groceries: ['Ziploc', 'Unga', 'Bidco', 'Pembe', 'Brookside', 'Menengai'],
   cat_appliances: ['Samsung', 'LG', 'Hisense', 'Ramtons', 'Hotpoint', 'Syinix'],
   cat_gaming: ['Sony', 'Microsoft', 'Nintendo', 'Razer', 'Logitech', 'SteelSeries'],
   cat_jewelry: ['Casio', 'Fossil', 'Rolex', 'Citizen', 'Local Artisan', 'Seiko'],
@@ -32,7 +32,7 @@ const brandsByCat = {
   cat_garden: ['Bosch', 'Gardena', 'Fiskars', 'Miracle-Gro', 'Local Garden', 'Black+Decker'],
   cat_music: ['Yamaha', 'Casio', 'Fender', 'Donner', 'Audio-Technica', 'Local Music'],
   cat_tv: ['Samsung', 'LG', 'Hisense', 'Sony', 'TCL', 'Vitron'],
-  cat_household: ['Bidco', 'Ariel', 'Sunlight', 'Dettol', 'Air Wick', 'Always'],
+  cat_household: ['Velvex', 'Rosy', 'Toilex', 'Celine', 'Nice & Soft', 'Livelle', 'Bidco'],
   cat_power: ['Sun King', 'd.light', 'Sollatek', 'Mustek', 'Victron', 'Jinko'],
   cat_furniture: ['IKEA', 'Woodmarc', 'Meko', 'Ashley', 'Local Craft', 'Victoria'],
   cat_wine: ['Robertson', 'KWV', 'Four Cousins', 'Tusker', 'Guinness', 'Smirnoff'],
@@ -542,7 +542,9 @@ const vendors = [
   { id: 'usr_vendor3', name: 'Enagol Ame', email: 'fashion@bigdrop.co.ke', storeName: 'Style Avenue', phone: '+254712345003', status: 'approved' },
   { id: 'usr_vendor4', name: 'John Mwangi', email: 'home@bigdrop.co.ke', storeName: 'HomeNest Supplies', phone: '+254712345004', status: 'approved' },
   { id: 'usr_vendor5', name: 'Sarah Wanjiru', email: 'pending@bigdrop.co.ke', storeName: 'Safari Snacks Ltd', phone: '+254712345005', status: 'pending' },
-  { id: 'usr_vendor6', name: 'Priya Shah', email: 'chandaria@bigdrop.co.ke', storeName: 'Chandaria Supermarket', phone: '+254712345006', status: 'approved' },
+  { id: 'usr_vendor6', name: 'Priya Shah', email: 'chandaria@bigdrop.co.ke', storeName: 'Chandaria Supermarket 🛒', phone: '+254712345006', status: 'approved' },
+  { id: 'usr_vendor7', name: 'BigDrop Kenya', email: 'orders@bigdrop.co.ke', storeName: 'BigDrop Kenya', phone: '+254722359298', status: 'approved' },
+  { id: 'usr_vendor8', name: 'James Kariuki', email: 'phones@bigdrop.co.ke', storeName: 'Phone & Tablet Hub', phone: '+254712345008', status: 'approved' },
 ];
 
 const db = {
