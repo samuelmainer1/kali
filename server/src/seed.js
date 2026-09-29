@@ -515,6 +515,27 @@ products.push({
   soldCount: 0,
 });
 
+function applyWooCatalogue() {
+  const wooCataloguePath = path.join(dataDir, 'woo-catalogue.json');
+  if (!fs.existsSync(wooCataloguePath)) return false;
+  const woo = JSON.parse(fs.readFileSync(wooCataloguePath, 'utf8'));
+  if (!Array.isArray(woo.products) || !woo.products.length) return false;
+  const byId = new Map(categories.map((c) => [c.id, c]));
+  for (const c of woo.categories || []) {
+    if (byId.has(c.id)) Object.assign(byId.get(c.id), c);
+    else {
+      categories.push(c);
+      byId.set(c.id, c);
+    }
+  }
+  products.length = 0;
+  products.push(...woo.products);
+  console.log(`Using WooCommerce catalogue: ${products.length} products`);
+  return true;
+}
+
+const usedWooCatalogue = applyWooCatalogue();
+
 const vendors = [
   { id: 'usr_vendor1', name: 'Grace Njeri', email: 'beauty@bigdrop.co.ke', storeName: 'Nairobi Beauty Co.', phone: '+254712345001', status: 'approved' },
   { id: 'usr_vendor2', name: 'Kevin Otieno', email: 'gadgets@bigdrop.co.ke', storeName: 'TechHub KE', phone: '+254712345002', status: 'approved' },
@@ -769,9 +790,11 @@ function buildDemoOrders(productList) {
 
 db.orders = buildDemoOrders(products);
 
-// Force a few low-stock SKUs for alert demos
-for (let i = 0; i < Math.min(6, products.length); i += 2) {
-  products[i].stock = 2 + (i % 4);
+// Force a few low-stock SKUs for alert demos (sample catalogue only)
+if (!usedWooCatalogue) {
+  for (let i = 0; i < Math.min(6, products.length); i += 2) {
+    products[i].stock = 2 + (i % 4);
+  }
 }
 
 if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });

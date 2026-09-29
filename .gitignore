@@ -24,6 +24,7 @@ server/data/db.json.bak
 server/data/db.json.pre-restore
 server/data/*.pre-*
 server/data/backups/
+server/data/woo-image-cache.json
 *-audit.json
 localize-report.json
 image-fix-report.json
