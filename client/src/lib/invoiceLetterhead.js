@@ -1,11 +1,11 @@
 export const INVOICE_COMPANY_NAME = 'BigDrop Kenya';
 
-export const INVOICE_ADDRESS_LINES = ['NextGen Mall,', '3rd Floor, Suite 40,', 'Nairobi, Kenya.'];
+export const INVOICE_ADDRESS_LINES = ['Nextgen Mall, 3rd Floor, Suite 39/40'];
 
 export const INVOICE_ORDERS_EMAIL = 'orders@bigdrop.co.ke';
 export const INVOICE_PHONE = '+254 722 359 298';
 
-export const INVOICE_THANK_YOU = 'Thank you for shopping with BigDrop Kenya. We hope to see you again soon.';
+export const INVOICE_THANK_YOU = 'THANK YOU FOR YOUR BUSINESS!';
 export const INVOICE_FOOTER_CONTACT = 'www.bigdrop.co.ke · orders@bigdrop.co.ke · +254 722 359 298';
 
 export function letterheadFromSite(site) {

@@ -168,10 +168,10 @@ export const DEFAULT_DELIVERY_COPY = {
 
 export const DEFAULT_LETTERHEAD = {
   companyName: 'BigDrop Kenya',
-  address: 'NextGen Mall,\n3rd Floor, Suite 40,\nNairobi, Kenya.',
+  address: 'Nextgen Mall, 3rd Floor, Suite 39/40',
   email: 'orders@bigdrop.co.ke',
   phone: '+254 722 359 298',
-  thankYou: 'Thank you for shopping with BigDrop Kenya. We hope to see you again soon.',
+  thankYou: 'THANK YOU FOR YOUR BUSINESS!',
   footerContact: 'www.bigdrop.co.ke · orders@bigdrop.co.ke · +254 722 359 298',
 };
 

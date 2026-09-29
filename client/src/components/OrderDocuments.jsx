@@ -1,9 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Download, Eye, FileText, Receipt, X } from 'lucide-react';
-import { formatKES } from '../lib/api';
 import { downloadOrderDocumentPdf } from '../lib/downloadInvoicePdf';
 import { useBrand } from '../lib/useBrand';
-import { letterheadFromSite, formatInvoiceDate } from '../lib/invoiceLetterhead';
+import { buildInvoiceModel, formatInvoiceMoney } from '../lib/invoiceTemplate';
 
 export const ORDER_FLOW = ['placed', 'confirmed', 'picking', 'packed', 'out_for_delivery', 'delivered'];
 
@@ -17,33 +16,23 @@ export function nextOrderStatuses(current) {
   return opts;
 }
 
-function DocumentViewer({ doc, order, onClose, brand }) {
-  const items = doc.items || order?.items || [];
-  const isReceipt = doc.type === 'receipt';
-  const title = isReceipt ? 'Receipt' : 'Invoice';
-  const [busy, setBusy] = useState(false);
-  const logo = brand?.logo || '/logo-header.png';
-  const letterhead = brand?.letterhead || letterheadFromSite(null);
-  const companyLines = letterhead.companyLines || [];
+function MoneyCell({ value }) {
+  return (
+    <span className="bd-inv-money">
+      <em>Ksh</em>
+      <span>{formatInvoiceMoney(value)}</span>
+    </span>
+  );
+}
 
-  const issuedAt = doc.issuedAt || order?.createdAt || new Date().toISOString();
-  const dueAt = (() => {
-    const d = new Date(issuedAt);
-    d.setDate(d.getDate() + 1);
-    return d.toISOString();
-  })();
-  const shipping = Number(doc.shipping ?? order?.shipping ?? 0);
-  const discount = Number(order?.discount || doc.discount || 0);
-  const subtotal =
-    doc.subtotal ??
-    order?.subtotal ??
-    items.reduce((sum, i) => sum + (i.price || 0) * (i.qty || 1), 0);
-  const total = Number(doc.total ?? order?.total ?? subtotal + shipping - discount);
-  const paid = order?.paymentStatus === 'paid' || isReceipt;
-  const balanceDue = paid ? 0 : total;
-  const addr = order?.shippingAddress || {};
-  const orderNumber = order?.orderNumber || doc.orderNumber || '';
-  const tracking = order?.trackingNumber || '';
+function DocumentViewer({ doc, order, onClose, brand }) {
+  const title = doc.type === 'receipt' ? 'Receipt' : 'Invoice';
+  const [busy, setBusy] = useState(false);
+  const model = useMemo(() => buildInvoiceModel(doc, order, brand), [doc, order, brand]);
+  const displayRows = [
+    ...model.rows,
+    ...Array.from({ length: Math.max(0, model.minRows - model.rows.length) }, () => null),
+  ];
 
   async function handleDownload() {
     if (busy) return;
@@ -61,9 +50,9 @@ function DocumentViewer({ doc, order, onClose, brand }) {
   return (
     <div className="bd-doc-modal" role="dialog" aria-modal="true" aria-label={title}>
       <div className="bd-doc-modal-backdrop" onClick={onClose} />
-      <div className="bd-doc-modal-panel">
+      <div className="bd-doc-modal-panel bd-doc-modal-panel-wide">
         <div className="bd-doc-modal-toolbar">
-          <strong>{isReceipt ? 'Delivery receipt' : 'Tax invoice'}</strong>
+          <strong>{model.isReceipt ? 'Delivery receipt' : 'Tax invoice'}</strong>
           <div className="bd-doc-modal-actions">
             <button type="button" className="bd-doc-btn" onClick={handleDownload} disabled={busy}>
               <Download size={14} /> {busy ? 'Preparing…' : 'Download PDF'}
@@ -74,121 +63,144 @@ function DocumentViewer({ doc, order, onClose, brand }) {
           </div>
         </div>
 
-        <div className={`bd-doc-sheet bd-invoice-pro${isReceipt ? ' is-receipt' : ''}`}>
-          <div className="bd-invoice-pro-head">
-            <div className="bd-invoice-pro-brand">
-              <img src={logo} alt={letterhead.companyName} />
+        <div className={`bd-doc-sheet bd-inv-tpl${model.isReceipt ? ' is-receipt' : ''}`}>
+          <header className="bd-inv-tpl-head">
+            <div className="bd-inv-tpl-brand">
+              <div className="bd-inv-tpl-logo">
+                <img src={model.logo} alt={model.companyName} />
+              </div>
+              <div className="bd-inv-tpl-company">
+                <h1>{model.companyName}</h1>
+                <p>{model.addressLine}</p>
+                <p className="bd-inv-tpl-contact">{model.contactLine}</p>
+              </div>
             </div>
-            <div className="bd-invoice-pro-title">
-              <h2>{isReceipt ? 'RECEIPT' : 'INVOICE'}</h2>
-              <p># {orderNumber || doc.id || ''}</p>
+            <h2>{model.title}</h2>
+          </header>
+
+          <div className="bd-inv-tpl-ids">
+            <div className="bd-inv-tpl-id">
+              <span>INVOICE NUMBER</span>
+              <strong>{model.orderNumber}</strong>
+            </div>
+            <div className="bd-inv-tpl-id">
+              <span>INVOICE DATE</span>
+              <strong>{model.dateLabel}</strong>
             </div>
           </div>
 
-          <div className="bd-invoice-pro-meta-row">
-            <div className="bd-invoice-pro-company">
-              <strong>{letterhead.companyName}</strong>
-              {companyLines.map((line) => (
-                <span key={line}>{line}</span>
-              ))}
-            </div>
-            <div className="bd-invoice-pro-dates">
-              <div>
-                <span>Date:</span>
-                <strong>{formatInvoiceDate(issuedAt)}</strong>
-              </div>
-              {!paid ? (
+          <div className="bd-inv-tpl-grid">
+            <section>
+              <h3>BILL TO</h3>
+              <dl>
                 <div>
-                  <span>Due Date:</span>
-                  <strong>{formatInvoiceDate(dueAt)}</strong>
+                  <dt>NAME</dt>
+                  <dd>{model.billTo.name || '—'}</dd>
                 </div>
-              ) : null}
-              <div>
-                <span>Tracking:</span>
-                <strong>{tracking || '—'}</strong>
-              </div>
-            </div>
+                <div>
+                  <dt>EMAIL</dt>
+                  <dd>{model.billTo.email || '—'}</dd>
+                </div>
+                <div>
+                  <dt>PHONE</dt>
+                  <dd>{model.billTo.phone || '—'}</dd>
+                </div>
+                <div>
+                  <dt>BILLING ADDRESS</dt>
+                  <dd>{model.billTo.address || '—'}</dd>
+                </div>
+              </dl>
+            </section>
+            <section>
+              <h3>PAYMENT DETAILS</h3>
+              <dl>
+                <div>
+                  <dt>PAYMENT METHOD</dt>
+                  <dd>{model.payment.method}</dd>
+                </div>
+                <div>
+                  <dt>TRANSACTION #</dt>
+                  <dd>{model.payment.transaction}</dd>
+                </div>
+                <div>
+                  <dt>CARD NUMBER</dt>
+                  <dd>{model.payment.cardNumber || '—'}</dd>
+                </div>
+                <div>
+                  <dt>PAYMENT DATE</dt>
+                  <dd>{model.payment.date}</dd>
+                </div>
+              </dl>
+            </section>
           </div>
 
-          <div className="bd-invoice-pro-balance">
-            <span>Balance Due:</span>
-            <strong>
-              {paid ? <em className="bd-invoice-paid">PAID</em> : null}
-              {formatKES(balanceDue)}
-            </strong>
-          </div>
-
-          <div className="bd-invoice-pro-parties">
-            <div>
-              <p className="bd-invoice-pro-label">Bill To:</p>
-              <strong>{doc.to?.name || order?.customerName || ''}</strong>
-              <span>{doc.to?.email || order?.customerEmail || ''}</span>
-              <span>{doc.to?.phone || order?.customerPhone || ''}</span>
-              <span>Order {orderNumber}</span>
-            </div>
-            <div>
-              <p className="bd-invoice-pro-label">Ship To:</p>
-              {addr.line1 ? (
-                <>
-                  <strong>{addr.line1}</strong>
-                  <span>{[addr.city, addr.county].filter(Boolean).join(', ')}</span>
-                  {addr.notes ? <span>{addr.notes}</span> : null}
-                </>
-              ) : (
-                <span>Same as billing</span>
-              )}
-            </div>
-          </div>
-
-          <table className="bd-invoice-pro-table">
+          <table className="bd-inv-tpl-table">
             <thead>
               <tr>
-                <th>Item</th>
-                <th>Quantity</th>
-                <th>Rate</th>
-                <th>Amount</th>
+                <th>Date</th>
+                <th>Code</th>
+                <th>Description in Detail</th>
+                <th>
+                  Qty
+                  <br />
+                  (Tons)
+                </th>
+                <th>Rate/Ton</th>
+                <th>Fare</th>
               </tr>
             </thead>
             <tbody>
-              {items.map((i) => (
-                <tr key={i.productId || i.name}>
-                  <td>{i.name}</td>
-                  <td>{i.qty}</td>
-                  <td>{formatKES(i.price || 0)}</td>
-                  <td>{formatKES((i.price || 0) * (i.qty || 1))}</td>
-                </tr>
-              ))}
+              {displayRows.map((row, idx) =>
+                row ? (
+                  <tr key={`${row.description}-${idx}`}>
+                    <td>{row.date}</td>
+                    <td>{row.code}</td>
+                    <td>{row.description}</td>
+                    <td>{row.qty}</td>
+                    <td>
+                      <MoneyCell value={row.rate} />
+                    </td>
+                    <td>
+                      <MoneyCell value={row.fare} />
+                    </td>
+                  </tr>
+                ) : (
+                  <tr key={`empty-${idx}`} className="bd-inv-empty">
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                  </tr>
+                )
+              )}
             </tbody>
           </table>
 
-          <div className="bd-invoice-pro-totals">
-            <div>
-              <span>Subtotal:</span>
-              <strong>{formatKES(subtotal)}</strong>
+          <div className="bd-inv-tpl-bottom">
+            <div className="bd-inv-tpl-terms">
+              <h4>Terms &amp; Conditions</h4>
+              {model.terms.map((line) => (
+                <p key={line}>{line}</p>
+              ))}
             </div>
-            {discount > 0 && (
+            <div className="bd-inv-tpl-totals">
               <div>
-                <span>Discount:</span>
-                <strong>-{formatKES(discount)}</strong>
+                <span>SUB TOTAL</span>
+                <MoneyCell value={model.subtotal} />
               </div>
-            )}
-            {shipping > 0 && (
-              <div>
-                <span>Delivery:</span>
-                <strong>{formatKES(shipping)}</strong>
+              <div className="tax">
+                <span>TAX {model.taxPct}%</span>
               </div>
-            )}
-            <div className="grand">
-              <span>Total:</span>
-              <strong>{formatKES(total)}</strong>
+              <div className="grand">
+                <span>GRAND TOTAL</span>
+                <MoneyCell value={model.grandTotal} />
+              </div>
             </div>
           </div>
 
-          <p className="bd-invoice-pro-note">
-            {letterhead.thankYou}
-            <br />
-            {letterhead.footerContact}
-          </p>
+          <p className="bd-inv-tpl-thanks">{model.thanks}</p>
         </div>
       </div>
     </div>
@@ -220,9 +232,9 @@ export default function OrderDocuments({ order, compact = false }) {
       items: order.items,
       shipping: order.shipping,
       total: order.total,
-      note: brand.letterhead?.thankYou || 'Thank you for shopping with BigDrop Kenya. We hope to see you again soon.',
+      paymentMethod: order.paymentMethod,
     };
-  }, [invoice, order, brand.letterhead?.thankYou]);
+  }, [invoice, order]);
 
   useEffect(() => {
     if (!viewing) return undefined;

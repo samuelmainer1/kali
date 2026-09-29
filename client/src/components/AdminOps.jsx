@@ -526,10 +526,10 @@ export function SettingsTab({ site, onSaved, onError, flash }) {
   });
   const [letterhead, setLetterhead] = useState({
     companyName: site?.letterhead?.companyName || 'BigDrop Kenya',
-    address: site?.letterhead?.address || 'NextGen Mall,\n3rd Floor, Suite 40,\nNairobi, Kenya.',
+    address: site?.letterhead?.address || 'Nextgen Mall, 3rd Floor, Suite 39/40',
     email: site?.letterhead?.email || 'orders@bigdrop.co.ke',
     phone: site?.letterhead?.phone || '+254 722 359 298',
-    thankYou: site?.letterhead?.thankYou || 'Thank you for shopping with BigDrop Kenya. We hope to see you again soon.',
+    thankYou: site?.letterhead?.thankYou || 'THANK YOU FOR YOUR BUSINESS!',
     footerContact: site?.letterhead?.footerContact || 'www.bigdrop.co.ke · orders@bigdrop.co.ke · +254 722 359 298',
   });
   const [announcement, setAnnouncement] = useState({
