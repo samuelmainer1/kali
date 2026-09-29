@@ -93,7 +93,7 @@ export function buildInvoiceModel(doc, order, brandInput) {
   if (shipping > 0) {
     rows.push({
       date: dateLabel,
-      code: '',
+      code: 'DELIVERY',
       description: 'Delivery',
       qty: 1,
       rate: shipping,

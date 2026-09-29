@@ -2493,12 +2493,18 @@ html.dark-mode .compare-table th, html.dark-mode .compare-table td { border-colo
   width: 100%;
   border-collapse: collapse;
   table-layout: fixed;
-  font-size: 0.8rem;
+  font-size: 0.82rem;
 }
+.bd-inv-col-date { width: 11%; }
+.bd-inv-col-sku { width: 14%; }
+.bd-inv-col-desc { width: 42%; }
+.bd-inv-col-qty { width: 6%; }
+.bd-inv-col-price { width: 13.5%; }
+.bd-inv-col-amount { width: 13.5%; }
 .bd-inv-tpl-table th,
 .bd-inv-tpl-table td {
   border: 1px solid #c5cad3;
-  padding: 6px 8px;
+  padding: 7px 8px;
   text-align: center;
   vertical-align: middle;
 }
@@ -2507,8 +2513,25 @@ html.dark-mode .compare-table th, html.dark-mode .compare-table td { border-colo
   color: #fff;
   font-weight: 700;
   line-height: 1.2;
+  letter-spacing: 0.02em;
 }
-.bd-inv-tpl-table tbody td { height: 28px; }
+.bd-inv-tpl-table th.bd-inv-desc,
+.bd-inv-tpl-table td.bd-inv-desc {
+  text-align: left;
+  font-size: 0.88rem;
+  padding-left: 12px;
+  padding-right: 12px;
+}
+.bd-inv-tpl-table td.bd-inv-sku {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.75rem;
+  letter-spacing: 0.02em;
+}
+.bd-inv-tpl-table td.bd-inv-qty {
+  font-weight: 700;
+  width: 6%;
+}
+.bd-inv-tpl-table tbody td { height: 30px; }
 .bd-inv-tpl-table tbody tr.bd-inv-empty td { height: 28px; }
 .bd-inv-money {
   display: flex;

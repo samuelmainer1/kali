@@ -122,10 +122,12 @@ function DocumentViewer({ doc, order, onClose, brand }) {
                   <dt>TRANSACTION #</dt>
                   <dd>{model.payment.transaction}</dd>
                 </div>
+              {model.payment.cardNumber ? (
                 <div>
                   <dt>CARD NUMBER</dt>
-                  <dd>{model.payment.cardNumber || '—'}</dd>
+                  <dd>{model.payment.cardNumber}</dd>
                 </div>
+              ) : null}
                 <div>
                   <dt>PAYMENT DATE</dt>
                   <dd>{model.payment.date}</dd>
@@ -135,18 +137,22 @@ function DocumentViewer({ doc, order, onClose, brand }) {
           </div>
 
           <table className="bd-inv-tpl-table">
+            <colgroup>
+              <col className="bd-inv-col-date" />
+              <col className="bd-inv-col-sku" />
+              <col className="bd-inv-col-desc" />
+              <col className="bd-inv-col-qty" />
+              <col className="bd-inv-col-price" />
+              <col className="bd-inv-col-amount" />
+            </colgroup>
             <thead>
               <tr>
                 <th>Date</th>
-                <th>Code</th>
-                <th>Description in Detail</th>
-                <th>
-                  Qty
-                  <br />
-                  (Tons)
-                </th>
-                <th>Rate/Ton</th>
-                <th>Fare</th>
+                <th>SKU</th>
+                <th className="bd-inv-desc">Description</th>
+                <th>Qty</th>
+                <th>Unit Price</th>
+                <th>Amount</th>
               </tr>
             </thead>
             <tbody>
@@ -154,9 +160,9 @@ function DocumentViewer({ doc, order, onClose, brand }) {
                 row ? (
                   <tr key={`${row.description}-${idx}`}>
                     <td>{row.date}</td>
-                    <td>{row.code}</td>
-                    <td>{row.description}</td>
-                    <td>{row.qty}</td>
+                    <td className="bd-inv-sku">{row.code || '—'}</td>
+                    <td className="bd-inv-desc">{row.description}</td>
+                    <td className="bd-inv-qty">{row.qty}</td>
                     <td>
                       <MoneyCell value={row.rate} />
                     </td>
@@ -168,8 +174,8 @@ function DocumentViewer({ doc, order, onClose, brand }) {
                   <tr key={`empty-${idx}`} className="bd-inv-empty">
                     <td>&nbsp;</td>
                     <td>&nbsp;</td>
-                    <td>&nbsp;</td>
-                    <td>&nbsp;</td>
+                    <td className="bd-inv-desc">&nbsp;</td>
+                    <td className="bd-inv-qty">&nbsp;</td>
                     <td>&nbsp;</td>
                     <td>&nbsp;</td>
                   </tr>

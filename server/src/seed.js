@@ -709,6 +709,7 @@ function buildDemoOrders(productList) {
         name: p.name,
         price: p.price,
         qty: 1 + (i % 2),
+        sku: p.sku || '',
         vendorId: p.vendorId,
         image: p.images?.[0],
       };

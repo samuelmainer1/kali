@@ -1228,6 +1228,7 @@ router.post('/orders', authOptional, async (req, res) => {
       name: variant ? `${product.name} (${variant})` : product.name,
       price: product.price,
       qty,
+      sku: product.sku || '',
       image: product.images[0],
       vendorId: product.vendorId,
       variant,

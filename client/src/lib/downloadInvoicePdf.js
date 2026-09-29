@@ -182,19 +182,19 @@ export async function downloadOrderDocumentPdf(doc, order, brandInput) {
   drawSection(payX, 'PAYMENT DETAILS', [
     { label: 'PAYMENT METHOD', value: model.payment.method },
     { label: 'TRANSACTION #', value: model.payment.transaction },
-    { label: 'CARD NUMBER', value: model.payment.cardNumber || '—' },
+    ...(model.payment.cardNumber ? [{ label: 'CARD NUMBER', value: model.payment.cardNumber }] : []),
     { label: 'PAYMENT DATE', value: model.payment.date },
   ]);
 
   y += sectionH + 5;
 
   const cols = [
-    { key: 'date', label: 'Date', w: 28, align: 'center' },
-    { key: 'code', label: 'Code', w: 22, align: 'center' },
-    { key: 'description', label: 'Description in Detail', w: 88, align: 'center' },
-    { key: 'qty', label: 'Qty\n(Tons)', w: 22, align: 'center' },
-    { key: 'rate', label: 'Rate/Ton', w: 42, align: 'center' },
-    { key: 'fare', label: 'Fare', w: 0, align: 'center' },
+    { key: 'date', label: 'Date', w: 26, align: 'center' },
+    { key: 'code', label: 'SKU', w: 34, align: 'center' },
+    { key: 'description', label: 'Description', w: 118, align: 'left' },
+    { key: 'qty', label: 'Qty', w: 14, align: 'center' },
+    { key: 'rate', label: 'Unit Price', w: 36, align: 'center' },
+    { key: 'fare', label: 'Amount', w: 0, align: 'center' },
   ];
   const tableW = contentR - contentL;
   cols[cols.length - 1].w = tableW - cols.slice(0, -1).reduce((s, c) => s + c.w, 0);
@@ -243,14 +243,16 @@ export async function downloadOrderDocumentPdf(doc, order, brandInput) {
     const ry = bodyTop + idx * rowH + 4.8;
     let x = contentL;
     const textCells = [
-      { text: row.date, w: cols[0].w },
-      { text: row.code, w: cols[1].w },
-      { text: row.description, w: cols[2].w },
-      { text: String(row.qty), w: cols[3].w },
+      { text: row.date, w: cols[0].w, align: 'center' },
+      { text: row.code || '—', w: cols[1].w, align: 'center' },
+      { text: row.description, w: cols[2].w, align: 'left' },
+      { text: String(row.qty), w: cols[3].w, align: 'center' },
     ];
     textCells.forEach((cell) => {
-      const wrapped = pdf.splitTextToSize(String(cell.text || ''), cell.w - 3);
-      pdf.text(wrapped[0] || '', x + cell.w / 2, ry, { align: 'center' });
+      const inset = cell.align === 'left' ? 2.2 : 1.5;
+      const wrapped = pdf.splitTextToSize(String(cell.text || ''), cell.w - inset * 2);
+      const tx = cell.align === 'left' ? x + inset : x + cell.w / 2;
+      pdf.text(wrapped[0] || '', tx, ry, { align: cell.align });
       x += cell.w;
     });
     drawMoney(x, cols[4].w, row.rate, ry);
