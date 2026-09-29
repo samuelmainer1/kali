@@ -82,37 +82,37 @@ export function buildInvoiceModel(doc, order, brandInput) {
     const rate = Number(item.price || 0);
     return {
       date: dateLabel,
-      code: item.sku || item.code || '',
+      sku: item.sku || item.code || '',
       description: item.name || 'Item',
       qty,
-      rate,
-      fare: rate * qty,
+      unitPrice: rate,
+      amount: rate * qty,
     };
   });
 
   if (shipping > 0) {
     rows.push({
       date: dateLabel,
-      code: 'DELIVERY',
+      sku: 'DELIVERY',
       description: 'Delivery',
       qty: 1,
-      rate: shipping,
-      fare: shipping,
+      unitPrice: shipping,
+      amount: shipping,
     });
   }
 
   if (discount > 0) {
     rows.push({
       date: dateLabel,
-      code: '',
+      sku: '',
       description: 'Discount',
       qty: 1,
-      rate: -discount,
-      fare: -discount,
+      unitPrice: -discount,
+      amount: -discount,
     });
   }
 
-  const subtotal = rows.reduce((sum, row) => sum + row.fare, 0);
+  const subtotal = rows.reduce((sum, row) => sum + row.amount, 0);
   const grandTotal = Number(doc?.total ?? order?.total ?? subtotal);
   const addressLine =
     (letterhead.addressLines || []).join(', ').replace(/,\s*,/g, ', ') ||

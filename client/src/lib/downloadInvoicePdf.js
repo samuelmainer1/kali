@@ -189,12 +189,12 @@ export async function downloadOrderDocumentPdf(doc, order, brandInput) {
   y += sectionH + 5;
 
   const cols = [
-    { key: 'date', label: 'Date', w: 26, align: 'center' },
-    { key: 'code', label: 'SKU', w: 34, align: 'center' },
-    { key: 'description', label: 'Description', w: 118, align: 'left' },
-    { key: 'qty', label: 'Qty', w: 14, align: 'center' },
-    { key: 'rate', label: 'Unit Price', w: 36, align: 'center' },
-    { key: 'fare', label: 'Amount', w: 0, align: 'center' },
+    { key: 'date', label: 'Date', w: 22, align: 'center' },
+    { key: 'sku', label: 'SKU', w: 32, align: 'center' },
+    { key: 'description', label: 'Description', w: 132, align: 'left' },
+    { key: 'qty', label: 'Qty', w: 10, align: 'center' },
+    { key: 'unitPrice', label: 'Unit Price', w: 34, align: 'center' },
+    { key: 'amount', label: 'Amount', w: 0, align: 'center' },
   ];
   const tableW = contentR - contentL;
   cols[cols.length - 1].w = tableW - cols.slice(0, -1).reduce((s, c) => s + c.w, 0);
@@ -243,21 +243,23 @@ export async function downloadOrderDocumentPdf(doc, order, brandInput) {
     const ry = bodyTop + idx * rowH + 4.8;
     let x = contentL;
     const textCells = [
-      { text: row.date, w: cols[0].w, align: 'center' },
-      { text: row.code || '—', w: cols[1].w, align: 'center' },
-      { text: row.description, w: cols[2].w, align: 'left' },
-      { text: String(row.qty), w: cols[3].w, align: 'center' },
+      { text: row.date, w: cols[0].w, align: 'center', size: 7.5 },
+      { text: row.sku || '—', w: cols[1].w, align: 'center', size: 7.5 },
+      { text: row.description, w: cols[2].w, align: 'left', size: 9 },
+      { text: String(row.qty), w: cols[3].w, align: 'center', size: 8 },
     ];
     textCells.forEach((cell) => {
-      const inset = cell.align === 'left' ? 2.2 : 1.5;
+      pdf.setFontSize(cell.size);
+      const inset = cell.align === 'left' ? 2.4 : 1.2;
       const wrapped = pdf.splitTextToSize(String(cell.text || ''), cell.w - inset * 2);
       const tx = cell.align === 'left' ? x + inset : x + cell.w / 2;
       pdf.text(wrapped[0] || '', tx, ry, { align: cell.align });
       x += cell.w;
     });
-    drawMoney(x, cols[4].w, row.rate, ry);
+    pdf.setFontSize(8);
+    drawMoney(x, cols[4].w, row.unitPrice, ry);
     x += cols[4].w;
-    drawMoney(x, cols[5].w, row.fare, ry);
+    drawMoney(x, cols[5].w, row.amount, ry);
   });
 
   y = bodyTop + bodyH + 6;

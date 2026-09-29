@@ -150,7 +150,7 @@ function DocumentViewer({ doc, order, onClose, brand }) {
                 <th>Date</th>
                 <th>SKU</th>
                 <th className="bd-inv-desc">Description</th>
-                <th>Qty</th>
+                <th className="bd-inv-qty">Qty</th>
                 <th>Unit Price</th>
                 <th>Amount</th>
               </tr>
@@ -160,14 +160,14 @@ function DocumentViewer({ doc, order, onClose, brand }) {
                 row ? (
                   <tr key={`${row.description}-${idx}`}>
                     <td>{row.date}</td>
-                    <td className="bd-inv-sku">{row.code || '—'}</td>
+                    <td className="bd-inv-sku">{row.sku || '—'}</td>
                     <td className="bd-inv-desc">{row.description}</td>
                     <td className="bd-inv-qty">{row.qty}</td>
                     <td>
-                      <MoneyCell value={row.rate} />
+                      <MoneyCell value={row.unitPrice} />
                     </td>
                     <td>
-                      <MoneyCell value={row.fare} />
+                      <MoneyCell value={row.amount} />
                     </td>
                   </tr>
                 ) : (
