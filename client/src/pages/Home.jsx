@@ -261,9 +261,9 @@ export default function Home() {
     10
   );
   const choice = useMemo(() => {
-    const core = products.filter((p) => isTodayUpload(p) && !p.featured);
+    const core = products.filter((p) => p.source === 'manual' && !p.featured);
     const used = new Set(
-      products.filter((p) => p.featured || isTodayUpload(p)).map((p) => p.id)
+      products.filter((p) => p.featured || p.source === 'manual').map((p) => p.id)
     );
     const pool = products.filter((p) => !used.has(p.id));
     const shuffled = [...pool];
@@ -526,9 +526,6 @@ export default function Home() {
         {show('featured') && featured.length > 0 && (
           <GridSection title={t('featured')} to="/shop" products={featured} />
         )}
-        {show('choice') && choice.length > 0 && (
-          <GridSection title={t('choice')} to="/shop" products={choice} />
-        )}
 
         {show('appBanner') && (
         <section className="py-4">
@@ -596,6 +593,9 @@ export default function Home() {
           </div>
         </section>
 
+        {show('choice') && choice.length > 0 && (
+          <GridSection title={t('choice')} to="/shop" products={choice} />
+        )}
         {show('food') && <GridSection title={t('food')} to="/category/food-drinks" products={bySlug('food-drinks')} />}
         {show('healthBeauty') && <GridSection title={t('healthBeauty')} to="/category/beauty-health" products={bySlug('beauty-health', { includeToday: true })} />}
         {show('tvsElectronics') && <GridSection title={t('tvsElectronics')} to="/category/tvs-electronics" products={bySlug('tvs-electronics')} />}
