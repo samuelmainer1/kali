@@ -61,6 +61,7 @@ export function cardConfigured() {
   return Boolean(process.env.PAYSTACK_SECRET_KEY);
 }
 
+/** Buy Goods and Services till shown at checkout when Daraja keys are not set. */
 export const DEFAULT_PAYBILL = '862294';
 
 export function resolvePaybill() {

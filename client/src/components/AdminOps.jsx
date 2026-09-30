@@ -785,7 +785,7 @@ export function SettingsTab({ site, onSaved, onError, flash }) {
         <h2 className="font-display text-xl font-bold">Checkout payments</h2>
         <p className="text-xs text-ink-mute">Cash on delivery stays hidden until you turn it on.</p>
         <label className="block text-sm">
-          <span className="text-ink-mute">M-Pesa Paybill</span>
+          <span className="text-ink-mute">M-Pesa till (Buy Goods and Services)</span>
           <input value={form.paybill} onChange={set('paybill')} className={field} placeholder="862294" />
         </label>
         {[

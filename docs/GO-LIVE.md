@@ -66,7 +66,7 @@ in `.env` today, so you can see exactly what has to change.
 | `SMTP_HOST` `SMTP_PORT` `SMTP_SECURE` `SMTP_USER` `SMTP_PASS` `SMTP_FROM` | Welcome mail, newsletter, password reset, order confirmations | only `SMTP_FROM` set | real mailbox credentials — **without these, mail is only logged to the console** (`[mail:simulated]`) |
 | `MPESA_ENV` | Daraja live vs sandbox | *(unset → sandbox)* | `production` |
 | `MPESA_CONSUMER_KEY` `MPESA_CONSUMER_SECRET` `MPESA_PASSKEY` | Live M-Pesa STK | *(unset → demo STK)* | from Daraja |
-| `MPESA_SHORTCODE` | Paybill | `862294` | confirm against Daraja |
+| `MPESA_SHORTCODE` | Buy Goods till | `862294` | Lipa na M-Pesa → Buy Goods and Services |
 | `MPESA_CALLBACK_URL` | Safaricom → your API | *(unset)* | `https://www.bigdrop.co.ke/api/payments/mpesa/callback` |
 | `PAYSTACK_SECRET_KEY` | Card charging (must start with `sk_`, or production boot fails) | *(unset → demo card)* | live secret key |
 | `PAYSTACK_CALLBACK_URL` | Return after a card payment | *(unset)* | `https://www.bigdrop.co.ke/checkout` |

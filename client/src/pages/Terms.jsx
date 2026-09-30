@@ -11,7 +11,7 @@ const sections = [
   },
   {
     title: '3. Orders and payments',
-    body: 'When you place an order, you agree to pay the listed price plus applicable delivery fees. We accept M-Pesa at checkout (Paybill 862294). Card payments are coming soon. Cash on delivery is only available when BigDrop enables it. All payments are processed securely.',
+    body: 'When you place an order, you agree to pay the listed price plus applicable delivery fees. We accept M-Pesa at checkout (Lipa na M-Pesa → Buy Goods and Services, till 862294). Card payments are coming soon. Cash on delivery is only available when BigDrop enables it. All payments are processed securely.',
   },
   {
     title: '4. Delivery and fulfillment',

@@ -448,7 +448,7 @@ export default function Checkout() {
                   id: 'mpesa',
                   label: 'M-Pesa',
                   desc: payStatus.paybill
-                    ? `STK push on your phone, or Lipa na M-Pesa Paybill ${payStatus.paybill}`
+                    ? `STK push on your phone, or Lipa na M-Pesa → Buy Goods and Services, till ${payStatus.paybill}`
                     : 'Pay via M-Pesa STK push on your phone.',
                 },
                 {
@@ -505,17 +505,15 @@ export default function Checkout() {
                 </label>
                 {(payStatus.paybill || site?.paybill) && (
                   <div className="mt-4 rounded-xl border border-[#015837]/20 bg-[#015837]/5 p-4 text-sm">
-                    <p className="font-semibold text-[#015837]">Lipa na M-Pesa — Paybill {payStatus.paybill || site.paybill}</p>
+                    <p className="font-semibold text-[#015837]">Lipa na M-Pesa — Buy Goods and Services</p>
                     <dl className="mt-2 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-ink">
-                      <dt className="text-ink-mute">Paybill</dt>
+                      <dt className="text-ink-mute">Till number</dt>
                       <dd className="font-mono font-semibold">{payStatus.paybill || site.paybill}</dd>
-                      <dt className="text-ink-mute">Account</dt>
-                      <dd className="font-mono">{form.mpesaPhone || 'Your M-Pesa number'}</dd>
                       <dt className="text-ink-mute">Amount</dt>
                       <dd className="font-semibold">{formatKES(total)}</dd>
                     </dl>
                     <p className="mt-2 text-xs text-ink-mute">
-                      If the STK prompt does not appear, open M-Pesa → Lipa na M-Pesa → Paybill, enter these details, then place your order.
+                      If the STK prompt does not appear, open M-Pesa → Lipa na M-Pesa → Buy Goods and Services, enter till {payStatus.paybill || site.paybill} and the amount, then place your order.
                     </p>
                   </div>
                 )}

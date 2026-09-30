@@ -108,7 +108,7 @@ export const DEFAULT_FAQS = [
     items: [
       {
         q: 'What payment methods are accepted?',
-        a: 'Pay with M-Pesa at checkout. Lipa na M-Pesa Paybill 862294. If the STK prompt does not appear, pay that till manually. Card is coming soon. Cash on delivery is only available if BigDrop turns it on.',
+        a: 'Pay with M-Pesa at checkout. Lipa na M-Pesa → Buy Goods and Services, till 862294. If the STK prompt does not appear, pay that till manually. Card is coming soon. Cash on delivery is only available if BigDrop turns it on.',
       },
       {
         q: 'When do vendors get paid?',
@@ -134,7 +134,7 @@ export const DEFAULT_FAQS = [
       },
       {
         q: 'Can I pay from outside Kenya?',
-        a: 'Pay with M-Pesa if you have a Kenyan line (Paybill 862294). Card checkout is coming soon.',
+        a: 'Pay with M-Pesa if you have a Kenyan line (Lipa na M-Pesa → Buy Goods and Services, till 862294). Card checkout is coming soon.',
       },
       {
         q: 'Will the recipient be updated on delivery?',
@@ -696,13 +696,14 @@ export function remapGoLiveCustomerCopy(db) {
         item.a = 'Delivery fees are shown at checkout. Pickup at NextGen Mall, 3rd Floor, Suite 40 is free.';
         changed = true;
       }
-      if (/major cards at checkout/i.test(a) || (/pay with m-pesa at checkout/i.test(a) && !/862294/.test(a))) {
+      if (/major cards at checkout/i.test(a) || (/pay with m-pesa at checkout/i.test(a) && !/buy goods/i.test(a))) {
         item.a =
-          'Pay with M-Pesa at checkout. Lipa na M-Pesa Paybill 862294. If the STK prompt does not appear, pay that till manually. Card is coming soon. Cash on delivery is only available if BigDrop turns it on.';
+          'Pay with M-Pesa at checkout. Lipa na M-Pesa → Buy Goods and Services, till 862294. If the STK prompt does not appear, pay that till manually. Card is coming soon. Cash on delivery is only available if BigDrop turns it on.';
         changed = true;
       }
-      if (/card checkout is the recommended option/i.test(a)) {
-        item.a = 'Pay with M-Pesa if you have a Kenyan line (Paybill 862294). Card checkout is coming soon.';
+      if (/card checkout is the recommended option/i.test(a) || (/kenyan line/i.test(a) && !/buy goods/i.test(a))) {
+        item.a =
+          'Pay with M-Pesa if you have a Kenyan line (Lipa na M-Pesa → Buy Goods and Services, till 862294). Card checkout is coming soon.';
         changed = true;
       }
     }

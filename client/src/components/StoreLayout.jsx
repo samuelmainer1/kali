@@ -694,7 +694,7 @@ export default function StoreLayout() {
             <div className="flex items-center gap-2 flex-wrap justify-center">
               <span className="px-2 py-1 bg-green-600 text-white rounded text-xs font-semibold">M-Pesa</span>
               <span className="px-2 py-1 bg-white text-[#015837] rounded text-xs font-semibold">
-                Paybill {site?.payments?.paybill || site?.paybill || '862294'}
+                Till {site?.payments?.paybill || site?.paybill || '862294'}
               </span>
               <span className="px-2 py-1 bg-blue-600 text-white rounded text-xs font-semibold">Visa</span>
               <span className="px-2 py-1 bg-red-600 text-white rounded text-xs font-semibold">Mastercard</span>
