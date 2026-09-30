@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, ChevronLeft, ChevronRight, Mail, ShieldCheck, Smartphone, Star, Truck, Zap, Headphones } from 'lucide-react';
 import { api, formatKES } from '../lib/api';
@@ -260,7 +260,19 @@ export default function Home() {
     bestPool,
     10
   );
-  const choice = products.filter((p) => isTodayUpload(p) && !p.featured);
+  const choice = useMemo(() => {
+    const core = products.filter((p) => isTodayUpload(p) && !p.featured);
+    const used = new Set(
+      products.filter((p) => p.featured || isTodayUpload(p)).map((p) => p.id)
+    );
+    const pool = products.filter((p) => !used.has(p.id));
+    const shuffled = [...pool];
+    for (let i = shuffled.length - 1; i > 0; i -= 1) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    return padToAtLeast(core, shuffled, 10);
+  }, [products]);
   const bySlug = (slug, { includeToday = false } = {}) => {
     const cat = categories.find((c) => c.slug === slug);
     const inCategory = products.filter(
@@ -514,6 +526,9 @@ export default function Home() {
         {show('featured') && featured.length > 0 && (
           <GridSection title={t('featured')} to="/shop" products={featured} />
         )}
+        {show('choice') && choice.length > 0 && (
+          <GridSection title={t('choice')} to="/shop" products={choice} />
+        )}
 
         {show('appBanner') && (
         <section className="py-4">
@@ -581,7 +596,6 @@ export default function Home() {
           </div>
         </section>
 
-        {show('choice') && <GridSection title={t('choice')} to="/shop" products={choice} />}
         {show('food') && <GridSection title={t('food')} to="/category/food-drinks" products={bySlug('food-drinks')} />}
         {show('healthBeauty') && <GridSection title={t('healthBeauty')} to="/category/beauty-health" products={bySlug('beauty-health', { includeToday: true })} />}
         {show('tvsElectronics') && <GridSection title={t('tvsElectronics')} to="/category/tvs-electronics" products={bySlug('tvs-electronics')} />}
