@@ -481,6 +481,7 @@ router.patch('/admin/site', authRequired, requireRole('admin'), (req, res) => {
         cta: String(h.cta || 'Shop Now').trim() || 'Shop Now',
         gradient: String(h.gradient || '').trim(),
         image: saveDataUrl(h.image || '', 'heroes') || '',
+        fullBleed: h.fullBleed === true,
       }));
       const nextImages = new Set(savedHeroes.map((h) => h.image));
       previous.forEach((h) => {

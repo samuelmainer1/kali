@@ -208,6 +208,7 @@ export default function Home() {
               href: h.href || '/shop',
               gradient: h.gradient,
               image: h.image,
+              fullBleed: h.fullBleed === true,
             }))
           );
         }
@@ -311,13 +312,20 @@ export default function Home() {
             return (
             <div
               key={item.id || item.title}
-              className={`carousel-slide${item.image ? ' has-image' : ''}`}
+              className={`carousel-slide${item.image ? ' has-image' : ''}${item.fullBleed ? ' is-artwork' : ''}`}
               style={
                 item.image
                   ? { backgroundImage: `url('${item.image}')`, backgroundSize: 'cover', backgroundPosition: 'center' }
                   : { background: item.gradient || 'linear-gradient(to right, #f97316, #fbbf24)' }
               }
             >
+              {item.fullBleed ? (
+                <Link
+                  to={item.href || '/shop'}
+                  className="absolute inset-0 z-10"
+                  aria-label={slideItem.title || slideItem.cta || 'Shop'}
+                />
+              ) : (
               <div>
                 <h2>{slideItem.title}</h2>
                 <p>{slideItem.subtitle || slideItem.text}</p>
@@ -329,6 +337,7 @@ export default function Home() {
                   <ArrowRight size={16} />
                 </Link>
               </div>
+              )}
             </div>
             );
           })}

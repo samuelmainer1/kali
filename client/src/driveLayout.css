@@ -149,6 +149,12 @@
   display: block;
   background: linear-gradient(180deg, rgba(0,0,0,0.25) 0%, rgba(0,0,0,0.45) 100%);
 }
+.bd-drive-hero .carousel-slide.is-artwork {
+  padding: 0;
+}
+.bd-drive-hero .carousel-slide.is-artwork::before {
+  display: none;
+}
 .bd-drive-hero .carousel-slide h1,
 .bd-drive-hero .carousel-slide h2 {
   font-size: clamp(1.5rem, 4vw, 3rem);

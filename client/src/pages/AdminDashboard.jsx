@@ -1206,6 +1206,14 @@ export default function AdminDashboard() {
                       className="mt-2 w-full rounded-xl border border-ink/10 px-3 py-2 text-sm"
                     />
                   </label>
+                  <label className="text-sm md:col-span-2 flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      checked={h.fullBleed === true}
+                      onChange={(e) => updateHero(i, 'fullBleed', e.target.checked)}
+                    />
+                    <span className="text-ink-mute">Full banner artwork — hide title overlay (the image already has the text)</span>
+                  </label>
                   {h.image && <img src={h.image} alt="" className="md:col-span-2 h-28 w-full rounded-xl object-cover" />}
                   <div className="md:col-span-2 flex justify-end">
                     <button
