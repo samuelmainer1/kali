@@ -22,6 +22,7 @@ process.env.UPLOADS_DIR = path.join(tmp, 'uploads');
 process.env.MPESA_CONSUMER_KEY = '';
 process.env.MPESA_CONSUMER_SECRET = '';
 process.env.MPESA_PASSKEY = '';
+delete process.env.MPESA_SHORTCODE;
 delete process.env.PAYSTACK_SECRET_KEY;
 
 const {
@@ -70,6 +71,7 @@ test('gateway status reports simulated when no live keys are configured', () => 
   const status = paymentStatus();
   assert.equal(status.mpesa, 'simulated');
   assert.equal(status.card, 'simulated');
+  assert.equal(status.paybill, '862294');
 });
 
 test('card checkout rejects an invalid amount and a missing email', async () => {

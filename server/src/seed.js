@@ -6,6 +6,14 @@ import { nanoid } from 'nanoid';
 import { DEFAULT_COUPONS, DEFAULT_HOME_BLOCKS, DEFAULT_FAQS, FEATURED_CATEGORY_SLUGS, defaultVendorHours } from './commerce.js';
 import { dataDir, dbPath } from './db.js';
 
+if (process.env.NODE_ENV === 'production' && process.env.FORCE_SEED !== '1') {
+  console.error(
+    'Refusing to run seed in production. Copy the live server/data/db.json instead. ' +
+      'Set FORCE_SEED=1 only if you intend to wipe the catalogue.'
+  );
+  process.exit(1);
+}
+
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const hash = await bcrypt.hash('password123', 10);

@@ -11,7 +11,7 @@ const sections = [
   },
   {
     title: '3. Orders and payments',
-    body: 'When you place an order, you agree to pay the listed price plus applicable delivery fees. We accept M-Pesa at checkout. Card payments are coming soon. Cash on delivery is only available when BigDrop enables it. All payments are processed securely.',
+    body: 'When you place an order, you agree to pay the listed price plus applicable delivery fees. We accept M-Pesa at checkout (Paybill 862294). Card payments are coming soon. Cash on delivery is only available when BigDrop enables it. All payments are processed securely.',
   },
   {
     title: '4. Delivery and fulfillment',
@@ -19,7 +19,7 @@ const sections = [
   },
   {
     title: '5. Returns and refunds',
-    body: 'Returns are handled according to our Returns & Refunds policy. Eligible items may be returned within the stated window. Refunds are processed to the original payment method where possible.',
+    body: 'Returns follow our Returns & Refunds policy. Inspect your parcel on delivery. Report damage, missing items, or unused goods within 24 hours for a replacement or refund. Refunds go to the original payment method within 5–10 business days.',
   },
   {
     title: '6. Vendor obligations',
@@ -27,7 +27,7 @@ const sections = [
   },
   {
     title: '7. BigDrop Pay Protection',
-    body: 'Eligible orders are covered by BigDrop Pay Protection, which includes secure payment handling, money-back guarantees on qualifying disputes, and Globeflight delivery assurance.',
+    body: 'Eligible orders are covered by BigDrop Pay Protection: secure payment handling, the 24-hour inspect-on-delivery return window, and Globeflight delivery assurance. Refunds follow the Returns & Refunds policy.',
   },
   {
     title: '8. Limitation of liability',

@@ -248,6 +248,7 @@ router.patch('/admin/site/settings', authRequired, requireRole('admin'), (req, r
     }
     if (body.flashEndsAt !== undefined) d.site.flashEndsAt = body.flashEndsAt;
     if (body.whatsapp !== undefined) d.site.whatsapp = String(body.whatsapp);
+    if (body.paybill !== undefined) d.site.paybill = String(body.paybill || '').replace(/\D/g, '') || d.site.paybill;
     if (body.featuredCategorySlugs) d.site.featuredCategorySlugs = body.featuredCategorySlugs;
     if (body.phone !== undefined) d.site.phone = String(body.phone);
     if (body.emails !== undefined) {

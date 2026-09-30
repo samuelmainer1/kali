@@ -75,6 +75,13 @@ function publicUser(user) {
   return safe;
 }
 
+async function publicUserWithFlags(user) {
+  const safe = publicUser(user);
+  if (!user?.password) return { ...safe, mustChangePassword: false };
+  const demo = await bcrypt.compare('password123', user.password);
+  return { ...safe, mustChangePassword: demo };
+}
+
 function generateTracking() {
   return 'GF' + nanoid(9).toUpperCase().replace(/[^A-Z0-9]/g, 'X').slice(0, 9);
 }
@@ -197,6 +204,9 @@ router.post('/auth/register', async (req, res) => {
   if (!name || !email || !password) {
     return res.status(400).json({ error: 'Name, email, and password are required' });
   }
+  if (password === 'password123') {
+    return res.status(400).json({ error: 'Choose a password that is not the demo password.' });
+  }
   const allowedRoles = ['customer', 'vendor'];
   if (!allowedRoles.includes(role)) {
     return res.status(400).json({ error: 'Invalid role' });
@@ -274,11 +284,14 @@ router.post('/auth/login', async (req, res) => {
   if (user.role === 'vendor' && user.status === 'rejected') {
     return res.status(403).json({ error: 'Your vendor application was rejected. Contact BigDrop support.' });
   }
-  res.json({ token: signToken(user), user: publicUser(user) });
+  res.json({ token: signToken(user), user: await publicUserWithFlags(user) });
 });
 
-router.get('/auth/me', authRequired, (req, res) => {
-  res.json({ user: req.user });
+router.get('/auth/me', authRequired, async (req, res) => {
+  const db = readDb();
+  const user = db.users.find((u) => u.id === req.user.id);
+  if (!user) return res.status(401).json({ error: 'User not found' });
+  res.json({ user: await publicUserWithFlags(user) });
 });
 
 router.post('/auth/forgot', async (req, res) => {
@@ -333,6 +346,9 @@ router.post('/auth/password', authRequired, async (req, res) => {
   if (next.length < 6) {
     return res.status(400).json({ error: 'New password must be at least 6 characters' });
   }
+  if (next === 'password123') {
+    return res.status(400).json({ error: 'Choose a password that is not the demo password.' });
+  }
   const db = readDb();
   const user = db.users.find((u) => u.id === req.user.id);
   if (!user || !(await bcrypt.compare(current, user.password))) {
@@ -343,7 +359,8 @@ router.post('/auth/password', authRequired, async (req, res) => {
     const u = d.users.find((x) => x.id === user.id);
     if (u) u.password = passwordHash;
   });
-  res.json({ ok: true, message: 'Password updated.' });
+  const updated = { ...user, password: passwordHash };
+  res.json({ ok: true, message: 'Password updated.', user: await publicUserWithFlags(updated) });
 });
 
 router.get('/site', (req, res) => {
@@ -360,6 +377,7 @@ router.get('/site', (req, res) => {
           : FEATURED_CATEGORY_SLUGS,
         flashEndsAt: site.flashEndsAt || null,
         whatsapp: site.whatsapp || '254722359298',
+        paybill: site.paybill || paymentStatus().paybill,
         pickupPoints: PICKUP_POINTS,
         slots: [],
         faqs: Array.isArray(db.faqs) && db.faqs.length ? db.faqs : DEFAULT_FAQS,

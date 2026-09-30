@@ -61,11 +61,25 @@ export function cardConfigured() {
   return Boolean(process.env.PAYSTACK_SECRET_KEY);
 }
 
+export const DEFAULT_PAYBILL = '862294';
+
+export function resolvePaybill() {
+  const fromEnv = String(process.env.MPESA_SHORTCODE || '').trim();
+  if (fromEnv) return fromEnv;
+  try {
+    const fromSite = String(readDb().site?.paybill || '').trim();
+    if (fromSite) return fromSite;
+  } catch {
+    // Tests and first boot may not have a store yet.
+  }
+  return DEFAULT_PAYBILL;
+}
+
 export function paymentStatus() {
   return {
     mpesa: mpesaConfigured() ? 'live' : 'simulated',
     card: cardConfigured() ? 'live' : 'simulated',
-    paybill: process.env.MPESA_SHORTCODE || '',
+    paybill: resolvePaybill(),
   };
 }
 

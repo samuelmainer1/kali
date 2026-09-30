@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { api } from '../lib/api';
 
-export default function ChangePasswordForm({ className = '' }) {
+export default function ChangePasswordForm({ className = '', required = false, onSuccess }) {
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirm, setConfirm] = useState('');
@@ -17,6 +17,10 @@ export default function ChangePasswordForm({ className = '' }) {
       setError('New password must be at least 6 characters.');
       return;
     }
+    if (newPassword === 'password123') {
+      setError('Choose a password that is not the demo password.');
+      return;
+    }
     if (newPassword !== confirm) {
       setError('New password and confirmation do not match.');
       return;
@@ -28,6 +32,7 @@ export default function ChangePasswordForm({ className = '' }) {
       setCurrentPassword('');
       setNewPassword('');
       setConfirm('');
+      onSuccess?.(res.user);
     } catch (err) {
       setError(err.message || 'Could not update password.');
     } finally {
@@ -39,8 +44,12 @@ export default function ChangePasswordForm({ className = '' }) {
 
   return (
     <form onSubmit={onSubmit} className={`rounded-2xl border border-ink/5 bg-white p-6 shadow-lift space-y-3 max-w-xl ${className}`}>
-      <h2 className="font-display text-xl font-bold">Change password</h2>
-      <p className="text-xs text-ink-mute">Use this when you are already signed in. Forgot password is still on the login screen.</p>
+      <h2 className="font-display text-xl font-bold">{required ? 'Set a new password' : 'Change password'}</h2>
+      <p className="text-xs text-ink-mute">
+        {required
+          ? 'This account still uses the demo password. Choose a new one before you continue.'
+          : 'Use this when you are already signed in. Forgot password is still on the login screen.'}
+      </p>
       {error ? <p className="text-sm text-red-600">{error}</p> : null}
       {msg ? <p className="text-sm text-leaf">{msg}</p> : null}
       <label className="block text-sm">

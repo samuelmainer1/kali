@@ -482,6 +482,7 @@ export function SettingsTab({ site, onSaved, onError, flash }) {
     gaId: site?.gaId || '',
     metaPixelId: site?.metaPixelId || '',
     gscVerification: site?.gscVerification || '',
+    paybill: site?.paybill || site?.payments?.paybill || '862294',
   });
   const [payments, setPayments] = useState({
     mpesa: site?.payments?.mpesaEnabled !== false,
@@ -687,6 +688,7 @@ export function SettingsTab({ site, onSaved, onError, flash }) {
         gaId: form.gaId,
         metaPixelId: form.metaPixelId,
         gscVerification: form.gscVerification,
+        paybill: form.paybill,
         deliveryCopy,
         letterhead,
         announcement,
@@ -782,6 +784,10 @@ export function SettingsTab({ site, onSaved, onError, flash }) {
       <section className="space-y-3 rounded-2xl border border-ink/5 bg-white p-6 shadow-lift">
         <h2 className="font-display text-xl font-bold">Checkout payments</h2>
         <p className="text-xs text-ink-mute">Cash on delivery stays hidden until you turn it on.</p>
+        <label className="block text-sm">
+          <span className="text-ink-mute">M-Pesa Paybill</span>
+          <input value={form.paybill} onChange={set('paybill')} className={field} placeholder="862294" />
+        </label>
         {[
           ['mpesa', 'M-Pesa'],
           ['card', 'Card (Paystack)'],

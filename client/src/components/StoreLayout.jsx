@@ -41,6 +41,7 @@ import SearchSuggest from './SearchSuggest';
 import WhatsAppWidget from './WhatsAppWidget';
 import TrackingScripts, { SITE_TITLE } from './TrackingScripts';
 import CmsLink from './CmsLink';
+import ChangePasswordForm from './ChangePasswordForm';
 
 function TikTokIcon({ size = 20 }) {
   return (
@@ -51,7 +52,7 @@ function TikTokIcon({ size = 20 }) {
 }
 
 export default function StoreLayout() {
-  const { user, logout } = useAuth();
+  const { user, logout, updateUser } = useAuth();
   const { count } = useCart();
   const { count: compareCount, items: compareItems, removeItem: removeCompareItem } = useCompare();
   const { openMiniCart, openAuth } = useUI();
@@ -181,6 +182,19 @@ export default function StoreLayout() {
 
   return (
     <div className="bd-site">
+      {user?.mustChangePassword ? (
+        <div className="fixed inset-0 z-[90] flex items-center justify-center bg-black/70 p-4">
+          <div className="w-full max-w-lg">
+            <ChangePasswordForm
+              required
+              onSuccess={(next) => updateUser(next || { mustChangePassword: false })}
+            />
+            <button type="button" onClick={logout} className="mt-3 w-full text-sm text-white/80 hover:text-white">
+              Sign out
+            </button>
+          </div>
+        </div>
+      ) : null}
       {announcement?.enabled && announcement.text ? (
         <div className="bd-announce">
           {announcement.href ? (
@@ -679,6 +693,9 @@ export default function StoreLayout() {
             </div>
             <div className="flex items-center gap-2 flex-wrap justify-center">
               <span className="px-2 py-1 bg-green-600 text-white rounded text-xs font-semibold">M-Pesa</span>
+              <span className="px-2 py-1 bg-white text-[#015837] rounded text-xs font-semibold">
+                Paybill {site?.payments?.paybill || site?.paybill || '862294'}
+              </span>
               <span className="px-2 py-1 bg-blue-600 text-white rounded text-xs font-semibold">Visa</span>
               <span className="px-2 py-1 bg-red-600 text-white rounded text-xs font-semibold">Mastercard</span>
             </div>

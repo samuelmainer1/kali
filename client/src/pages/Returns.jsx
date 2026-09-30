@@ -7,7 +7,7 @@ const sections = [
   {
     icon: Clock,
     title: 'Return window',
-    body: 'You may request a return within 24 hours of delivery for most items, provided they are unused, in original packaging, with tags and seals intact.',
+    body: 'You may request a return within 24 hours of delivery for unused items in original packaging, with tags and seals intact. Inspect the parcel on delivery and report damage or missing items within the same 24 hours.',
   },
   {
     icon: Package,
@@ -27,7 +27,7 @@ const sections = [
   {
     icon: AlertCircle,
     title: 'Exchanges & damaged goods',
-    body: 'If your parcel arrived damaged or incomplete, report it within 48 hours of delivery. We will arrange a free replacement or full refund — you should not be charged return shipping for our error.',
+    body: 'If your parcel arrived damaged or incomplete, report it within 24 hours of delivery. We will arrange a free replacement or full refund — you should not be charged return shipping for our error.',
   },
 ];
 

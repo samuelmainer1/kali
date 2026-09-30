@@ -9,9 +9,10 @@ import extraRoutes from './extraRoutes.js';
 import { initDb, readDb, writeDb } from './db.js';
 import { uploadsRoot } from './uploads.js';
 import { hydratePaymentsFromDb } from './payments.js';
-import { remapDeadUnsplash, remapInvoiceThankYou, remapGoLiveCustomerCopy, DEFAULT_FAQS } from './commerce.js';
+import { remapDeadUnsplash, remapInvoiceThankYou, remapGoLiveCustomerCopy, hideProductsWithoutImages, DEFAULT_FAQS } from './commerce.js';
 import { buildRobotsTxt, buildSitemapXml, injectIndexHtml, contentPathMissing } from './seo.js';
 import { validateRuntimeConfig } from './runtimeConfig.js';
+import { mailConfigured } from './mailer.js';
 
 const runtimeConfig = validateRuntimeConfig();
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -118,6 +119,7 @@ if (!liveDb.site.payments) {
 if (remapAdminLoginEmail(liveDb)) patched = true;
 if (remapInvoiceThankYou(liveDb)) patched = true;
 if (remapGoLiveCustomerCopy(liveDb)) patched = true;
+if (hideProductsWithoutImages(liveDb)) patched = true;
 if (patched) writeDb(liveDb);
 
 // In-flight payment records must survive restarts (M-Pesa callbacks, confirm polling).
@@ -129,7 +131,12 @@ if (runtimeConfig.isProduction) {
   if (admin?.password && (await bcrypt.compare('password123', admin.password))) {
     console.error(
       'SECURITY WARNING: the admin account still uses the demo password "password123". ' +
-        'Change it in Admin → Account before going live.'
+        'Sign in and change it before going live — the shop will require a new password.'
+    );
+  }
+  if (!mailConfigured()) {
+    console.error(
+      'OPS WARNING: SMTP is not configured. Welcome mail, invoices, password resets, and order emails will only log to the console until SMTP_HOST and SMTP_FROM are set.'
     );
   }
 }

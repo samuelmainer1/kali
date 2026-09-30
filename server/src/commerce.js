@@ -108,7 +108,7 @@ export const DEFAULT_FAQS = [
     items: [
       {
         q: 'What payment methods are accepted?',
-        a: 'Pay with M-Pesa at checkout. Card is coming soon. Cash on delivery is only available if BigDrop turns it on.',
+        a: 'Pay with M-Pesa at checkout. Lipa na M-Pesa Paybill 862294. If the STK prompt does not appear, pay that till manually. Card is coming soon. Cash on delivery is only available if BigDrop turns it on.',
       },
       {
         q: 'When do vendors get paid?',
@@ -117,6 +117,10 @@ export const DEFAULT_FAQS = [
       {
         q: 'Is my payment information secure?',
         a: 'Yes. All transactions are processed through secured, encrypted payment channels with fraud checks on every order.',
+      },
+      {
+        q: 'How do returns and refunds work?',
+        a: 'Inspect your parcel on delivery. Report damage, missing items, or unused goods within 24 hours for a replacement or refund. Refunds go to the original payment method within 5–10 business days.',
       },
     ],
   },
@@ -130,7 +134,7 @@ export const DEFAULT_FAQS = [
       },
       {
         q: 'Can I pay from outside Kenya?',
-        a: 'Pay with M-Pesa if you have a Kenyan line. Card checkout is coming soon.',
+        a: 'Pay with M-Pesa if you have a Kenyan line (Paybill 862294). Card checkout is coming soon.',
       },
       {
         q: 'Will the recipient be updated on delivery?',
@@ -669,6 +673,11 @@ const HERO_NATIONWIDE_TEXT = 'Usually the same business day within Nairobi; 2–
 
 export function remapGoLiveCustomerCopy(db) {
   let changed = false;
+  db.site = db.site || {};
+  if (!String(db.site.paybill || '').trim()) {
+    db.site.paybill = '862294';
+    changed = true;
+  }
   const heroes = db.site?.heroes || [];
   for (const h of heroes) {
     const title = String(h.title || '');
@@ -687,14 +696,35 @@ export function remapGoLiveCustomerCopy(db) {
         item.a = 'Delivery fees are shown at checkout. Pickup at NextGen Mall, 3rd Floor, Suite 40 is free.';
         changed = true;
       }
-      if (/major cards at checkout/i.test(a)) {
-        item.a = 'Pay with M-Pesa at checkout. Card is coming soon. Cash on delivery is only available if BigDrop turns it on.';
+      if (/major cards at checkout/i.test(a) || (/pay with m-pesa at checkout/i.test(a) && !/862294/.test(a))) {
+        item.a =
+          'Pay with M-Pesa at checkout. Lipa na M-Pesa Paybill 862294. If the STK prompt does not appear, pay that till manually. Card is coming soon. Cash on delivery is only available if BigDrop turns it on.';
         changed = true;
       }
       if (/card checkout is the recommended option/i.test(a)) {
-        item.a = 'Pay with M-Pesa if you have a Kenyan line. Card checkout is coming soon.';
+        item.a = 'Pay with M-Pesa if you have a Kenyan line (Paybill 862294). Card checkout is coming soon.';
         changed = true;
       }
+    }
+    if (group.id === 'payments' && !(group.items || []).some((i) => /returns and refunds/i.test(i.q || ''))) {
+      group.items = group.items || [];
+      group.items.push({
+        q: 'How do returns and refunds work?',
+        a: 'Inspect your parcel on delivery. Report damage, missing items, or unused goods within 24 hours for a replacement or refund. Refunds go to the original payment method within 5–10 business days.',
+      });
+      changed = true;
+    }
+  }
+  return changed;
+}
+
+export function hideProductsWithoutImages(db) {
+  let changed = false;
+  for (const p of db.products || []) {
+    const hasImage = (p.images || []).some((u) => String(u || '').trim());
+    if (!hasImage && !p.hidden) {
+      p.hidden = true;
+      changed = true;
     }
   }
   return changed;

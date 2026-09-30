@@ -74,7 +74,7 @@ const groups = [
     items: [
       {
         q: 'What payment methods are accepted?',
-        a: 'Pay with M-Pesa at checkout. Card is coming soon. Cash on delivery is only available if BigDrop turns it on.',
+        a: 'Pay with M-Pesa at checkout. Lipa na M-Pesa Paybill 862294. If the STK prompt does not appear, pay that till manually. Card is coming soon. Cash on delivery is only available if BigDrop turns it on.',
       },
       {
         q: 'When do vendors get paid?',
@@ -83,6 +83,10 @@ const groups = [
       {
         q: 'Is my payment information secure?',
         a: 'Yes. All transactions are processed through secured, encrypted payment channels with fraud checks on every order.',
+      },
+      {
+        q: 'How do returns and refunds work?',
+        a: 'Inspect your parcel on delivery. Report damage, missing items, or unused goods within 24 hours for a replacement or refund. Refunds go to the original payment method within 5–10 business days.',
       },
     ],
   },
@@ -97,7 +101,7 @@ const groups = [
       },
       {
         q: 'Can I pay from outside Kenya?',
-        a: 'Pay with M-Pesa if you have a Kenyan line. Card checkout is coming soon.',
+        a: 'Pay with M-Pesa if you have a Kenyan line (Paybill 862294). Card checkout is coming soon.',
       },
       {
         q: 'Will the recipient be updated on delivery?',
@@ -176,7 +180,7 @@ const groupsSw = [
     items: [
       {
         q: 'Njia gani za malipo zinakubaliwa?',
-        a: 'Lipa kwa M-Pesa kwenye malipo. Kadi inakuja hivi karibuni. Cash on delivery inapatikana tu BigDrop ikiiwasha.',
+        a: 'Lipa kwa M-Pesa kwenye malipo. Lipa na M-Pesa Paybill 862294. Kama STK haionekani, lipa till hiyo mwenyewe. Kadi inakuja hivi karibuni. Cash on delivery inapatikana tu BigDrop ikiiwasha.',
       },
       {
         q: 'Wauzaji wanalipwa lini?',
@@ -199,7 +203,7 @@ const groupsSw = [
       },
       {
         q: 'Naweza kulipa nikiwa nje ya Kenya?',
-        a: 'Lipa kwa M-Pesa ukiwa na nambari ya Kenya. Malipo ya kadi yanakuja hivi karibuni.',
+        a: 'Lipa kwa M-Pesa ukiwa na nambari ya Kenya (Paybill 862294). Malipo ya kadi yanakuja hivi karibuni.',
       },
       {
         q: 'Mpokeaji atasasishwa kuhusu uwasilishaji?',

@@ -7,8 +7,8 @@ export const INVOICE_LINE = [190, 196, 204];
 export const INVOICE_INK = [28, 28, 28];
 
 export const INVOICE_TERMS = [
-  '1. Once the payment is done in Any Case it is not Refunded',
-  '2. Inspect your parcel on delivery. If anything is damaged or missing, tell BigDrop within 24 hours and we will replace it or refund you.',
+  '1. Inspect your parcel on delivery. Report damage or missing items within 24 hours for a replacement or refund.',
+  '2. Unused items in original packaging may be returned within 24 hours. Refunds take 5–10 business days to M-Pesa or the original payment method.',
 ];
 
 export const INVOICE_THANKS = 'THANK YOU FOR YOUR BUSINESS!';

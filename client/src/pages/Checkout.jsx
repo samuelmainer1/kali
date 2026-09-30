@@ -39,7 +39,14 @@ export default function Checkout() {
   const [stkMsg, setStkMsg] = useState('');
   const [error, setError] = useState('');
   const [searchParams] = useSearchParams();
-  const [payStatus, setPayStatus] = useState({ mpesa: 'simulated', card: 'simulated', mpesaEnabled: true, cardEnabled: true, codEnabled: false });
+  const [payStatus, setPayStatus] = useState({
+    mpesa: 'simulated',
+    card: 'simulated',
+    mpesaEnabled: true,
+    cardEnabled: true,
+    codEnabled: false,
+    paybill: '862294',
+  });
   const [cardReceipt, setCardReceipt] = useState('');
   const [cardRef, setCardRef] = useState('');
   const [site, setSite] = useState(null);
@@ -440,7 +447,9 @@ export default function Checkout() {
                 payStatus.mpesaEnabled !== false && {
                   id: 'mpesa',
                   label: 'M-Pesa',
-                  desc: 'Pay via M-Pesa STK push on your phone.',
+                  desc: payStatus.paybill
+                    ? `STK push on your phone, or Lipa na M-Pesa Paybill ${payStatus.paybill}`
+                    : 'Pay via M-Pesa STK push on your phone.',
                 },
                 {
                   id: 'card',
@@ -482,17 +491,35 @@ export default function Checkout() {
               )}
             </div>
             {form.paymentMethod === 'mpesa' && (
-              <label className="mt-4 block text-sm">
-                <span className="text-ink-mute">M-Pesa number</span>
-                <RequiredMark />
-                <input
-                  required
-                  value={form.mpesaPhone}
-                  onChange={set('mpesaPhone')}
-                  placeholder="07xx or 2547xx"
-                  className="mt-1 w-full rounded-xl border border-ink/10 px-3 py-2.5"
-                />
-              </label>
+              <>
+                <label className="mt-4 block text-sm">
+                  <span className="text-ink-mute">M-Pesa number</span>
+                  <RequiredMark />
+                  <input
+                    required
+                    value={form.mpesaPhone}
+                    onChange={set('mpesaPhone')}
+                    placeholder="07xx or 2547xx"
+                    className="mt-1 w-full rounded-xl border border-ink/10 px-3 py-2.5"
+                  />
+                </label>
+                {(payStatus.paybill || site?.paybill) && (
+                  <div className="mt-4 rounded-xl border border-[#015837]/20 bg-[#015837]/5 p-4 text-sm">
+                    <p className="font-semibold text-[#015837]">Lipa na M-Pesa — Paybill {payStatus.paybill || site.paybill}</p>
+                    <dl className="mt-2 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-ink">
+                      <dt className="text-ink-mute">Paybill</dt>
+                      <dd className="font-mono font-semibold">{payStatus.paybill || site.paybill}</dd>
+                      <dt className="text-ink-mute">Account</dt>
+                      <dd className="font-mono">{form.mpesaPhone || 'Your M-Pesa number'}</dd>
+                      <dt className="text-ink-mute">Amount</dt>
+                      <dd className="font-semibold">{formatKES(total)}</dd>
+                    </dl>
+                    <p className="mt-2 text-xs text-ink-mute">
+                      If the STK prompt does not appear, open M-Pesa → Lipa na M-Pesa → Paybill, enter these details, then place your order.
+                    </p>
+                  </div>
+                )}
+              </>
             )}
             {form.paymentMethod === 'card' && (
               <label className="mt-4 block text-sm">
