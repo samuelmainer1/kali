@@ -2,7 +2,7 @@ import { readDb } from './db.js';
 import { vendorStoreSlug } from './commerce.js';
 
 const SITE_DESCRIPTION =
-  'BigDrop Kenya — groceries, electronics, fashion, home & more, delivered by Globeflight across Kenya. Pay via M-Pesa or card.';
+  'BigDrop Kenya — groceries, electronics, fashion, home & more, delivered by Globeflight across Kenya. Pay via M-Pesa.';
 
 const LOCAL_ORIGIN = /^https?:\/\/(localhost|127\.0\.0\.1|\[::1\]|0\.0\.0\.0)(:\d+)?$/i;
 // Phase-1 hosting: PHASE_NOINDEX=true swaps every injected robots meta to noindex
@@ -77,6 +77,7 @@ const STATIC_PATHS = [
   '/deals',
   '/black-friday',
   '/brands',
+  '/track',
 ];
 
 /**
@@ -94,12 +95,12 @@ export const STATIC_PAGE_META = {
   '/': {
     title: 'BigDrop Kenya | Online Shopping Store in Kenya',
     description:
-      'BigDrop Kenya — groceries, electronics, fashion, home & more, delivered by Globeflight across Kenya. Pay via M-Pesa or card.',
+      'BigDrop Kenya — groceries, electronics, fashion, home & more, delivered by Globeflight across Kenya. Pay via M-Pesa.',
   },
   '/shop': {
     title: 'Shop Online in Kenya | BigDrop Kenya',
     description:
-      'Shop 2000+ products online in Kenya — fashion, electronics, groceries, home & more. M-Pesa & card accepted, nationwide delivery by Globeflight.',
+      'Shop 2000+ products online in Kenya — fashion, electronics, groceries, home & more. Pay with M-Pesa, nationwide delivery by Globeflight.',
   },
   '/about': {
     title: 'About Us | BigDrop Kenya',
@@ -177,6 +178,12 @@ export const STATIC_PAGE_META = {
   '/wishlist': { title: 'Wishlist | BigDrop Kenya', noindex: true },
   '/compare': { title: 'Compare Products | BigDrop Kenya', noindex: true },
   '/order-success': { title: 'Order Confirmation | BigDrop Kenya', noindex: true },
+  '/track': {
+    title: 'Track Your Order | BigDrop Kenya',
+    description:
+      'Enter your Globeflight tracking number to see where your BigDrop Kenya order is — live shipment status and delivery updates.',
+  },
+  '/reset-password': { title: 'Reset Password | BigDrop Kenya', noindex: true },
 };
 
 export function buildSitemapXml(req) {
@@ -264,6 +271,61 @@ export function buildRobotsTxt(req) {
     `Sitemap: ${origin}/sitemap.xml`,
     '',
   ].join('\n');
+}
+
+export function organizationJsonLd(origin, siteName = 'BigDrop Kenya') {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'Organization',
+    name: siteName,
+    url: origin,
+    logo: `${origin}/icon-512.png`,
+    email: 'info@bigdrop.co.ke',
+    telephone: '+254 722 359 298',
+    address: {
+      '@type': 'PostalAddress',
+      streetAddress: 'NextGen Mall, Mombasa Road, 3rd Floor, Suite 40',
+      addressLocality: 'Nairobi',
+      addressCountry: 'KE',
+    },
+  };
+}
+
+export function websiteJsonLd(origin, siteName = 'BigDrop Kenya') {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    name: siteName,
+    url: `${origin}/`,
+    publisher: { '@type': 'Organization', name: siteName, url: origin },
+    potentialAction: {
+      '@type': 'SearchAction',
+      target: {
+        '@type': 'EntryPoint',
+        urlTemplate: `${origin}/shop?q={search_term_string}`,
+      },
+      'query-input': 'required name=search_term_string',
+    },
+  };
+}
+
+function insertJsonLd(html, id, data) {
+  const json = JSON.stringify(data).replace(/</g, '\\u003c');
+  const ld = `<script type="application/ld+json" id="${id}">${json}</script>`;
+  if (new RegExp(`id=["']${id}["']`).test(html)) return html;
+  return html.replace(/<\/head>/i, `  ${ld}\n</head>`);
+}
+
+const HOMEPAGE_H1 = 'BigDrop Kenya — Online shopping in Kenya';
+const HOMEPAGE_H1_STYLE =
+  'position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0';
+
+function injectHomepageH1(html) {
+  if (/<h1[\s>]/i.test(html)) return html;
+  return html.replace(
+    /<div id=["']root["']>\s*<\/div>/i,
+    `<div id="root"><h1 style="${HOMEPAGE_H1_STYLE}">${xmlEscape(HOMEPAGE_H1)}</h1></div>`
+  );
 }
 
 export function articleJsonLd(post, origin) {
@@ -556,7 +618,7 @@ function injectProductHtml(html, product, origin, db) {
 function injectCategoryHtml(html, cat, origin, db) {
   const siteName = db.site?.name || 'BigDrop Kenya';
   const title = pageTitle(cat.name, siteName);
-  const description = cat.description || `Shop ${cat.name} online at ${siteName}. Genuine products, M-Pesa & card payment, same-day delivery in Nairobi.`;
+  const description = cat.description || `Shop ${cat.name} online at ${siteName}. Genuine products, pay with M-Pesa, same-day delivery in Nairobi.`;
   const canonical = `${origin}/category/${cat.slug}`;
   const image = absoluteUrl(origin, cat.image);
 
@@ -590,7 +652,7 @@ function injectVendorHtml(html, vendor, origin, db) {
   const title = pageTitle(storeName, siteName);
   const description =
     `Shop ${products.length} ${products.length === 1 ? 'product' : 'products'} from ${storeName} ` +
-    `on ${siteName}. Pay with M-Pesa or card, delivered nationwide by Globeflight.`;
+    `on ${siteName}. Pay with M-Pesa, delivered nationwide by Globeflight.`;
   const canonical = `${origin}/vendors/${vendorStoreSlug(vendor)}`;
   const photo = products.map((p) => (Array.isArray(p.images) ? p.images[0] : p.image)).find(Boolean);
   const image = absoluteUrl(origin, photo);
@@ -683,6 +745,12 @@ function applyGenericOrigin(html, origin, pathOnly, siteName) {
     // No canonical → no language twins either: an unknown path must not keep the
     // homepage hreflang pair the shell ships with.
     next = stripAlternateLinks(next);
+  }
+
+  if (isRoot) {
+    next = insertJsonLd(next, 'bd-org-jsonld', organizationJsonLd(origin, siteName || 'BigDrop Kenya'));
+    next = insertJsonLd(next, 'bd-website-jsonld', websiteJsonLd(origin, siteName || 'BigDrop Kenya'));
+    next = injectHomepageH1(next);
   }
   return next;
 }

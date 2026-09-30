@@ -333,6 +333,7 @@ export default function Home() {
 
   return (
     <div>
+      <h1 className="sr-only">BigDrop Kenya — Online shopping in Kenya</h1>
       <section className="hero-carousel bd-drive-hero">
         <div className="carousel-track" style={{ transform: `translateX(-${slide * 100}%)` }}>
           {heroes.map((item) => {

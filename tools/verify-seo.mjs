@@ -144,7 +144,9 @@ function assertHead(html, expectOrigin) {
   check('og:url is absolute', abs(ogUrl), ogUrl);
   check('og:url is this origin', ogUrl.startsWith(expectOrigin), ogUrl);
   check('og:image absolute (chat apps reject relative paths)', abs(ogImage), ogImage);
-  check('og:image re-anchored to this origin', ogImage.includes(expectOrigin), ogImage);
+  const imageOnThisOrigin = ogImage.includes(expectOrigin);
+  const imageIsRemoteHttps = /^https:\/\//i.test(ogImage) && !/localhost|127\.0\.0\.1/i.test(ogImage);
+  check('og:image is this origin or a remote https host (never localhost)', imageOnThisOrigin || imageIsRemoteHttps, ogImage);
   check('twitter:image matches og:image', HEAD.twitterImage(html) === ogImage);
   check('exactly one canonical link', countOf(html, /rel=["']canonical["']/gi) === 1);
   check('canonical matches og:url', canonical === ogUrl, canonical);
@@ -393,11 +395,38 @@ check(
   HEAD.title(aboutRes.html)
 );
 
-for (const util of ['/cart', '/wishlist', '/compare', '/order-success']) {
+for (const util of ['/cart', '/wishlist', '/compare', '/order-success', '/reset-password']) {
   const { html } = await fetchHtml(util, prodHeaders);
   check(`${util} carries noindex`, /name=["']robots["'][^>]*content=["'][^"']*noindex/i.test(html));
   check(`${util} has no canonical link`, countOf(html, /rel=["']canonical["']/gi) === 0);
 }
+
+const trackPage = await fetchHtml('/track', prodHeaders);
+check(
+  '/track has unique title (not homepage title)',
+  HEAD.title(trackPage.html) !== HOMEPAGE_TITLE && /Track/i.test(HEAD.title(trackPage.html)),
+  HEAD.title(trackPage.html)
+);
+check('/track is indexable', /name=["']robots["'][^>]*content=["']index, follow["']/.test(trackPage.html));
+check('/track canonical is self-referencing', HEAD.canonical(trackPage.html) === `https://${PROD_HOST}/track`, HEAD.canonical(trackPage.html));
+
+const homeOrg = jsonLd(homeProd, 'bd-org-jsonld');
+const homeWeb = jsonLd(homeProd, 'bd-website-jsonld');
+check('homepage Organization JSON-LD present', homeOrg && homeOrg['@type'] === 'Organization', homeOrg ? homeOrg['@type'] : 'missing');
+check('homepage WebSite JSON-LD present', homeWeb && homeWeb['@type'] === 'WebSite', homeWeb ? homeWeb['@type'] : 'missing');
+check('homepage has a crawler-visible H1', /<h1[\s>]/i.test(homeProd));
+check(
+  'homepage description does not advertise card payments',
+  !/\bor card\b|& card|card accepted|card payment/i.test(HEAD.description(homeProd)),
+  HEAD.description(homeProd).slice(0, 120)
+);
+
+console.log('\n=== share & icon assets ===');
+const shareRes = await fetchRetry(`${BASE}/share-default.jpg`, { headers: prodHeaders });
+check('share-default.jpg is served', shareRes.status === 200, String(shareRes.status));
+check('share-default.jpg is a JPEG', /image\/jpeg/i.test(shareRes.headers.get('content-type') || ''), shareRes.headers.get('content-type') || '');
+const iconRes = await fetchRetry(`${BASE}/icon-512.png`, { headers: prodHeaders });
+check('icon-512.png is served', iconRes.status === 200, String(iconRes.status));
 
 console.log(`\n${failures === 0 ? 'PASS — all assertions hold' : `FAIL — ${failures} assertion(s) failed`}`);
 process.exitCode = failures === 0 ? 0 : 1;

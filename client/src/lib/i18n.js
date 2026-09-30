@@ -90,7 +90,7 @@ export const messages = {
     heroSchoolText: 'Everything your child needs at great prices',
     freeDeliveryOver: 'Nationwide delivery by Globeflight',
     freeOverCheckout: '',
-    guestCheckout: 'Guest checkout available — no account required. Pay with M-Pesa or card.',
+    guestCheckout: 'Guest checkout available — no account required. Pay with M-Pesa.',
     estimatedDeliveryNote: 'Usually the same business day within Nairobi; 2–5 days elsewhere',
     cookies:
       'We use cookies to keep you signed in, remember your cart, and improve your experience.',
@@ -313,7 +313,7 @@ export const messages = {
     heroSchoolText: 'Kila kitu mwanafunzi anahitaji kwa bei nzuri',
     freeDeliveryOver: 'Usafirishaji nchini kote na Globeflight',
     freeOverCheckout: '',
-    guestCheckout: 'Unaweza kulipa bila akaunti. Lipa kwa M-Pesa au kadi.',
+    guestCheckout: 'Unaweza kulipa bila akaunti. Lipa kwa M-Pesa.',
     estimatedDeliveryNote: 'Kwa kawaida siku hiyo hiyo ya kazi ndani ya Nairobi; siku 2–5 kwingineko',
     cookies:
       'Tunatumia kuki kukuweka umeingia, kukumbuka kikapu, na kuboresha huduma.',

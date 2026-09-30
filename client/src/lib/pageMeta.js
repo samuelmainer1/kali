@@ -3,7 +3,7 @@ export const SITE_NAME = 'BigDrop Kenya';
 // between server HTML and the hydrated client state.
 export const SITE_TITLE = 'BigDrop Kenya | Online Shopping Store in Kenya';
 export const SITE_DESCRIPTION =
-  'BigDrop Kenya — groceries, electronics, fashion, home & more, delivered by Globeflight across Kenya. Pay via M-Pesa or card.';
+  'BigDrop Kenya — groceries, electronics, fashion, home & more, delivered by Globeflight across Kenya. Pay via M-Pesa.';
 export const SITE_LOCALE = 'en_KE';
 export const SITE_HREFLANG = 'en-KE';
 
@@ -19,12 +19,12 @@ export const STATIC_PAGE_META = {
   '/': {
     title: 'BigDrop Kenya | Online Shopping Store in Kenya',
     description:
-      'BigDrop Kenya — groceries, electronics, fashion, home & more, delivered by Globeflight across Kenya. Pay via M-Pesa or card.',
+      'BigDrop Kenya — groceries, electronics, fashion, home & more, delivered by Globeflight across Kenya. Pay via M-Pesa.',
   },
   '/shop': {
     title: 'Shop Online in Kenya | BigDrop Kenya',
     description:
-      'Shop 2000+ products online in Kenya — fashion, electronics, groceries, home & more. M-Pesa & card accepted, nationwide delivery by Globeflight.',
+      'Shop 2000+ products online in Kenya — fashion, electronics, groceries, home & more. Pay with M-Pesa, nationwide delivery by Globeflight.',
   },
   '/about': {
     title: 'About Us | BigDrop Kenya',
@@ -144,6 +144,109 @@ export function absoluteUrl(src, origin) {
   if (!base) return '';
   const path = src.startsWith('/') ? src : `/${src}`;
   return `${base}${path}`;
+}
+
+const BRAND_PLACEHOLDERS = /^(big\s*drop|unbranded|bigdrop vendor)$/i;
+
+export function organizationJsonLd(origin, siteName = SITE_NAME) {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'Organization',
+    name: siteName,
+    url: origin,
+    logo: `${origin}/icon-512.png`,
+    email: 'info@bigdrop.co.ke',
+    telephone: '+254 722 359 298',
+    address: {
+      '@type': 'PostalAddress',
+      streetAddress: 'NextGen Mall, Mombasa Road, 3rd Floor, Suite 40',
+      addressLocality: 'Nairobi',
+      addressCountry: 'KE',
+    },
+  };
+}
+
+export function websiteJsonLd(origin, siteName = SITE_NAME) {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    name: siteName,
+    url: `${origin}/`,
+    publisher: { '@type': 'Organization', name: siteName, url: origin },
+    potentialAction: {
+      '@type': 'SearchAction',
+      target: {
+        '@type': 'EntryPoint',
+        urlTemplate: `${origin}/shop?q={search_term_string}`,
+      },
+      'query-input': 'required name=search_term_string',
+    },
+  };
+}
+
+export function homeJsonLd(origin) {
+  const o = origin || (typeof window !== 'undefined' ? window.location.origin : '');
+  return [
+    { id: 'bd-org-jsonld', data: organizationJsonLd(o) },
+    { id: 'bd-website-jsonld', data: websiteJsonLd(o) },
+  ];
+}
+
+export function productJsonLdBlocks(product, origin) {
+  const o = origin || (typeof window !== 'undefined' ? window.location.origin : '');
+  const url = `${o}/product/${product.slug}`;
+  const image = absoluteUrl(Array.isArray(product.images) ? product.images[0] : product.image, o);
+  const own = String(product?.brand || '').trim();
+  const hasMaker = Boolean(own && !BRAND_PLACEHOLDERS.test(own));
+  const brandName = hasMaker ? own : String(product?.vendorName || SITE_NAME);
+  const productLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    name: product.name,
+    image: image || undefined,
+    description: metaText(product.excerpt || product.description || ''),
+    brand: { '@type': 'Brand', name: brandName },
+    sku: product.sku || undefined,
+    offers: {
+      '@type': 'Offer',
+      priceCurrency: product.currency || 'KES',
+      price: Number(product.price || 0),
+      availability: product.stock > 0 ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
+      url,
+    },
+  };
+  if (!hasMaker) {
+    productLd.seller = { '@type': 'Organization', name: brandName };
+  }
+  const crumbs = [{ '@type': 'ListItem', position: 1, name: 'Home', item: o }];
+  if (product.categorySlug || product.categoryName) {
+    crumbs.push({
+      '@type': 'ListItem',
+      position: 2,
+      name: product.categoryName || product.categorySlug,
+      item: product.categorySlug ? `${o}/category/${product.categorySlug}` : undefined,
+    });
+  }
+  crumbs.push({
+    '@type': 'ListItem',
+    position: crumbs.length + 1,
+    name: product.name,
+    item: url,
+  });
+  return [
+    { id: 'bd-product-jsonld', data: productLd },
+    {
+      id: 'bd-breadcrumb-jsonld',
+      data: { '@context': 'https://schema.org', '@type': 'BreadcrumbList', itemListElement: crumbs },
+    },
+  ];
+}
+
+/** Product / category / vendor / article URLs apply their own head; skip the generic reset. */
+export function defersOwnMeta(pathname) {
+  const raw = String(pathname || '');
+  const path = raw.length > 1 && raw.endsWith('/') ? raw.slice(0, -1) : raw;
+  return /^\/(product|category|blog)\/[^/]+$/.test(path) || /^\/vendors\/[^/]+$/.test(path);
 }
 
 function upsertMeta(attr, key, value) {
@@ -281,6 +384,10 @@ export function applyPageMeta({
   // are dropped so filter/pagination views don't publish a different og:url per variant.
   upsertMeta('property', 'og:url', pageUrl());
   upsertMeta('property', 'og:image', image || defaultShareImage());
+  if (image && !String(image).endsWith('/share-default.jpg')) {
+    document.querySelector('meta[property="og:image:width"]')?.remove();
+    document.querySelector('meta[property="og:image:height"]')?.remove();
+  }
   upsertMeta('name', 'twitter:card', 'summary_large_image');
   upsertMeta('name', 'twitter:title', title || SITE_TITLE);
   upsertMeta('name', 'twitter:description', desc);
@@ -317,6 +424,7 @@ export function applyShopMeta() {
     description: entry?.description || SITE_DESCRIPTION,
     canonical: entry && !entry.noindex ? `${window.location.origin}${path}` : '',
     noindex: Boolean(entry?.noindex),
+    jsonLd: path === '/' ? homeJsonLd(window.location.origin) : null,
   });
   // applyShopMeta is the generic reset — by definition no page owns the head now.
   metaOwnerPath = null;

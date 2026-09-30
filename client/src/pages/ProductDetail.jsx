@@ -23,6 +23,14 @@ import ProductCard from '../components/ProductCard';
 import RecentlyViewed from '../components/RecentlyViewed';
 import StarRating from '../components/StarRating';
 import { preventBrokenProductImage, resolveProductImage } from '../lib/productImage';
+import {
+  applyPageMeta,
+  applyShopMeta,
+  absoluteUrl,
+  brandTitle,
+  productJsonLdBlocks,
+  SITE_DESCRIPTION,
+} from '../lib/pageMeta';
 
 /**
  * Product copy arrives from WooCommerce as one long run of text. Split it back into
@@ -160,6 +168,21 @@ export default function ProductDetail() {
       })
       .catch((e) => setError(e.message));
   }, [slug, trackView]);
+
+  useEffect(() => {
+    if (!product?.slug) return undefined;
+    const origin = window.location.origin;
+    const image = Array.isArray(product.images) ? product.images[0] : product.image;
+    applyPageMeta({
+      title: brandTitle(product.name),
+      description: product.metaDescription || product.excerpt || product.description || SITE_DESCRIPTION,
+      image: absoluteUrl(image, origin),
+      canonical: `${origin}/product/${product.slug}`,
+      type: 'product',
+      jsonLd: productJsonLdBlocks(product, origin),
+    });
+    return () => applyShopMeta();
+  }, [product]);
 
   const images = product?.images?.length ? product.images : product ? [resolveProductImage(product)] : [];
   const compareAt = product?.compareAt || product?.comparePrice;

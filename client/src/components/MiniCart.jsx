@@ -70,7 +70,7 @@ export default function MiniCart() {
                 <span>Subtotal</span>
                 <strong>{formatKES(subtotal)}</strong>
               </div>
-              <p className="bd-minicart-note">Pay with M-Pesa or card · Nationwide delivery by Globeflight</p>
+              <p className="bd-minicart-note">Pay with M-Pesa · Nationwide delivery by Globeflight</p>
               <Link to="/cart" className="bd-btn-outline" onClick={closeMiniCart}>
                 View cart
               </Link>

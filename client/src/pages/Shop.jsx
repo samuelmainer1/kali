@@ -5,6 +5,13 @@ import { api } from '../lib/api';
 import ProductCard from '../components/ProductCard';
 import FilterSidebar from '../components/FilterSidebar';
 import { useLang } from '../context/LangContext';
+import {
+  applyPageMeta,
+  applyShopMeta,
+  brandTitle,
+  SITE_NAME,
+  absoluteUrl,
+} from '../lib/pageMeta';
 
 const PAGE_SIZE = 60;
 // At most this many numbered buttons are rendered at once. With ~1,800
@@ -128,6 +135,21 @@ export default function Shop() {
   const categoryName = categories.find((c) => c.slug === category)?.name;
   const heading = q ? `Results for “${q}”` : categoryName || 'All Products';
   const crumbLabel = q ? 'Search Results' : categoryName || 'Shop';
+
+  useEffect(() => {
+    if (!pathCategory) return undefined;
+    const cat = categories.find((c) => c.slug === pathCategory);
+    if (!cat) return undefined;
+    applyPageMeta({
+      title: brandTitle(cat.name),
+      description:
+        cat.description ||
+        `Shop ${cat.name} online at ${SITE_NAME}. Genuine products, pay with M-Pesa, same-day delivery in Nairobi.`,
+      image: absoluteUrl(cat.image),
+      canonical: `${window.location.origin}/category/${cat.slug}`,
+    });
+    return () => applyShopMeta();
+  }, [pathCategory, categories]);
 
   const activeFilterCount =
     (minP || maxP ? 1 : 0) + selectedBrands.length + (Number(minR) ? 1 : 0) + (dealOnly ? 1 : 0);

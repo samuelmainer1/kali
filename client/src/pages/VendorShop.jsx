@@ -6,6 +6,7 @@ import ProductCard from '../components/ProductCard';
 import FilterSidebar from '../components/FilterSidebar';
 import PageHero from '../components/PageHero';
 import { useLang } from '../context/LangContext';
+import { applyPageMeta, applyShopMeta, brandTitle, SITE_NAME, absoluteUrl } from '../lib/pageMeta';
 
 const PAGE_SIZE = 60;
 // Mirrors Shop.jsx: at most this many numbered buttons render at once, as a
@@ -42,6 +43,20 @@ export default function VendorShop() {
       })
       .catch((e) => setError(e.message));
   }, [slug]);
+
+  useEffect(() => {
+    if (!vendor) return undefined;
+    const origin = window.location.origin;
+    const storeName = vendor.storeName || vendor.name || 'BigDrop Vendor';
+    const photo = products.map((p) => (Array.isArray(p.images) ? p.images[0] : p.image)).find(Boolean);
+    applyPageMeta({
+      title: brandTitle(storeName),
+      description: `Shop ${products.length} ${products.length === 1 ? 'product' : 'products'} from ${storeName} on ${SITE_NAME}. Pay with M-Pesa, delivered nationwide by Globeflight.`,
+      image: absoluteUrl(photo, origin),
+      canonical: `${origin}/vendors/${slug}`,
+    });
+    return () => applyShopMeta();
+  }, [vendor, products, slug]);
 
   const toggleBrand = (brand) => {
     setPage(1);

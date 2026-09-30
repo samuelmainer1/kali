@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
-import { applyShopMeta, pageMetaOwns, SITE_TITLE, SITE_DESCRIPTION } from '../lib/pageMeta';
+import { applyShopMeta, defersOwnMeta, pageMetaOwns, SITE_TITLE, SITE_DESCRIPTION } from '../lib/pageMeta';
 
 function setMeta(attr, key, value) {
   if (!value) return;
@@ -25,7 +25,7 @@ export default function TrackingScripts({ site }) {
     // config finishes loading (gsc changes) — without the ownership check, that late
     // re-run would wipe a product/article head the page just wrote back to the generic
     // shop title/description.
-    if (!pageMetaOwns(location.pathname)) applyShopMeta();
+    if (!pageMetaOwns(location.pathname) && !defersOwnMeta(location.pathname)) applyShopMeta();
     if (gsc) setMeta('name', 'google-site-verification', gsc);
   }, [gsc, location.pathname]);
 

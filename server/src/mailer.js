@@ -36,7 +36,7 @@ export async function sendWelcomeEmail(user) {
     : 'Welcome to BigDrop Kenya';
   const text = isVendor
     ? `Hi ${user.name},\n\nThank you for applying to sell on BigDrop. Our team will review ${user.storeName || 'your store'} and email you when it is approved.\n\nBigDrop Kenya\nNextgen Mall, 3rd Floor, Suite 40.\norders@bigdrop.co.ke`
-    : `Hi ${user.name},\n\nYour BigDrop account is ready. You can shop with M-Pesa or card.\n\nBigDrop Kenya\nNextgen Mall, 3rd Floor, Suite 40.\norders@bigdrop.co.ke`;
+    : `Hi ${user.name},\n\nYour BigDrop account is ready. You can shop with M-Pesa.\n\nBigDrop Kenya\nNextgen Mall, 3rd Floor, Suite 40.\norders@bigdrop.co.ke`;
   try {
     return await sendMail({ to: user.email, subject, text });
   } catch (err) {
