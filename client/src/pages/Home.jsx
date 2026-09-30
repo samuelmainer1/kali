@@ -255,7 +255,6 @@ export default function Home() {
     (a, b) => (b.rating || 0) - (a.rating || 0) || (b.reviews || 0) - (a.reviews || 0)
   );
   const featured = products.filter((p) => p.featured);
-  const featuredFallback = padToAtLeast(featured, bestPool, 10);
   const bestSellers = padToAtLeast(bestPool.slice(0, 10), bestPool, 10);
   const topSelling = padToAtLeast(
     [...products].sort((a, b) => (b.soldCount || 0) - (a.soldCount || 0)).slice(10, 20),
@@ -513,7 +512,9 @@ export default function Home() {
           </section>
         )}
 
-        {show('featured') && <GridSection title={t('featured')} to="/shop" products={featuredFallback} />}
+        {show('featured') && featured.length > 0 && (
+          <GridSection title={t('featured')} to="/shop" products={featured} />
+        )}
 
         {show('appBanner') && (
         <section className="py-4">
