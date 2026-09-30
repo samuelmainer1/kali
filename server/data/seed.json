@@ -610,7 +610,7 @@
         "/uploads/products/photo-1610945415295-d9bbf067e59c_w1200.jpg",
         "/uploads/products/photo-1610945415295-d9bbf067e59c_w800_c.jpg"
       ],
-      "featured": true,
+      "featured": false,
       "rating": 4,
       "reviews": 26,
       "reviewList": [
@@ -688,7 +688,7 @@
         "/uploads/products/photo-1510557880182-3d4d3cba35a5_w1200.jpg",
         "/uploads/products/photo-1510557880182-3d4d3cba35a5_w800_c.jpg"
       ],
-      "featured": true,
+      "featured": false,
       "rating": 4.1,
       "reviews": 37,
       "reviewList": [
@@ -1430,7 +1430,7 @@
         "/uploads/products/photo-1587049352846-4a222e784d38_w1200.jpg.150kb.webp",
         "/uploads/products/photo-1587049352846-4a222e784d38_w800_c.jpg"
       ],
-      "featured": true,
+      "featured": false,
       "rating": 4,
       "reviews": 136,
       "reviewList": [
@@ -1528,7 +1528,7 @@
         "/uploads/products/photo-1447933601403-0c6688de566e_w1200.jpg.150kb.webp",
         "/uploads/products/photo-1447933601403-0c6688de566e_w800_c.jpg"
       ],
-      "featured": true,
+      "featured": false,
       "rating": 4.1,
       "reviews": 147,
       "reviewList": [
@@ -2390,7 +2390,7 @@
         "/uploads/products/photo-1587829741301-dc798b83add3_w1200.jpg",
         "/uploads/products/photo-1587829741301-dc798b83add3_w800_c.jpg"
       ],
-      "featured": true,
+      "featured": false,
       "rating": 4,
       "reviews": 66,
       "reviewList": [
@@ -2468,7 +2468,7 @@
         "/uploads/products/photo-1527864550417-7fd91fc51a46_w1200.jpg",
         "/uploads/products/photo-1527864550417-7fd91fc51a46_w800_c.jpg"
       ],
-      "featured": true,
+      "featured": false,
       "rating": 4.1,
       "reviews": 77,
       "reviewList": [
@@ -3290,7 +3290,7 @@
         "/uploads/products/photo-1556228578-8c89e6adf883_w1200.jpg.150kb.webp",
         "/uploads/products/photo-1556228578-8c89e6adf883_w800_c.jpg.150kb.webp"
       ],
-      "featured": true,
+      "featured": false,
       "rating": 4,
       "reviews": 176,
       "reviewList": [
@@ -3408,7 +3408,7 @@
         "/uploads/products/photo-1596755389378-c31d21fd1273_w1200.jpg",
         "/uploads/products/photo-1596755389378-c31d21fd1273_w800_c.jpg"
       ],
-      "featured": true,
+      "featured": false,
       "rating": 4.1,
       "reviews": 187,
       "reviewList": [
@@ -4150,7 +4150,7 @@
         "/uploads/products/photo-1631049307264-da0ec9d70304_w1200.jpg",
         "/uploads/products/photo-1631049307264-da0ec9d70304_w800_c.jpg"
       ],
-      "featured": true,
+      "featured": false,
       "rating": 4,
       "reviews": 106,
       "reviewList": [
@@ -4238,7 +4238,7 @@
         "/uploads/products/photo-1485955900006-10f4d324d411_w1200.jpg",
         "/uploads/products/photo-1485955900006-10f4d324d411_w800_c.jpg"
       ],
-      "featured": true,
+      "featured": false,
       "rating": 4.1,
       "reviews": 117,
       "reviewList": [
@@ -5169,7 +5169,7 @@
         "/uploads/products/photo-1586201375761-83865001e31c_w1200.jpg.150kb.webp",
         "/uploads/products/photo-1586201375761-83865001e31c_w800_c.jpg"
       ],
-      "featured": true,
+      "featured": false,
       "rating": 4,
       "reviews": 36,
       "reviewList": [
@@ -5256,7 +5256,7 @@
         "/uploads/products/photo-1472220625704-91e1462799b2_w1200.jpg",
         "/uploads/products/photo-1472220625704-91e1462799b2_w800_c.jpg"
       ],
-      "featured": true,
+      "featured": false,
       "rating": 4.1,
       "reviews": 47,
       "reviewList": [
@@ -6089,7 +6089,7 @@
         "/uploads/products/photo-1583947581924-860bda6a26df_w1200.jpg",
         "/uploads/products/photo-1583947581924-860bda6a26df_w800_c.jpg"
       ],
-      "featured": true,
+      "featured": false,
       "rating": 4,
       "reviews": 146,
       "reviewList": [
@@ -6196,7 +6196,7 @@
         "/uploads/products/photo-1583947215259-38e31be8751f_w1200.jpg",
         "/uploads/products/photo-1583947215259-38e31be8751f_w800_c.jpg"
       ],
-      "featured": true,
+      "featured": false,
       "rating": 4.1,
       "reviews": 157,
       "reviewList": [
@@ -7108,7 +7108,7 @@
         "/uploads/products/photo-1556909114-f6e7ad7d3136_w1200.jpg",
         "/uploads/products/photo-1556909114-f6e7ad7d3136_w800_c.jpg"
       ],
-      "featured": true,
+      "featured": false,
       "rating": 4,
       "reviews": 76,
       "reviewList": [
@@ -7186,7 +7186,7 @@
         "/uploads/products/photo-1544787219-7f47ccb76574_w1200.jpg",
         "/uploads/products/photo-1544787219-7f47ccb76574_w800_c.jpg"
       ],
-      "featured": true,
+      "featured": false,
       "rating": 4.1,
       "reviews": 87,
       "reviewList": [
@@ -8318,7 +8318,7 @@
         "/uploads/products/photo-1593359677879-a4bb92f829d1_w1200.jpg",
         "/uploads/products/photo-1593359677879-a4bb92f829d1_w800_c.jpg"
       ],
-      "featured": true,
+      "featured": false,
       "rating": 4.3,
       "reviews": 39,
       "reviewList": [
@@ -8396,7 +8396,7 @@
         "/uploads/products/photo-1461151304267-38535e780c79_w1200.jpg",
         "/uploads/products/photo-1461151304267-38535e780c79_w800_c.jpg"
       ],
-      "featured": true,
+      "featured": false,
       "rating": 4.4,
       "reviews": 50,
       "reviewList": [
@@ -8952,7 +8952,7 @@
         "/uploads/products/photo-1606144042614-b2417e99c4e3_w1200.jpg",
         "/uploads/products/photo-1606144042614-b2417e99c4e3_w800_c.jpg"
       ],
-      "featured": true,
+      "featured": false,
       "rating": 4.1,
       "reviews": 127,
       "reviewList": [
@@ -9050,7 +9050,7 @@
         "/uploads/products/photo-1599669454699-248893623440_w1200.jpg",
         "/uploads/products/photo-1599669454699-248893623440_w800_c.jpg"
       ],
-      "featured": true,
+      "featured": false,
       "rating": 4.2,
       "reviews": 138,
       "reviewList": [
@@ -9930,7 +9930,7 @@
         "/uploads/products/photo-1547996160-81dfa63595aa_w1200.jpg",
         "/uploads/products/photo-1547996160-81dfa63595aa_w800_c.jpg"
       ],
-      "featured": true,
+      "featured": false,
       "rating": 4.1,
       "reviews": 57,
       "reviewList": [
@@ -10008,7 +10008,7 @@
         "/uploads/products/photo-1515562141207-7a88fb7ce338_w1200.jpg",
         "/uploads/products/photo-1515562141207-7a88fb7ce338_w800_c.jpg"
       ],
-      "featured": true,
+      "featured": false,
       "rating": 4.2,
       "reviews": 68,
       "reviewList": [
@@ -10810,7 +10810,7 @@
         "/uploads/products/photo-1517842645767-c639042777db_w1200.jpg",
         "/uploads/products/photo-1517842645767-c639042777db_w800_c.jpg"
       ],
-      "featured": true,
+      "featured": false,
       "rating": 4.1,
       "reviews": 167,
       "reviewList": [
@@ -10918,7 +10918,7 @@
         "/uploads/products/photo-1455390582262-044cdead277a_w1200.jpg",
         "/uploads/products/photo-1455390582262-044cdead277a_w800_c.jpg"
       ],
-      "featured": true,
+      "featured": false,
       "rating": 4.2,
       "reviews": 178,
       "reviewList": [
@@ -11700,7 +11700,7 @@
         "/uploads/products/photo-1587654780291-39c9404d746b_w1200.jpg.150kb.webp",
         "/uploads/products/photo-1587654780291-39c9404d746b_w800_c.jpg"
       ],
-      "featured": true,
+      "featured": false,
       "rating": 4.1,
       "reviews": 97,
       "reviewList": [
@@ -11778,7 +11778,7 @@
         "/uploads/products/photo-1566576912321-d58ddd7a6088_w1200.jpg",
         "/uploads/products/photo-1566576912321-d58ddd7a6088_w800_c.jpg"
       ],
-      "featured": true,
+      "featured": false,
       "rating": 4.2,
       "reviews": 108,
       "reviewList": [
@@ -12668,7 +12668,7 @@
         "/uploads/products/photo-1601925260368-ae2f83cf8b7f_w1200.jpg.150kb.webp",
         "/uploads/products/photo-1601925260368-ae2f83cf8b7f_w800_c.jpg"
       ],
-      "featured": true,
+      "featured": false,
       "rating": 4.1,
       "reviews": 27,
       "reviewList": [
@@ -12746,7 +12746,7 @@
         "/uploads/products/photo-1517836357463-d25dfeac3438_w1200.jpg.150kb.webp",
         "/uploads/products/photo-1517836357463-d25dfeac3438_w800_c.jpg"
       ],
-      "featured": true,
+      "featured": false,
       "rating": 4.2,
       "reviews": 38,
       "reviewList": [
@@ -13504,7 +13504,7 @@
         "/uploads/products/photo-1590874103328-eac38a683ce7_w1200.jpg.150kb.webp",
         "/uploads/products/photo-1590874103328-eac38a683ce7_w800_c.jpg"
       ],
-      "featured": true,
+      "featured": false,
       "rating": 4.1,
       "reviews": 137,
       "reviewList": [
@@ -13620,7 +13620,7 @@
         "/uploads/products/photo-1596755094514-f87e34085b2c_w1200.jpg.150kb.webp",
         "/uploads/products/photo-1596755094514-f87e34085b2c_w800_c.jpg"
       ],
-      "featured": true,
+      "featured": false,
       "rating": 4.2,
       "reviews": 148,
       "reviewList": [
@@ -14626,7 +14626,7 @@
         "/uploads/products/photo-1522771930-78848d9293e8_w1200.jpg.150kb.webp",
         "/uploads/products/photo-1522771930-78848d9293e8_w800_c.jpg.150kb.webp"
       ],
-      "featured": true,
+      "featured": false,
       "rating": 4.1,
       "reviews": 67,
       "reviewList": [
@@ -14704,7 +14704,7 @@
         "/uploads/products/photo-1515488042361-ee00e0ddd4e4_w1200.jpg.150kb.webp",
         "/uploads/products/photo-1515488042361-ee00e0ddd4e4_w800_c.jpg"
       ],
-      "featured": true,
+      "featured": false,
       "rating": 4.2,
       "reviews": 78,
       "reviewList": [
@@ -15532,7 +15532,7 @@
         "/uploads/products/photo-1605559424843-9e4c228bf1c2_w1200.jpg.150kb.webp",
         "/uploads/products/photo-1605559424843-9e4c228bf1c2_w800_c.jpg"
       ],
-      "featured": true,
+      "featured": false,
       "rating": 4.1,
       "reviews": 177,
       "reviewList": [
@@ -15650,7 +15650,7 @@
         "/uploads/products/photo-1449965408869-eaa3f722e40d_w1200.jpg",
         "/uploads/products/photo-1449965408869-eaa3f722e40d_w800_c.jpg"
       ],
-      "featured": true,
+      "featured": false,
       "rating": 4.2,
       "reviews": 188,
       "reviewList": [
@@ -16228,7 +16228,7 @@
         "/uploads/products/photo-1589924691995-400dc9ecc119_w1200.jpg.150kb.webp",
         "/uploads/products/photo-1589924691995-400dc9ecc119_w800_c.jpg"
       ],
-      "featured": true,
+      "featured": false,
       "rating": 3.9,
       "reviews": 85,
       "reviewList": [
@@ -16306,7 +16306,7 @@
         "/uploads/products/photo-1574158622682-e40e69881006_w1200.jpg.150kb.webp",
         "/uploads/products/photo-1574158622682-e40e69881006_w800_c.jpg"
       ],
-      "featured": true,
+      "featured": false,
       "rating": 4,
       "reviews": 96,
       "reviewList": [
@@ -16970,7 +16970,7 @@
         "/uploads/products/photo-1416879595882-3373a0480b5b_w1200.jpg.150kb.webp",
         "/uploads/products/photo-1416879595882-3373a0480b5b_w800_c.jpg"
       ],
-      "featured": true,
+      "featured": false,
       "rating": 4.7,
       "reviews": 173,
       "reviewList": [
@@ -17076,7 +17076,7 @@
       "images": [
         "/uploads/products/photo-1504148455328-c376907d081c_w1200.jpg.150kb.webp"
       ],
-      "featured": true,
+      "featured": false,
       "rating": 4.8,
       "reviews": 184,
       "reviewList": [
@@ -17660,7 +17660,7 @@
         "/uploads/products/photo-1510915361894-db8b60106cb1_w1200.jpg",
         "/uploads/products/photo-1510915361894-db8b60106cb1_w800_c.jpg"
       ],
-      "featured": true,
+      "featured": false,
       "rating": 4.5,
       "reviews": 81,
       "reviewList": [
@@ -17736,7 +17736,7 @@
       "images": [
         "/uploads/products/photo-1484704849700-f032a568e944_w1200.jpg"
       ],
-      "featured": true,
+      "featured": false,
       "rating": 4.6,
       "reviews": 92,
       "reviewList": [
@@ -18394,7 +18394,7 @@
         "/uploads/products/photo-1509391366360-2e959784a276_w1200.jpg.150kb.webp",
         "/uploads/products/photo-1509391366360-2e959784a276_w800_c.jpg"
       ],
-      "featured": true,
+      "featured": false,
       "rating": 4.3,
       "reviews": 169,
       "reviewList": [
@@ -18510,7 +18510,7 @@
         "/uploads/products/photo-1497435334941-8c899ee9e8e9_w1200.jpg.150kb.webp",
         "/uploads/products/photo-1497435334941-8c899ee9e8e9_w800_c.jpg.150kb.webp"
       ],
-      "featured": true,
+      "featured": false,
       "rating": 4.4,
       "reviews": 180,
       "reviewList": [
@@ -19189,7 +19189,7 @@
         "/uploads/products/photo-1555041469-a586c61ea9bc_w1200.jpg",
         "/uploads/products/photo-1555041469-a586c61ea9bc_w800_c.jpg"
       ],
-      "featured": true,
+      "featured": false,
       "rating": 4.1,
       "reviews": 77,
       "reviewList": [
@@ -19274,7 +19274,7 @@
       "images": [
         "/uploads/products/photo-1503602642458-232111445657_w1200.jpg"
       ],
-      "featured": true,
+      "featured": false,
       "rating": 4.2,
       "reviews": 88,
       "reviewList": [
@@ -19970,7 +19970,7 @@
         "/uploads/products/photo-1510812431401-41d2bd2722f3_w1200.jpg",
         "/uploads/products/photo-1510812431401-41d2bd2722f3_w800_c.jpg"
       ],
-      "featured": true,
+      "featured": false,
       "rating": 3.9,
       "reviews": 165,
       "reviewList": [
@@ -20084,7 +20084,7 @@
       "images": [
         "/uploads/products/photo-1510812431401-41d2bd2722f3_w1200.jpg"
       ],
-      "featured": true,
+      "featured": false,
       "rating": 4,
       "reviews": 176,
       "reviewList": [
@@ -20763,7 +20763,7 @@
         "/uploads/products/photo-1471864190281-a93a3070b6de_w1200.jpg",
         "/uploads/products/photo-1471864190281-a93a3070b6de_w800_c.jpg"
       ],
-      "featured": true,
+      "featured": false,
       "rating": 4.7,
       "reviews": 73,
       "reviewList": [
@@ -20850,7 +20850,7 @@
         "/uploads/products/photo-1587854692152-cbe660dbde88_w1200.jpg",
         "/uploads/products/photo-1587854692152-cbe660dbde88_w800_c.jpg"
       ],
-      "featured": true,
+      "featured": false,
       "rating": 4.8,
       "reviews": 84,
       "reviewList": [
@@ -22774,7 +22774,7 @@
       "shopByCategory": true,
       "featuredFour": true,
       "flashDeals": true,
-      "featured": true,
+      "featured": false,
       "appBanner": true,
       "bestSellers": true,
       "topSelling": true,
