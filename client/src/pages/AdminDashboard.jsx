@@ -65,6 +65,26 @@ import {
 import BlogEditor from '../components/BlogEditor';
 import NewOrdersBadge from '../components/NewOrdersBadge';
 
+const HOME_BLOCK_LABELS = {
+  shopByCategory: 'Shop by category',
+  featuredFour: 'New on BigDrop',
+  flashDeals: 'Flash deals',
+  featured: 'Featured products',
+  appBanner: 'App download banner',
+  bestSellers: 'Best sellers',
+  topSelling: 'Top selling items',
+  choice: "BigDrop's Choice",
+  food: 'Food',
+  healthBeauty: 'Health & Beauty',
+  tvsElectronics: 'TVs & Electronics',
+  household: 'Household',
+  phoneTablets: 'Phone & Tablets',
+  newsletter: 'Newsletter',
+  recentlyViewed: 'Recently viewed',
+  promoBanners: 'Extra banners',
+  testimonials: 'Testimonials',
+};
+
 const TABS = [
   { id: 'overview', label: 'Overview', icon: LayoutGrid },
   { id: 'analytics', label: 'Analytics', icon: BarChart3 },
@@ -1302,7 +1322,7 @@ export default function AdminDashboard() {
                       checked={homeBlocks[key] !== false}
                       onChange={(e) => setHomeBlocks((b) => ({ ...b, [key]: e.target.checked }))}
                     />
-                    {key}
+                    {HOME_BLOCK_LABELS[key] || key}
                   </label>
                 ))}
               </div>

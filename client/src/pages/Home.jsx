@@ -218,7 +218,7 @@ export default function Home() {
         if (d.site?.flashEndsAt) {
           setFlashEndsAt(d.site.flashEndsAt);
           const left = Math.max(0, Math.floor((Date.parse(d.site.flashEndsAt) - Date.now()) / 1000));
-          setSeconds(left || 8 * 3600);
+          setSeconds(left > 0 ? left : 8 * 3600);
         }
       })
       .catch(() => {});
@@ -235,8 +235,10 @@ export default function Home() {
     const t = setInterval(() => {
       if (flashEndsAt) {
         const left = Math.max(0, Math.floor((Date.parse(flashEndsAt) - Date.now()) / 1000));
-        setSeconds(left);
-        return;
+        if (left > 0) {
+          setSeconds(left);
+          return;
+        }
       }
       setSeconds((s) => (s <= 0 ? 8 * 3600 : s - 1));
     }, 1000);
@@ -282,7 +284,23 @@ export default function Home() {
     const sortedRest = [...rest].sort(
       (a, b) => (b.soldCount || b.reviews || 0) - (a.soldCount || a.reviews || 0)
     );
-    if (!includeToday) return padToAtLeast(sortedRest, bestPool, 10);
+    if (!includeToday) {
+      const fill =
+        slug === 'food-drinks'
+          ? products.filter(
+              (p) =>
+                !isTodayUpload(p) &&
+                (p.categorySlug === 'groceries' ||
+                  p.categorySlug === 'wine-spirits' ||
+                  p.categoryId === 'cat_groceries' ||
+                  p.categoryId === 'cat_wine')
+            )
+          : bestPool;
+      const sortedFill = [...fill].sort(
+        (a, b) => (b.soldCount || b.reviews || 0) - (a.soldCount || a.reviews || 0)
+      );
+      return padToAtLeast(sortedRest, sortedFill, 10);
+    }
     const todayInCat = inCategory.filter(isTodayUpload);
     return padToAtLeast(todayInCat, sortedRest, 10);
   };

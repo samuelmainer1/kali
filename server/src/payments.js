@@ -171,7 +171,7 @@ export async function startStk({ phone, amount }) {
       BusinessShortCode: shortcode,
       Password: password,
       Timestamp: timestamp,
-      TransactionType: 'CustomerPayBillOnline',
+      TransactionType: 'CustomerBuyGoodsOnline',
       Amount: kes,
       PartyA: msisdn,
       PartyB: shortcode,

@@ -485,9 +485,9 @@ export function SettingsTab({ site, onSaved, onError, flash }) {
     paybill: site?.paybill || site?.payments?.paybill || '862294',
   });
   const [payments, setPayments] = useState({
-    mpesa: site?.payments?.mpesaEnabled !== false,
-    card: site?.payments?.cardEnabled !== false,
-    cod: site?.payments?.codEnabled === true,
+    mpesa: site?.payments?.mpesa !== false,
+    card: site?.payments?.card === true,
+    cod: site?.payments?.cod === true,
   });
   const [socials, setSocials] = useState({
     facebook: site?.socials?.facebook || '',
@@ -783,14 +783,14 @@ export function SettingsTab({ site, onSaved, onError, flash }) {
 
       <section className="space-y-3 rounded-2xl border border-ink/5 bg-white p-6 shadow-lift">
         <h2 className="font-display text-xl font-bold">Checkout payments</h2>
-        <p className="text-xs text-ink-mute">Cash on delivery stays hidden until you turn it on.</p>
+        <p className="text-xs text-ink-mute">Cash on delivery stays hidden until you turn it on. Card stays Coming Soon at checkout even if this box is ticked — do not turn it on until card payments are launched.</p>
         <label className="block text-sm">
           <span className="text-ink-mute">M-Pesa till (Buy Goods and Services)</span>
           <input value={form.paybill} onChange={set('paybill')} className={field} placeholder="862294" />
         </label>
         {[
           ['mpesa', 'M-Pesa'],
-          ['card', 'Card (Paystack)'],
+          ['card', 'Card (Coming Soon)'],
           ['cod', 'Cash on delivery'],
         ].map(([key, label]) => (
           <label key={key} className="flex items-center gap-2 text-sm">
