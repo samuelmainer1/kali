@@ -247,33 +247,32 @@ export default function Home() {
   const m = String(Math.floor((seconds % 3600) / 60)).padStart(2, '0');
   const s = String(seconds % 60).padStart(2, '0');
 
-  const flash = products.filter((p) => p.compareAt && p.compareAt > p.price).slice(0, 20);
-  const bestPool = [...products].sort(
+  const isTodayUpload = (p) => p.source === 'manual';
+  const catalogue = products.filter((p) => !isTodayUpload(p));
+  const flash = catalogue.filter((p) => p.compareAt && p.compareAt > p.price).slice(0, 20);
+  const bestPool = [...catalogue].sort(
     (a, b) => (b.soldCount || b.reviews || 0) - (a.soldCount || a.reviews || 0)
   );
-  const ratingPool = [...products].sort(
-    (a, b) => (b.rating || 0) - (a.rating || 0) || (b.reviews || 0) - (a.reviews || 0)
-  );
-  const featured = products.filter((p) => p.featured);
+  const featured = products.filter((p) => p.featured).slice(0, 15);
   const bestSellers = padToAtLeast(bestPool.slice(0, 10), bestPool, 10);
   const topSelling = padToAtLeast(
-    [...products].sort((a, b) => (b.soldCount || 0) - (a.soldCount || 0)).slice(10, 20),
+    [...catalogue].sort((a, b) => (b.soldCount || 0) - (a.soldCount || 0)).slice(10, 20),
     bestPool,
     10
   );
-  const choicePrimary = [...products]
-    .filter((p) => (p.rating || 0) >= 4.5)
-    .sort((a, b) => (b.rating || 0) - (a.rating || 0));
-  const choice = padToAtLeast(choicePrimary, ratingPool, 10);
-  const bySlug = (slug) => {
+  const choice = products.filter((p) => isTodayUpload(p) && !p.featured);
+  const bySlug = (slug, { includeToday = false } = {}) => {
     const cat = categories.find((c) => c.slug === slug);
     const inCategory = products.filter(
       (p) => p.categorySlug === slug || (cat && p.categoryId === cat.id)
     );
-    const sortedInCategory = [...inCategory].sort(
+    const rest = inCategory.filter((p) => !isTodayUpload(p));
+    const sortedRest = [...rest].sort(
       (a, b) => (b.soldCount || b.reviews || 0) - (a.soldCount || a.reviews || 0)
     );
-    return padToAtLeast(sortedInCategory, bestPool, 10);
+    if (!includeToday) return padToAtLeast(sortedRest, bestPool, 10);
+    const todayInCat = inCategory.filter(isTodayUpload);
+    return padToAtLeast(todayInCat, sortedRest, 10);
   };
   const featuredFour = featuredSlugs
     .map((slug) => categories.find((c) => c.slug === slug))
@@ -584,7 +583,7 @@ export default function Home() {
 
         {show('choice') && <GridSection title={t('choice')} to="/shop" products={choice} />}
         {show('food') && <GridSection title={t('food')} to="/category/food-drinks" products={bySlug('food-drinks')} />}
-        {show('healthBeauty') && <GridSection title={t('healthBeauty')} to="/category/beauty-health" products={bySlug('beauty-health')} />}
+        {show('healthBeauty') && <GridSection title={t('healthBeauty')} to="/category/beauty-health" products={bySlug('beauty-health', { includeToday: true })} />}
         {show('tvsElectronics') && <GridSection title={t('tvsElectronics')} to="/category/tvs-electronics" products={bySlug('tvs-electronics')} />}
         {show('household') && <GridSection title={t('household')} to="/category/household" products={bySlug('household')} />}
         {show('phoneTablets') && <GridSection title={t('phoneTablets')} to="/category/phone-tablet" products={bySlug('phone-tablet')} />}
