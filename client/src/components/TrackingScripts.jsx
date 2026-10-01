@@ -30,21 +30,28 @@ export default function TrackingScripts({ site }) {
   }, [gsc, location.pathname]);
 
   useEffect(() => {
-    if (!ga || document.getElementById('bd-ga') || !/^G-[A-Z0-9]+$/i.test(ga)) return undefined;
-    const s = document.createElement('script');
-    s.id = 'bd-ga';
-    s.async = true;
-    s.src = `https://www.googletagmanager.com/gtag/js?id=${encodeURIComponent(ga)}`;
-    document.head.appendChild(s);
-    window.dataLayer = window.dataLayer || [];
-    function gtag() {
-      window.dataLayer.push(arguments);
+    if (!ga || !/^G-[A-Z0-9]+$/i.test(ga)) return undefined;
+    if (!document.getElementById('bd-ga')) {
+      const s = document.createElement('script');
+      s.id = 'bd-ga';
+      s.async = true;
+      s.src = `https://www.googletagmanager.com/gtag/js?id=${encodeURIComponent(ga)}`;
+      document.head.appendChild(s);
+      window.dataLayer = window.dataLayer || [];
+      function gtag() {
+        window.dataLayer.push(arguments);
+      }
+      window.gtag = gtag;
+      gtag('js', new Date());
     }
-    window.gtag = gtag;
-    gtag('js', new Date());
-    gtag('config', ga);
+    if (typeof window.gtag === 'function') {
+      window.gtag('config', ga, {
+        page_path: `${location.pathname}${location.search}`,
+        page_title: document.title,
+      });
+    }
     return undefined;
-  }, [ga]);
+  }, [ga, location.pathname, location.search]);
 
   useEffect(() => {
     if (!pixel || document.getElementById('bd-pixel')) return undefined;
