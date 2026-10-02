@@ -191,10 +191,19 @@ Shoppers already expect two things: pay with M-Pesa (Lipa na M-Pesa, Buy Goods t
 
 ## How BigDrop fulfills an order
 
-1. The customer orders on BigDrop and pays.
-2. We pick the SKU from your stored stock at NextGen Mall.
-3. We pack it and hand it to Globeflight Kenya.
-4. The shopper can [track the order](${SITE}/track). You see the same order in the vendor dashboard instead of chasing WhatsApp screenshots.
+### 1. The customer pays on BigDrop
+
+The shopper orders and pays with M-Pesa. That paid order is your pick ticket.
+
+### 2. We pick from your bin
+
+We take the SKU from your stored stock at NextGen Mall. Listings have to match the shelf.
+
+### 3. We pack and hand to Globeflight
+
+The parcel leaves with Globeflight Kenya. The shopper can [track the order](${SITE}/track). You see the same order in the vendor dashboard instead of chasing WhatsApp screenshots.
+
+### 4. Nairobi same day, nationwide in days
 
 Same-day dispatch is realistic inside Nairobi on a business day. Other towns usually take two to five days. Shoppers can read timelines on [shipping and fulfillment](${SITE}/fulfillment).
 
@@ -210,9 +219,11 @@ Inbound is simple once you are approved: send ready-to-ship goods, we bin them, 
 
 ## Who this is for
 
-- Kenyan brands that already sell on Instagram, TikTok or in a physical shop and want a proper online checkout.
-- Importers who need storage in Nairobi and a way to sell without standing in a stall.
-- Anyone tired of packing boxes at midnight and calling a rider for every order.
+Kenyan brands that already sell on Instagram, TikTok or in a physical shop and want a proper online checkout.
+
+Importers who need storage in Nairobi and a way to sell without standing in a stall.
+
+Anyone tired of packing boxes at midnight and calling a rider for every order.
 
 It is not a replacement for a factory. It is pick-and-pack fulfillment for goods that are already saleable.
 
