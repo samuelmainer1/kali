@@ -183,7 +183,7 @@ export default function BlogEditor({ posts, flash, onError, onChanged }) {
         <label className="block text-sm">
           <span className="text-ink-mute">URL slug</span>
           <input
-            placeholder="how-bigdrop-delivery-works"
+            placeholder="ecommerce-fulfillment-kenya"
             value={form.slug}
             onChange={set('slug')}
             className={field}

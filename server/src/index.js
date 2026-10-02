@@ -235,6 +235,7 @@ const PAGE_ALIASES = {
   '/offers': '/deals',
   '/shipping': '/fulfillment',
   '/sell-on-bigdrop': '/sell',
+  '/blog/how-bigdrop-delivery-works': '/blog/same-day-delivery-nairobi-kenya',
 };
 for (const [from, to] of Object.entries(PAGE_ALIASES)) {
   app.get(from, (_req, res) => res.redirect(301, to));

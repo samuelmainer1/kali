@@ -5,7 +5,7 @@ import { fileURLToPath } from 'url';
 import { nanoid } from 'nanoid';
 import { DEFAULT_COUPONS, DEFAULT_HOME_BLOCKS, DEFAULT_FAQS, FEATURED_CATEGORY_SLUGS, defaultVendorHours } from './commerce.js';
 import { dataDir, dbPath } from './db.js';
-import { POSTS as SEO_LAUNCH_POSTS } from '../scripts/addSeoBlogPosts.js';
+import { POSTS as SEO_LAUNCH_POSTS, FULFILLMENT_POST } from '../scripts/addSeoBlogPosts.js';
 
 if (process.env.NODE_ENV === 'production' && process.env.FORCE_SEED !== '1') {
   console.error(
@@ -603,30 +603,7 @@ const db = {
   orders: [],
   blogPosts: [
     ...SEO_LAUNCH_POSTS.map((p) => ({ ...p, published: true })),
-    {
-      id: 'blog_1', slug: 'ecommerce-fulfillment-kenya',
-      title: 'BigDrop Kenya: Smart E-commerce Fulfillment',
-      excerpt: 'Warehousing, pick & pack, and nationwide delivery powered by Globeflight.',
-      metaDescription: 'BigDrop offers warehousing, pick and pack, and nationwide delivery in Kenya so you can focus on selling.',
-      imageAlt: 'Warehouse shelves used for ecommerce fulfillment',
-      content: 'Looking for reliable e-commerce fulfillment in Kenya? BigDrop offers secure warehousing, inventory management, pick and pack, and nationwide delivery.\n\n## Why sellers use BigDrop\n\n> Focus on selling — let BigDrop pick, pack, store and deliver.\n\nWe handle storage at NextGen Mall and last-mile through Globeflight. Read more on [Globeflight Kenya](https://www.globeflight.co.ke).',
-      ctaLabel: 'Visit Globeflight Kenya',
-      ctaUrl: 'https://www.globeflight.co.ke',
-      image: 'https://images.unsplash.com/photo-1553413077-190dd305871c?w=1200&q=80',
-      author: 'BigDrop Team', publishedAt: '2026-07-15T10:00:00.000Z', tags: ['fulfillment'],
-      published: true,
-    },
-    {
-      id: 'blog_2', slug: 'how-bigdrop-delivery-works',
-      title: 'From Order to Doorstep: How BigDrop Delivery Works',
-      excerpt: 'Our fulfillment process from purchase order to Globeflight rider confirmation.',
-      metaDescription: 'See how BigDrop and Globeflight pick, pack, and deliver orders across Kenya — from checkout to your door.',
-      imageAlt: 'Delivery van on a Nairobi road',
-      content: 'Your client places an order. You hand it to Big Drop. We create a P.O, pick, pack, call, deliver, and update the system.\n\n### The steps\n\nOrder in, pick from the warehouse, pack, then a Globeflight rider takes it to the customer.',
-      image: 'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=1200&q=80',
-      author: 'Operations', publishedAt: '2026-06-02T10:00:00.000Z', tags: ['delivery'],
-      published: true,
-    },
+    { ...FULFILLMENT_POST, published: true },
   ],
   testimonials: [
     { id: 't1', name: 'Amily Moalin', role: 'Customer', quote: 'Products are genuine, delivery was faster than expected, and the team kept me updated every step.' },

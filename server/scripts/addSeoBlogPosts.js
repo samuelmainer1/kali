@@ -1,5 +1,5 @@
 /**
- * Publish three SEO landing articles on the live catalogue.
+ * Publish SEO launch articles (3 shopper + 1 seller) on the live catalogue.
  *
  *   node server/scripts/addSeoBlogPosts.js
  *   touch server/src/index.js
@@ -160,9 +160,81 @@ When the pantry is low, open BigDrop, pay with M-Pesa, and let the rider bring t
   },
 ];
 
+export const FULFILLMENT_POST = {
+  id: 'blog_1',
+  slug: 'ecommerce-fulfillment-kenya',
+  title: 'Ecommerce Fulfillment in Kenya: Warehousing and Nationwide Delivery',
+  excerpt:
+    'Store stock at NextGen Mall, let BigDrop pick and pack, and ship nationwide with Globeflight. You focus on selling.',
+  metaDescription:
+    'Ecommerce fulfillment in Kenya with BigDrop: warehousing at NextGen Mall, pick and pack, and Globeflight delivery nationwide. Sell. We fulfill.',
+  imageAlt: 'Warehouse shelves used for ecommerce fulfillment in Nairobi',
+  image: 'https://images.unsplash.com/photo-1553413077-190dd305871c?w=1200&q=80',
+  author: 'BigDrop Team',
+  tags: ['fulfillment', 'sellers', 'kenya'],
+  ctaLabel: 'Sell on BigDrop Kenya',
+  ctaUrl: `${SITE}/sell`,
+  publishedAt: '2026-07-15T10:00:00.000Z',
+  content: `If you sell online in Kenya, packing every order yourself does not scale. Ecommerce fulfillment is the gap between a sale on your phone and a parcel at the customer's door.
+
+BigDrop Kenya is built for that gap. You list products on the [BigDrop shop](${SITE}/shop). We store them at NextGen Mall, Mombasa Road, 3rd Floor, Suite 40, Nairobi. When an order is paid, we pick, pack and hand it to Globeflight for delivery across Kenya.
+
+> Focus on selling. BigDrop stores, picks, packs and delivers.
+
+## What ecommerce fulfillment in Kenya actually means
+
+Fulfillment is not a fancy word for a rider. It is a chain: inbound stock, a labelled bin, an accurate pick, a sealed pack, a courier handover, and a tracking number the shopper can use.
+
+A 3PL (third-party logistics) partner in Nairobi runs that chain so you do not have to hire a warehouse, a packer, and a nationwide courier of your own. BigDrop is that partner for approved vendors on the marketplace.
+
+Shoppers already expect two things: pay with M-Pesa (Lipa na M-Pesa, Buy Goods till 862294) and receive a Globeflight delivery. Your listing sits in that checkout. You do not invent a till or a last-mile network.
+
+## How BigDrop fulfills an order
+
+1. The customer orders on BigDrop and pays.
+2. We pick the SKU from your stored stock at NextGen Mall.
+3. We pack it and hand it to Globeflight Kenya.
+4. The shopper can [track the order](${SITE}/track). You see the same order in the vendor dashboard instead of chasing WhatsApp screenshots.
+
+Same-day dispatch is realistic inside Nairobi on a business day. Other towns usually take two to five days. Shoppers can read timelines on [shipping and fulfillment](${SITE}/fulfillment).
+
+Returns follow the [returns policy](${SITE}/returns). Questions from buyers land in the [help centre](${SITE}/help) — you are not the only number on the parcel.
+
+## Warehousing at NextGen Mall, Nairobi
+
+A spare room in Eastlands cannot cheaply serve Mombasa, Kisumu, Nakuru and Eldoret. Stock sitting at NextGen Mall is already on Globeflight's map. One location, one pick team, one last-mile partner.
+
+You still own the brand, the photos, and the price. We own the shelf space, the tape, and the handover. Keep listings accurate so the pick matches what the shopper paid for.
+
+Inbound is simple once you are approved: send ready-to-ship goods, we bin them, and they become available on the live catalogue. Goods that are not ready to ship — bulk raw materials, half-built kits — do not belong in this warehouse.
+
+## Who this is for
+
+- Kenyan brands that already sell on Instagram, TikTok or in a physical shop and want a proper online checkout.
+- Importers who need storage in Nairobi and a way to sell without standing in a stall.
+- Anyone tired of packing boxes at midnight and calling a rider for every order.
+
+It is not a replacement for a factory. It is pick-and-pack fulfillment for goods that are already saleable.
+
+## What you still do as the seller
+
+You apply, get approved, send stock, and keep product pages honest: price in KSh, photos, specs, and stock that matches the shelf. You set promotions when you want them. You answer product questions that only the brand can answer.
+
+You do not collect M-Pesa yourself for marketplace orders. You do not book Globeflight one parcel at a time. That is the point of fulfillment.
+
+## How to start selling with BigDrop fulfillment
+
+Apply to [sell on BigDrop](${SITE}/sell). When you are approved, send in stock, keep listings accurate, and let paid orders flow. For Globeflight's own network, see [Globeflight Kenya](https://www.globeflight.co.ke).
+
+Ecommerce in Kenya rewards sellers who can take M-Pesa and still deliver upcountry. BigDrop is the warehouse and the checkout. Globeflight is the road. You are the brand.`,
+}
+
+const REMOVE_SLUGS = new Set(['how-bigdrop-delivery-works']);
+
 function upsertPosts(list) {
-  const next = [...(list || [])];
-  for (const post of [...POSTS].reverse()) {
+  const next = [...(list || [])].filter((p) => !REMOVE_SLUGS.has(p.slug) && p.id !== 'blog_2');
+  const all = [...POSTS, FULFILLMENT_POST];
+  for (const post of [...all].reverse()) {
     const row = {
       ...post,
       published: true,
@@ -179,9 +251,9 @@ function run() {
   const live = updateDb(
     (db) => {
       db.blogPosts = upsertPosts(db.blogPosts);
-      return db.blogPosts.filter((p) => POSTS.some((x) => x.slug === p.slug)).map((p) => p.slug);
+      return db.blogPosts.map((p) => p.slug);
     },
-    { actor: 'system', action: 'blog.seoLaunch', detail: 'Publish three SEO launch articles' }
+    { actor: 'system', action: 'blog.seoLaunch', detail: 'Refresh SEO articles; drop thin delivery post' }
   );
 
   const seedPath = path.join(__dirname, '../data/seed.json');
