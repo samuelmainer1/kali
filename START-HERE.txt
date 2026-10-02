@@ -1,0 +1,46 @@
+BigDrop Kenya – How to run locally
+
+1. Install Node.js 18+ from https://nodejs.org
+2. Unzip this folder
+3. Open a terminal inside the unzipped folder and run:
+
+   npm install
+   npm install --prefix server
+   npm install --prefix client
+   npm run seed --prefix server
+   npm run dev
+
+4. Open http://localhost:5173 in your browser
+
+Demo logins (password for all: password123)
+- info@bigdrop.co.ke   (Admin)
+- customer@bigdrop.co.ke
+- beauty@bigdrop.co.ke
+- pending@bigdrop.co.ke
+
+Do NOT use Live Server on index.html — this is a Vite app.
+Do NOT run `npm run seed` on the live Oracom database.
+
+
+Oracom go-live (cPanel — you click these)
+
+This week
+1. Point www.bigdrop.co.ke at this Node app (WordPress can stay on the apex bigdrop.co.ke).
+2. Database Wizard → MySQL. Set MYSQL_HOST, MYSQL_USER, MYSQL_PASSWORD, MYSQL_DATABASE in the server env.
+3. Set UPLOADS_DIR to a folder outside the zip (photos must survive redeploys).
+   Copy server/uploads/products (3360 catalogue photos — 34.8 MB of them the
+   WebP derivatives of the 150KB pass — ≈397 MB in total) into that folder —
+   the shop now serves every product, category, hero and blog image from UPLOADS_DIR
+   and no longer hot-links images.unsplash.com.
+4. Set CLIENT_ORIGIN and PUBLIC_CLIENT_URL to https://www.bigdrop.co.ke
+   and VITE_API_URL to https://www.bigdrop.co.ke/api (or your API URL).
+5. SMTP (orders@ / info@), M-Pesa Daraja, Paystack, Africa's Talking SMS.
+6. Log in as info@bigdrop.co.ke. Admin → Woo import: upload the WooCommerce products CSV
+   while WordPress is still online so images download into UPLOADS_DIR.
+
+Next week
+7. Point bigdrop.co.ke at this app. Update CLIENT_ORIGIN, PUBLIC_CLIENT_URL, VITE_API_URL,
+   M-Pesa callback, and Paystack callback to the live domain.
+8. Delete WordPress last. wp-content/uploads dies with it — imported photos must already be in UPLOADS_DIR.
+
+Analytics IDs (GA4, Meta Pixel, Search Console) go in Admin → Settings when you have them.
