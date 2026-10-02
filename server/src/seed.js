@@ -5,6 +5,7 @@ import { fileURLToPath } from 'url';
 import { nanoid } from 'nanoid';
 import { DEFAULT_COUPONS, DEFAULT_HOME_BLOCKS, DEFAULT_FAQS, FEATURED_CATEGORY_SLUGS, defaultVendorHours } from './commerce.js';
 import { dataDir, dbPath } from './db.js';
+import { POSTS as SEO_LAUNCH_POSTS } from '../scripts/addSeoBlogPosts.js';
 
 if (process.env.NODE_ENV === 'production' && process.env.FORCE_SEED !== '1') {
   console.error(
@@ -601,6 +602,7 @@ const db = {
   ],
   orders: [],
   blogPosts: [
+    ...SEO_LAUNCH_POSTS.map((p) => ({ ...p, published: true })),
     {
       id: 'blog_1', slug: 'ecommerce-fulfillment-kenya',
       title: 'BigDrop Kenya: Smart E-commerce Fulfillment',
