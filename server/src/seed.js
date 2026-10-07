@@ -620,6 +620,8 @@ const db = {
   siteMetrics: { visits: 12840, checkoutsStarted: 486 },
   site: {
     name: 'BigDrop Kenya',
+    gaId: 'G-5GN03XTJM6',
+    gscVerification: 'cr_IIhCzEktaOY0ilDBo1SzLAS2r9xQ7IIMbkLINhrs',
     tagline: 'Leading Online Shopping Store in Nairobi Kenya',
     phone: '+254 722 359 298',
     emails: ['info@bigdrop.co.ke', 'orders@bigdrop.co.ke'],

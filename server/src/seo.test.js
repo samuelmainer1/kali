@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { STATIC_PAGE_META, organizationJsonLd, websiteJsonLd } from './seo.js';
+import { STATIC_PAGE_META, organizationJsonLd, websiteJsonLd, gscVerificationToken } from './seo.js';
 
 test('static meta copy does not advertise card while card is coming soon', () => {
   for (const [path, meta] of Object.entries(STATIC_PAGE_META)) {
@@ -23,6 +23,14 @@ test('track is a unique indexable page kept in sync with the client', () => {
 
 test('reset-password is noindexed', () => {
   assert.equal(STATIC_PAGE_META['/reset-password']?.noindex, true);
+});
+
+test('gscVerificationToken accepts the HTML-tag content and the name= form', () => {
+  const token = 'cr_IIhCzEktaOY0ilDBo1SzLAS2r9xQ7IIMbkLINhrs';
+  assert.equal(gscVerificationToken(token), token);
+  assert.equal(gscVerificationToken(`google-site-verification=${token}`), token);
+  assert.equal(gscVerificationToken(''), '');
+  assert.equal(gscVerificationToken('<script>'), '');
 });
 
 test('homepage structured data names the shop and search endpoint', () => {

@@ -9,6 +9,14 @@ const LOCAL_ORIGIN = /^https?:\/\/(localhost|127\.0\.0\.1|\[::1\]|0\.0\.0\.0)(:\
 // so a temporary domain (shop.bigdrop.co.ke) never enters the search index.
 const PHASE_NOINDEX = String(process.env.PHASE_NOINDEX || '').trim().toLowerCase() === 'true';
 
+/** HTML-tag token for Google Search Console. Accepts the raw content or `name=token`. */
+export function gscVerificationToken(value) {
+  let t = String(value || '').trim();
+  t = t.replace(/^google-site-verification\s*=\s*/i, '');
+  if (!/^[A-Za-z0-9_-]{8,200}$/.test(t)) return '';
+  return t;
+}
+
 /**
  * Titles like "BigDrop Kenya: Smart E-commerce Fulfillment" must not become
  * "... | BigDrop Kenya" — a duplicated brand name looks spammy in search results and
@@ -755,6 +763,11 @@ function applyGenericOrigin(html, origin, pathOnly, siteName) {
   return next;
 }
 
+function withGscMeta(html, db) {
+  const gsc = gscVerificationToken(db.site?.gscVerification);
+  return gsc ? replaceOrInsertMeta(html, 'name', 'google-site-verification', gsc) : html;
+}
+
 export function injectIndexHtml(html, reqPath, req) {
   const db = readDb();
   const origin = originFromRequest(req);
@@ -769,21 +782,21 @@ export function injectIndexHtml(html, reqPath, req) {
   if (blogMatch) {
     const slug = decodeURIComponent(blogMatch[1]);
     const post = (db.blogPosts || []).find((p) => p.slug === slug || p.id === slug);
-    if (post) return injectBlogHtml(html, post, origin, siteName);
+    if (post) return withGscMeta(injectBlogHtml(html, post, origin, siteName), db);
   }
 
   const productMatch = pathOnly.match(/^\/product\/([^/]+)\/?$/);
   if (productMatch) {
     const slug = decodeURIComponent(productMatch[1]);
     const product = (db.products || []).find((p) => (p.slug === slug || p.id === slug) && p.status === 'approved' && !p.hidden);
-    if (product) return injectProductHtml(html, product, origin, db);
+    if (product) return withGscMeta(injectProductHtml(html, product, origin, db), db);
   }
 
   const catMatch = pathOnly.match(/^\/category\/([^/]+)\/?$/);
   if (catMatch) {
     const slug = decodeURIComponent(catMatch[1]);
     const cat = (db.categories || []).find((c) => c.slug === slug || c.id === slug);
-    if (cat) return injectCategoryHtml(html, cat, origin, db);
+    if (cat) return withGscMeta(injectCategoryHtml(html, cat, origin, db), db);
   }
 
   const vendorMatch = pathOnly.match(/^\/vendors\/([^/]+)\/?$/);
@@ -792,10 +805,10 @@ export function injectIndexHtml(html, reqPath, req) {
     const vendor = (db.users || []).find(
       (u) => u.role === 'vendor' && u.status === 'approved' && vendorStoreSlug(u) === slug
     );
-    if (vendor) return injectVendorHtml(html, vendor, origin, db);
+    if (vendor) return withGscMeta(injectVendorHtml(html, vendor, origin, db), db);
   }
 
-  return applyGenericOrigin(html, origin, pathOnly, siteName);
+  return withGscMeta(applyGenericOrigin(html, origin, pathOnly, siteName), db);
 }
 
 /**

@@ -224,6 +224,11 @@ check('homepage og:title is the brand title', HEAD.ogTitle(homeProd) === HOMEPAG
 check('homepage canonical is self-referencing', HEAD.canonical(homeProd) === `https://${PROD_HOST}/`, HEAD.canonical(homeProd));
 check('homepage share card is the 1200x630 default', HEAD.ogImage(homeProd).endsWith('/share-default.jpg'), HEAD.ogImage(homeProd));
 check('homepage keeps the 1200x630 hints', countOf(homeProd, /og:image:(?:width|height)/g) === 2);
+check(
+  'homepage has Google Search Console verification',
+  /<meta[^>]*name=["']google-site-verification["'][^>]*content=["']cr_IIhCzEktaOY0ilDBo1SzLAS2r9xQ7IIMbkLINhrs["']/i.test(homeProd)
+    || /<meta[^>]*content=["']cr_IIhCzEktaOY0ilDBo1SzLAS2r9xQ7IIMbkLINhrs["'][^>]*name=["']google-site-verification["']/i.test(homeProd),
+);
 
 for (const page of STATIC_PAGES) {
   const { html } = await fetchHtml(page, prodHeaders);

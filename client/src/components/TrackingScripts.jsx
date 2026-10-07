@@ -17,7 +17,10 @@ export default function TrackingScripts({ site }) {
   const location = useLocation();
   const ga = String(site?.gaId || '').trim();
   const pixel = String(site?.metaPixelId || '').replace(/\D/g, '');
-  const gsc = String(site?.gscVerification || '').trim();
+  const gsc = String(site?.gscVerification || '')
+    .trim()
+    .replace(/^google-site-verification\s*=\s*/i, '')
+    .replace(/[^A-Za-z0-9_-]/g, '');
 
   useEffect(() => {
     // Only fall back to the shop-wide head when the current page hasn't claimed it via
