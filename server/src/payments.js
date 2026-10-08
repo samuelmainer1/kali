@@ -90,6 +90,86 @@ function mpesaBase() {
     : 'https://sandbox.safaricom.co.ke';
 }
 
+function mpesaTimestamp() {
+  return new Date().toISOString().replace(/[-:TZ.]/g, '').slice(0, 14);
+}
+
+function mpesaPassword(timestamp) {
+  return Buffer.from(`${process.env.MPESA_SHORTCODE}${process.env.MPESA_PASSKEY}${timestamp}`).toString('base64');
+}
+
+// Checkout polls confirm every ~1.5s. Ask Daraja at most this often — the query
+// endpoint rate-limits, and we only need it when the HTTPS callback never arrives
+// (wrong TLS cert, delayed POST, etc.). 0 is allowed in tests.
+function stkQueryIntervalMs() {
+  const raw = Number(process.env.MPESA_STK_QUERY_INTERVAL_MS);
+  return Number.isFinite(raw) && raw >= 0 ? raw : 5000;
+}
+
+// ResultCodes that mean the customer will not pay this prompt. Anything else
+// (including "transaction is being processed") stays pending.
+const STK_FAILED_CODES = new Set([
+  1, // insufficient funds
+  1031, // cancelled by initiator
+  1032, // cancelled by user
+  1037, // timeout waiting for PIN
+  2001, // wrong PIN
+]);
+
+async function queryStk(checkoutRequestId) {
+  const timestamp = mpesaTimestamp();
+  const token = await mpesaToken();
+  const res = await fetch(`${mpesaBase()}/mpesa/stkpushquery/v1/query`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      BusinessShortCode: process.env.MPESA_SHORTCODE,
+      Password: mpesaPassword(timestamp),
+      Timestamp: timestamp,
+      CheckoutRequestID: checkoutRequestId,
+    }),
+  });
+  return res.json();
+}
+
+/** Apply a Daraja STK Query body onto the in-memory row. Returns the new row, or null if still pending. */
+function applyStkQueryResult(row, data) {
+  if (!data || typeof data !== 'object') return null;
+  const msg = String(data.errorMessage || data.ResultDesc || '');
+  const errCode = String(data.errorCode || data.ResponseCode || '');
+  if (errCode === '500.001.1001' || /being processed/i.test(msg)) return null;
+  if (data.ResultCode === undefined || data.ResultCode === null || data.ResultCode === '') return null;
+  const code = Number(data.ResultCode);
+  if (!Number.isFinite(code)) return null;
+
+  const id = row.id;
+  if (code === 0) {
+    const items = data.CallbackMetadata?.Item || [];
+    const receipt = items.find((i) => i.Name === 'MpesaReceiptNumber')?.Value;
+    const next = {
+      ...row,
+      status: 'paid',
+      receipt: receipt ? String(receipt) : row.receipt || id,
+      resultDesc: String(data.ResultDesc || 'The service request is processed successfully.'),
+      confirmedAt: Date.now(),
+    };
+    stkPending.set(id, next);
+    persistPaymentRecord(next);
+    return next;
+  }
+  if (STK_FAILED_CODES.has(code)) {
+    const next = {
+      ...row,
+      status: 'failed',
+      resultDesc: String(data.ResultDesc || 'Payment was cancelled.'),
+    };
+    stkPending.set(id, next);
+    persistPaymentRecord(next);
+    return next;
+  }
+  return null;
+}
+
 function normalizePhone(phone) {
   const digits = String(phone || '').replace(/\D/g, '');
   if (digits.startsWith('254') && digits.length >= 12) return digits.slice(0, 12);
@@ -141,12 +221,9 @@ export async function startStk({ phone, amount }) {
     };
   }
 
-  const timestamp = new Date()
-    .toISOString()
-    .replace(/[-:TZ.]/g, '')
-    .slice(0, 14);
+  const timestamp = mpesaTimestamp();
   const shortcode = process.env.MPESA_SHORTCODE;
-  const password = Buffer.from(`${shortcode}${process.env.MPESA_PASSKEY}${timestamp}`).toString('base64');
+  const password = mpesaPassword(timestamp);
 
   // Resolve and check the callback BEFORE spending a Daraja token on the request. An
   // unreachable CallBackURL still returns a CheckoutRequestID, so Safaricom would show
@@ -235,7 +312,7 @@ export function recordStkCallback(body) {
   persistPaymentRecord(next);
 }
 
-export function confirmStk(checkoutRequestId) {
+export async function confirmStk(checkoutRequestId) {
   const id = String(checkoutRequestId || '');
   const row = stkPending.get(id) || restoreRecord(id);
   if (!row) return { error: 'STK request not found. Send the prompt again.', status: 404 };
@@ -249,6 +326,32 @@ export function confirmStk(checkoutRequestId) {
       stkPending.set(id, next);
       persistPaymentRecord(next);
       return { ok: true, receipt: next.receipt, phone: next.phone, amount: next.amount, message: 'M-Pesa payment confirmed.' };
+    }
+    // Live STK: if Safaricom could not POST the callback (bad TLS on the shop
+    // hostname is the usual cause), ask Daraja whether the PIN already succeeded.
+    if (!row.simulated && mpesaConfigured()) {
+      const now = Date.now();
+      if (!row.lastQueryAt || now - row.lastQueryAt >= stkQueryIntervalMs()) {
+        row.lastQueryAt = now;
+        stkPending.set(id, row);
+        try {
+          const updated = applyStkQueryResult(row, await queryStk(id));
+          if (updated?.status === 'paid') {
+            return {
+              ok: true,
+              receipt: updated.receipt,
+              phone: updated.phone,
+              amount: updated.amount,
+              message: 'M-Pesa payment confirmed.',
+            };
+          }
+          if (updated?.status === 'failed') {
+            return { ok: false, pending: false, message: updated.resultDesc || 'Payment was cancelled.' };
+          }
+        } catch (err) {
+          console.error('M-Pesa STK query failed:', err.message);
+        }
+      }
     }
     return { ok: false, pending: true, message: row.simulated ? 'Waiting for PIN confirmation…' : 'Waiting for M-Pesa PIN…' };
   }

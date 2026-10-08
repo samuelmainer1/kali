@@ -85,7 +85,7 @@ test('M-Pesa checkout rejects a phone number that is too short', async () => {
 
 test('M-Pesa normalises a local number to 2547xxxxxxxx', async () => {
   const id = await paidStk(1500, '0712345678');
-  const confirmed = confirmStk(id);
+  const confirmed = await confirmStk(id);
   assert.equal(confirmed.ok, true);
   assert.equal(confirmed.phone, '254712345678');
   assert.equal(confirmed.amount, 1500);
@@ -102,7 +102,7 @@ test('a failed M-Pesa result can never be reserved for an order', async () => {
       },
     },
   });
-  const confirmed = confirmStk(stk.checkoutRequestId);
+  const confirmed = await confirmStk(stk.checkoutRequestId);
   assert.equal(confirmed.ok, false);
   assert.equal(confirmed.pending, false);
 
@@ -185,6 +185,117 @@ test('releasing a reservation frees the reference for a new order', async () => 
   const retried = reservePayment({ method: 'mpesa', reference, amount: 1200, orderId: 'ord_retry' });
   assert.equal(retried.ok, true);
   assert.equal(retried.record.consumedByOrderId, 'ord_retry');
+});
+
+function withLiveMpesaEnv(t) {
+  const prev = {
+    MPESA_CONSUMER_KEY: process.env.MPESA_CONSUMER_KEY,
+    MPESA_CONSUMER_SECRET: process.env.MPESA_CONSUMER_SECRET,
+    MPESA_PASSKEY: process.env.MPESA_PASSKEY,
+    MPESA_SHORTCODE: process.env.MPESA_SHORTCODE,
+    MPESA_CALLBACK_URL: process.env.MPESA_CALLBACK_URL,
+    MPESA_ENV: process.env.MPESA_ENV,
+    MPESA_STK_QUERY_INTERVAL_MS: process.env.MPESA_STK_QUERY_INTERVAL_MS,
+  };
+  process.env.MPESA_CONSUMER_KEY = 'key';
+  process.env.MPESA_CONSUMER_SECRET = 'secret';
+  process.env.MPESA_PASSKEY = 'pass';
+  process.env.MPESA_SHORTCODE = '862294';
+  process.env.MPESA_CALLBACK_URL = 'https://www.bigdrop.co.ke/api/payments/mpesa/callback';
+  process.env.MPESA_ENV = 'production';
+  process.env.MPESA_STK_QUERY_INTERVAL_MS = '0';
+  t.after(() => {
+    for (const [k, v] of Object.entries(prev)) {
+      if (v === undefined) delete process.env[k];
+      else process.env[k] = v;
+    }
+  });
+}
+
+function mockDaraja({ queryBodies, checkoutRequestId = 'ws_CO_QUERY_1' }) {
+  const originalFetch = globalThis.fetch;
+  const queryCalls = [];
+  globalThis.fetch = async (url, opts) => {
+    const u = String(url);
+    if (u.includes('/oauth/')) return { json: async () => ({ access_token: 'tok' }) };
+    if (u.includes('/stkpush/v1/processrequest')) {
+      return {
+        json: async () => ({
+          CheckoutRequestID: checkoutRequestId,
+          CustomerMessage: 'Success. Request accepted for processing',
+        }),
+      };
+    }
+    if (u.includes('/stkpushquery/v1/query')) {
+      queryCalls.push(opts?.body);
+      const body = queryBodies[Math.min(queryCalls.length - 1, queryBodies.length - 1)];
+      return { json: async () => body };
+    }
+    throw new Error('unexpected fetch ' + u);
+  };
+  return {
+    queryCalls,
+    restore() {
+      globalThis.fetch = originalFetch;
+    },
+  };
+}
+
+test('live STK confirm queries Daraja when the callback never arrives', async (t) => {
+  withLiveMpesaEnv(t);
+  const daraja = mockDaraja({
+    queryBodies: [
+      { errorCode: '500.001.1001', errorMessage: 'The transaction is being processed' },
+      { ResultCode: '0', ResultDesc: 'The service request is processed successfully.' },
+    ],
+  });
+  t.after(() => daraja.restore());
+
+  const stk = await startStk({ phone: '0712345678', amount: 750 });
+  assert.equal(stk.mode, 'live');
+  assert.equal(stk.checkoutRequestId, 'ws_CO_QUERY_1');
+
+  const waiting = await confirmStk(stk.checkoutRequestId);
+  assert.equal(waiting.ok, false);
+  assert.equal(waiting.pending, true);
+  assert.equal(daraja.queryCalls.length, 1);
+
+  const paid = await confirmStk(stk.checkoutRequestId);
+  assert.equal(paid.ok, true);
+  assert.equal(paid.receipt, 'ws_CO_QUERY_1');
+  assert.equal(paid.amount, 750);
+  assert.equal(daraja.queryCalls.length, 2);
+
+  const reserved = reservePayment({
+    method: 'mpesa',
+    reference: stk.checkoutRequestId,
+    amount: 750,
+    orderId: 'ord_query',
+  });
+  assert.equal(reserved.ok, true);
+});
+
+test('live STK confirm surfaces a cancelled PIN from Daraja query', async (t) => {
+  withLiveMpesaEnv(t);
+  const daraja = mockDaraja({
+    checkoutRequestId: 'ws_CO_CANCEL_1',
+    queryBodies: [{ ResultCode: 1032, ResultDesc: 'Request cancelled by user' }],
+  });
+  t.after(() => daraja.restore());
+
+  const stk = await startStk({ phone: '0722000111', amount: 400 });
+  const confirmed = await confirmStk(stk.checkoutRequestId);
+  assert.equal(confirmed.ok, false);
+  assert.equal(confirmed.pending, false);
+  assert.match(confirmed.message, /cancelled/i);
+
+  const reserved = reservePayment({
+    method: 'mpesa',
+    reference: stk.checkoutRequestId,
+    amount: 400,
+    orderId: 'ord_query_cancel',
+  });
+  assert.equal(reserved.status, 402);
 });
 
 test('a released payment still cannot fund two orders at once', async () => {

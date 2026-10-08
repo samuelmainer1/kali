@@ -171,6 +171,9 @@ export default function Checkout() {
         setStkMsg(`Paid. Receipt ${conf.receipt}`);
         return { receipt: conf.receipt, reference: stk.checkoutRequestId };
       }
+      if (conf.pending === false) {
+        throw new Error(conf.message || 'M-Pesa payment was cancelled.');
+      }
       setStkMsg(conf.message || 'Waiting for PIN…');
     }
     throw new Error('M-Pesa confirmation timed out. Try again.');

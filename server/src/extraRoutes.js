@@ -145,10 +145,14 @@ router.post('/payments/mpesa/stk', async (req, res) => {
   }
 });
 
-router.post('/payments/mpesa/confirm', (req, res) => {
-  const result = confirmStk(req.body?.checkoutRequestId);
-  if (result.error) return res.status(result.status || 400).json({ error: result.error });
-  res.json(result);
+router.post('/payments/mpesa/confirm', async (req, res) => {
+  try {
+    const result = await confirmStk(req.body?.checkoutRequestId);
+    if (result.error) return res.status(result.status || 400).json({ error: result.error });
+    res.json(result);
+  } catch (e) {
+    res.status(500).json({ error: e.message || 'Could not confirm M-Pesa' });
+  }
 });
 
 router.post('/payments/mpesa/callback', (req, res) => {
