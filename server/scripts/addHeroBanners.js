@@ -47,9 +47,7 @@ const urls = Object.fromEntries(BANNERS.map((b) => [b.id, copyBanner(b.file)]));
 
 const heroes = updateDb((db) => {
   db.site = db.site || {};
-  const current = Array.isArray(db.site.heroes) ? db.site.heroes : [];
-  const without = current.filter((h) => !BANNERS.some((b) => b.id === h.id));
-  const next = BANNERS.map((b) => ({
+  db.site.heroes = BANNERS.map((b) => ({
     id: b.id,
     title: b.title,
     text: b.text,
@@ -59,9 +57,8 @@ const heroes = updateDb((db) => {
     image: urls[b.id],
     fullBleed: true,
   }));
-  db.site.heroes = next;
   return db.site.heroes;
-}, { actor: 'system', action: 'site.heroes', detail: 'Add Flash Sale and BigDrop Kenya banners' });
+}, { actor: 'system', action: 'site.heroes', detail: 'Set Flash Sale and BigDrop Kenya banners only' });
 
 for (const h of heroes) {
   console.log(`${h.id} · ${h.title} · ${h.image} · fullBleed=${h.fullBleed === true}`);
