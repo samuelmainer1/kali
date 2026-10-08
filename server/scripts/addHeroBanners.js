@@ -59,7 +59,7 @@ const heroes = updateDb((db) => {
     image: urls[b.id],
     fullBleed: true,
   }));
-  db.site.heroes = [...next, ...without];
+  db.site.heroes = next;
   return db.site.heroes;
 }, { actor: 'system', action: 'site.heroes', detail: 'Add Flash Sale and BigDrop Kenya banners' });
 
