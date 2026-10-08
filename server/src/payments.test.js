@@ -34,6 +34,8 @@ const {
   reservePayment,
   releasePayment,
   paymentStatus,
+  mpesaStoreNumber,
+  mpesaTillNumber,
 } = await import('./payments.js');
 
 const EMAIL = 'shopper@example.com';
@@ -193,6 +195,7 @@ function withLiveMpesaEnv(t) {
     MPESA_CONSUMER_SECRET: process.env.MPESA_CONSUMER_SECRET,
     MPESA_PASSKEY: process.env.MPESA_PASSKEY,
     MPESA_SHORTCODE: process.env.MPESA_SHORTCODE,
+    MPESA_STORE_NUMBER: process.env.MPESA_STORE_NUMBER,
     MPESA_CALLBACK_URL: process.env.MPESA_CALLBACK_URL,
     MPESA_ENV: process.env.MPESA_ENV,
     MPESA_STK_QUERY_INTERVAL_MS: process.env.MPESA_STK_QUERY_INTERVAL_MS,
@@ -296,6 +299,50 @@ test('live STK confirm surfaces a cancelled PIN from Daraja query', async (t) =>
     orderId: 'ord_query_cancel',
   });
   assert.equal(reserved.status, 402);
+});
+
+test('store number falls back to the till when MPESA_STORE_NUMBER is unset', () => {
+  const prevStore = process.env.MPESA_STORE_NUMBER;
+  const prevTill = process.env.MPESA_SHORTCODE;
+  process.env.MPESA_SHORTCODE = '862294';
+  delete process.env.MPESA_STORE_NUMBER;
+  assert.equal(mpesaStoreNumber(), '862294');
+  assert.equal(mpesaTillNumber(), '862294');
+  process.env.MPESA_STORE_NUMBER = '5533221';
+  assert.equal(mpesaStoreNumber(), '5533221');
+  assert.equal(mpesaTillNumber(), '862294');
+  if (prevStore === undefined) delete process.env.MPESA_STORE_NUMBER;
+  else process.env.MPESA_STORE_NUMBER = prevStore;
+  if (prevTill === undefined) delete process.env.MPESA_SHORTCODE;
+  else process.env.MPESA_SHORTCODE = prevTill;
+});
+
+test('Buy Goods STK uses the store number as BusinessShortCode and the till as PartyB', async (t) => {
+  withLiveMpesaEnv(t);
+  process.env.MPESA_STORE_NUMBER = '5533221';
+  let stkBody;
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async (url, opts) => {
+    const u = String(url);
+    if (u.includes('/oauth/')) return { json: async () => ({ access_token: 'tok' }) };
+    if (u.includes('/stkpush/v1/processrequest')) {
+      stkBody = JSON.parse(opts.body);
+      return { json: async () => ({ CheckoutRequestID: 'ws_CO_TILL_1', CustomerMessage: 'Success' }) };
+    }
+    throw new Error('unexpected fetch ' + u);
+  };
+  t.after(() => {
+    globalThis.fetch = originalFetch;
+  });
+
+  const stk = await startStk({ phone: '0712345678', amount: 100 });
+  assert.equal(stk.checkoutRequestId, 'ws_CO_TILL_1');
+  assert.equal(stkBody.TransactionType, 'CustomerBuyGoodsOnline');
+  assert.equal(stkBody.BusinessShortCode, '5533221');
+  assert.equal(stkBody.PartyB, '862294');
+  const decoded = Buffer.from(stkBody.Password, 'base64').toString();
+  assert.ok(decoded.startsWith('5533221'), decoded);
+  assert.equal(decoded.includes('862294'), false);
 });
 
 test('a released payment still cannot fund two orders at once', async () => {

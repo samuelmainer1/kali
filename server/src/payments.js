@@ -94,8 +94,18 @@ function mpesaTimestamp() {
   return new Date().toISOString().replace(/[-:TZ.]/g, '').slice(0, 14);
 }
 
+/** Parent Store / H.O. number used as Daraja BusinessShortCode and in the STK password. */
+export function mpesaStoreNumber() {
+  return String(process.env.MPESA_STORE_NUMBER || process.env.MPESA_SHORTCODE || '').trim();
+}
+
+/** Till customers pay (Lipa na M-Pesa → Buy Goods). Sent as PartyB. */
+export function mpesaTillNumber() {
+  return String(process.env.MPESA_SHORTCODE || '').trim();
+}
+
 function mpesaPassword(timestamp) {
-  return Buffer.from(`${process.env.MPESA_SHORTCODE}${process.env.MPESA_PASSKEY}${timestamp}`).toString('base64');
+  return Buffer.from(`${mpesaStoreNumber()}${process.env.MPESA_PASSKEY}${timestamp}`).toString('base64');
 }
 
 // Checkout polls confirm every ~1.5s. Ask Daraja at most this often — the query
@@ -123,7 +133,7 @@ async function queryStk(checkoutRequestId) {
     method: 'POST',
     headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      BusinessShortCode: process.env.MPESA_SHORTCODE,
+      BusinessShortCode: mpesaStoreNumber(),
       Password: mpesaPassword(timestamp),
       Timestamp: timestamp,
       CheckoutRequestID: checkoutRequestId,
@@ -222,7 +232,8 @@ export async function startStk({ phone, amount }) {
   }
 
   const timestamp = mpesaTimestamp();
-  const shortcode = process.env.MPESA_SHORTCODE;
+  const storeNumber = mpesaStoreNumber();
+  const tillNumber = mpesaTillNumber();
   const password = mpesaPassword(timestamp);
 
   // Resolve and check the callback BEFORE spending a Daraja token on the request. An
@@ -245,13 +256,16 @@ export async function startStk({ phone, amount }) {
     method: 'POST',
     headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      BusinessShortCode: shortcode,
+      // Buy Goods: BusinessShortCode is the parent Store/H.O. number (password is
+      // built from this). PartyB is till 862294. Sending the till as both produces
+      // "The Agent number and Store number entered do not match."
+      BusinessShortCode: storeNumber,
       Password: password,
       Timestamp: timestamp,
       TransactionType: 'CustomerBuyGoodsOnline',
       Amount: kes,
       PartyA: msisdn,
-      PartyB: shortcode,
+      PartyB: tillNumber,
       PhoneNumber: msisdn,
       CallBackURL: callbackURL,
       AccountReference: 'BIGDROP',
