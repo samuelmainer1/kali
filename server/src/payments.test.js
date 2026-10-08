@@ -36,6 +36,7 @@ const {
   paymentStatus,
   mpesaStoreNumber,
   mpesaTillNumber,
+  mpesaStkTransactionType,
 } = await import('./payments.js');
 
 const EMAIL = 'shopper@example.com';
@@ -308,13 +309,39 @@ test('store number falls back to the till when MPESA_STORE_NUMBER is unset', () 
   delete process.env.MPESA_STORE_NUMBER;
   assert.equal(mpesaStoreNumber(), '862294');
   assert.equal(mpesaTillNumber(), '862294');
+  assert.equal(mpesaStkTransactionType(), 'CustomerPayBillOnline');
   process.env.MPESA_STORE_NUMBER = '5533221';
   assert.equal(mpesaStoreNumber(), '5533221');
   assert.equal(mpesaTillNumber(), '862294');
+  assert.equal(mpesaStkTransactionType(), 'CustomerBuyGoodsOnline');
   if (prevStore === undefined) delete process.env.MPESA_STORE_NUMBER;
   else process.env.MPESA_STORE_NUMBER = prevStore;
   if (prevTill === undefined) delete process.env.MPESA_SHORTCODE;
   else process.env.MPESA_SHORTCODE = prevTill;
+});
+
+test('a single Daraja shortcode sends STK as Pay Bill, not Buy Goods', async (t) => {
+  withLiveMpesaEnv(t);
+  delete process.env.MPESA_STORE_NUMBER;
+  let stkBody;
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async (url, opts) => {
+    const u = String(url);
+    if (u.includes('/oauth/')) return { json: async () => ({ access_token: 'tok' }) };
+    if (u.includes('/stkpush/v1/processrequest')) {
+      stkBody = JSON.parse(opts.body);
+      return { json: async () => ({ CheckoutRequestID: 'ws_CO_PAYBILL_1', CustomerMessage: 'Success' }) };
+    }
+    throw new Error('unexpected fetch ' + u);
+  };
+  t.after(() => {
+    globalThis.fetch = originalFetch;
+  });
+
+  await startStk({ phone: '0712345678', amount: 100 });
+  assert.equal(stkBody.TransactionType, 'CustomerPayBillOnline');
+  assert.equal(stkBody.BusinessShortCode, '862294');
+  assert.equal(stkBody.PartyB, '862294');
 });
 
 test('Buy Goods STK uses the store number as BusinessShortCode and the till as PartyB', async (t) => {

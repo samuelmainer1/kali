@@ -104,6 +104,18 @@ export function mpesaTillNumber() {
   return String(process.env.MPESA_SHORTCODE || '').trim();
 }
 
+/**
+ * Daraja STK TransactionType. CustomerBuyGoodsOnline requires a Store/H.O. number
+ * that is different from the till. Daraja showing only 862294 means one shortcode —
+ * sending Buy Goods with that number as both agent and store returns
+ * "The Agent number and Store number entered do not match." Use Pay Bill in that case.
+ */
+export function mpesaStkTransactionType() {
+  const store = mpesaStoreNumber();
+  const till = mpesaTillNumber();
+  return store && till && store !== till ? 'CustomerBuyGoodsOnline' : 'CustomerPayBillOnline';
+}
+
 function mpesaPassword(timestamp) {
   return Buffer.from(`${mpesaStoreNumber()}${process.env.MPESA_PASSKEY}${timestamp}`).toString('base64');
 }
@@ -256,13 +268,10 @@ export async function startStk({ phone, amount }) {
     method: 'POST',
     headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      // Buy Goods: BusinessShortCode is the parent Store/H.O. number (password is
-      // built from this). PartyB is till 862294. Sending the till as both produces
-      // "The Agent number and Store number entered do not match."
       BusinessShortCode: storeNumber,
       Password: password,
       Timestamp: timestamp,
-      TransactionType: 'CustomerBuyGoodsOnline',
+      TransactionType: mpesaStkTransactionType(),
       Amount: kes,
       PartyA: msisdn,
       PartyB: tillNumber,
