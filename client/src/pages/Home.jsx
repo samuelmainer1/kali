@@ -62,8 +62,19 @@ const TILE_GRADIENTS = [
   'from-red-400 to-red-600',
 ];
 
+function isPlaceholderHeroTitle(title) {
+  return /^slide\s+\d+$/i.test(String(title || '').trim());
+}
+
+function heroIsArtwork(item) {
+  if (item.fullBleed === true) return true;
+  const title = String(item.title || '').trim();
+  const text = String(item.subtitle || item.text || '').trim();
+  return Boolean(item.image && (!title || isPlaceholderHeroTitle(title)) && !text);
+}
+
 function displayHero(item, t) {
-  const rawTitle = item.title || '';
+  const rawTitle = isPlaceholderHeroTitle(item.title) ? '' : item.title || '';
   const looksLikeFreeMin = /10[\s,]*000/.test(rawTitle) && /free/i.test(rawTitle);
   return {
     ...item,
@@ -336,19 +347,20 @@ export default function Home() {
       <h1 className="sr-only">BigDrop Kenya — Online shopping in Kenya</h1>
       <section className="hero-carousel bd-drive-hero">
         <div className="carousel-track" style={{ transform: `translateX(-${slide * 100}%)` }}>
-          {heroes.map((item) => {
+          {heroes.map((item, i) => {
             const slideItem = displayHero(item, t);
+            const artwork = heroIsArtwork(item);
             return (
             <div
-              key={item.id || item.title}
-              className={`carousel-slide${item.image ? ' has-image' : ''}${item.fullBleed ? ' is-artwork' : ''}`}
+              key={item.id || i}
+              className={`carousel-slide${item.image ? ' has-image' : ''}${artwork ? ' is-artwork' : ''}`}
               style={
                 item.image
                   ? { backgroundImage: `url('${item.image}')`, backgroundSize: 'cover', backgroundPosition: 'center' }
                   : { background: item.gradient || 'linear-gradient(to right, #f97316, #fbbf24)' }
               }
             >
-              {item.fullBleed ? (
+              {artwork ? (
                 <Link
                   to={item.href || '/shop'}
                   className="absolute inset-0 z-10"
@@ -356,8 +368,8 @@ export default function Home() {
                 />
               ) : (
               <div>
-                <h2>{slideItem.title}</h2>
-                <p>{slideItem.subtitle || slideItem.text}</p>
+                {slideItem.title ? <h2>{slideItem.title}</h2> : null}
+                {slideItem.subtitle || slideItem.text ? <p>{slideItem.subtitle || slideItem.text}</p> : null}
                 <Link
                   to={item.href || '/shop'}
                   className="inline-flex items-center gap-2 bg-white text-gray-800 hover:bg-gray-100 font-semibold shadow-lg rounded-md px-5 py-2.5"

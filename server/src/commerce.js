@@ -671,6 +671,24 @@ export function remapInvoiceThankYou(db) {
 const HERO_NATIONWIDE_TITLE = 'Nationwide delivery by Globeflight';
 const HERO_NATIONWIDE_TEXT = 'Usually the same business day within Nairobi; 2–5 days elsewhere';
 
+/** Old saves filled blank titles with "Slide 1". Treat those as empty copy. */
+export function isPlaceholderHeroTitle(title) {
+  return /^slide\s+\d+$/i.test(String(title || '').trim());
+}
+
+export function publicHero(h) {
+  const titleRaw = String(h?.title || '').trim();
+  const title = isPlaceholderHeroTitle(titleRaw) ? '' : titleRaw;
+  const text = String(h?.text || h?.subtitle || '').trim();
+  const image = String(h?.image || '').trim();
+  return {
+    ...h,
+    title,
+    text,
+    fullBleed: h?.fullBleed === true || Boolean(image && !title && !text),
+  };
+}
+
 export function remapGoLiveCustomerCopy(db) {
   let changed = false;
   db.site = db.site || {};

@@ -35,6 +35,8 @@ import {
   vendorStoreSlug,
   resolveProductSku,
   skuTakenSet,
+  isPlaceholderHeroTitle,
+  publicHero,
 } from './commerce.js';
 
 const router = Router();
@@ -370,7 +372,7 @@ router.get('/site', (req, res) => {
     res.json({
       site: {
         ...site,
-        heroes: site.heroes?.length ? site.heroes : DEFAULT_HEROES,
+        heroes: (site.heroes?.length ? site.heroes : DEFAULT_HEROES).map(publicHero),
         homeBlocks: { ...DEFAULT_HOME_BLOCKS, ...(site.homeBlocks || {}) },
         featuredCategorySlugs: site.featuredCategorySlugs?.length
           ? site.featuredCategorySlugs
@@ -473,16 +475,22 @@ router.patch('/admin/site', authRequired, requireRole('admin'), (req, res) => {
   try {
     if (Array.isArray(heroes)) {
       const previous = readDb().site?.heroes || [];
-      savedHeroes = heroes.map((h, i) => ({
-        id: h.id || `hero_${nanoid(6)}`,
-        title: String(h.title || '').trim() || `Slide ${i + 1}`,
-        text: String(h.text || '').trim(),
-        href: String(h.href || '/shop').trim() || '/shop',
-        cta: String(h.cta || 'Shop Now').trim() || 'Shop Now',
-        gradient: String(h.gradient || '').trim(),
-        image: saveDataUrl(h.image || '', 'heroes') || '',
-        fullBleed: h.fullBleed === true,
-      }));
+      savedHeroes = heroes.map((h) => {
+        const titleRaw = String(h.title || '').trim();
+        const title = isPlaceholderHeroTitle(titleRaw) ? '' : titleRaw;
+        const text = String(h.text || '').trim();
+        const image = saveDataUrl(h.image || '', 'heroes') || '';
+        return {
+          id: h.id || `hero_${nanoid(6)}`,
+          title,
+          text,
+          href: String(h.href || '/shop').trim() || '/shop',
+          cta: String(h.cta || 'Shop Now').trim() || 'Shop Now',
+          gradient: String(h.gradient || '').trim(),
+          image,
+          fullBleed: h.fullBleed === true || Boolean(image && !title && !text),
+        };
+      });
       const nextImages = new Set(savedHeroes.map((h) => h.image));
       previous.forEach((h) => {
         if (h.image && !nextImages.has(h.image)) deleteLocalUpload(h.image);

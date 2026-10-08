@@ -1187,7 +1187,7 @@ export default function AdminDashboard() {
           {tab === 'heroes' && (
             <form onSubmit={saveHeroes} className="mt-8 space-y-4">
               <p className="text-sm text-ink-mute">
-                These slides appear on the homepage hero. Title, subtitle, and button text go live as saved. Uploads stay at the original pixels and are capped at 2MB. Files over 20MB are refused. Replacing a banner deletes the old file.
+                These slides appear on the homepage hero. Leave title and subtitle blank to show the image only — we will not fill in “Slide 1”. Uploads stay at the original pixels and are capped at 2MB. Files over 20MB are refused. Replacing a banner deletes the old file.
               </p>
               {heroes.map((h, i) => (
                 <div key={h.id || i} className="rounded-2xl border border-ink/5 bg-white p-5 shadow-lift grid gap-3 md:grid-cols-2">
