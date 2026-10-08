@@ -52,11 +52,12 @@ function getClientIp(req) {
   return req.socket?.remoteAddress || 'unknown';
 }
 
-function rateLimit(maxRequests = 120, windowMs = 60_000) {
+function rateLimit(maxRequests = 120, windowMs = 60_000, bucket = 'api') {
   return (req, res, next) => {
     const ip = getClientIp(req);
+    const key = `${bucket}:${ip}`;
     const now = Date.now();
-    const current = REQUEST_LIMITS.get(ip) || { count: 0, resetAt: now + windowMs };
+    const current = REQUEST_LIMITS.get(key) || { count: 0, resetAt: now + windowMs };
 
     if (now > current.resetAt) {
       current.count = 0;
@@ -64,7 +65,7 @@ function rateLimit(maxRequests = 120, windowMs = 60_000) {
     }
 
     current.count += 1;
-    REQUEST_LIMITS.set(ip, current);
+    REQUEST_LIMITS.set(key, current);
 
     if (current.count > maxRequests) {
       return res.status(429).json({ error: 'Too many requests. Please wait a moment and try again.' });
@@ -190,10 +191,20 @@ if (String(process.env.PHASE_NOINDEX || '').trim().toLowerCase() === 'true') {
     next();
   });
 }
-app.use('/api/auth', rateLimit(20, 60_000));
+// Credential stuffing is login/register/forgot/reset. GET /auth/me runs on every
+// signed-in page load, and POST /auth/password is a logged-in admin changing
+// their own password — those were sharing the 20/min bucket, so a few dashboard
+// loads plus one "change password" retry returned "Too many requests."
+const authBurst = rateLimit(20, 60_000, 'auth');
+app.use('/api/auth', (req, res, next) => {
+  if (req.method === 'GET') return next();
+  const path = String(req.path || '').replace(/\/+$/, '') || '/';
+  if (req.method === 'POST' && path === '/password') return next();
+  return authBurst(req, res, next);
+});
 // Scoped to the API: page loads pull a dozen+ static files each, and those must
 // never eat into a shopper's request budget.
-app.use('/api', rateLimit(180, 60_000));
+app.use('/api', rateLimit(180, 60_000, 'api'));
 
 const uploadsDir = uploadsRoot;
 if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });

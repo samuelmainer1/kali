@@ -158,6 +158,13 @@ test('security headers are present on API responses', async () => {
   assert.equal(res.headers.get('referrer-policy'), 'strict-origin-when-cross-origin');
 });
 
+test('signed-in session checks are not blocked by the login burst limit', async () => {
+  for (let i = 0; i < 25; i += 1) {
+    const res = await api('/api/auth/me', { token: customerToken });
+    assert.equal(res.status, 200, `GET /auth/me #${i + 1} should not be rate-limited: ${res.text}`);
+  }
+});
+
 test('an account is locked out after 5 failed logins', async () => {
   const target = 'chandaria@bigdrop.co.ke';
   for (let attempt = 1; attempt <= 5; attempt += 1) {
