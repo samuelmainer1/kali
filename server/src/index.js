@@ -13,6 +13,7 @@ import { remapDeadUnsplash, remapInvoiceThankYou, remapGoLiveCustomerCopy, hideP
 import { buildRobotsTxt, buildSitemapXml, injectIndexHtml, contentPathMissing } from './seo.js';
 import { validateRuntimeConfig } from './runtimeConfig.js';
 import { mailConfigured } from './mailer.js';
+import { readAcmeChallenge } from './acmeChallenge.js';
 
 const runtimeConfig = validateRuntimeConfig();
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -197,6 +198,15 @@ app.use('/api', rateLimit(180, 60_000));
 const uploadsDir = uploadsRoot;
 if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
 app.use('/uploads', express.static(uploadsDir, { maxAge: '1h', etag: true, lastModified: true }));
+
+// Let's Encrypt HTTP-01 must not fall through to the SPA homepage. DirectAdmin
+// drops the token under public_html; Passenger would otherwise return index.html
+// and AutoSSL would keep the shared server certificate.
+app.get('/.well-known/acme-challenge/:token', (req, res) => {
+  const body = readAcmeChallenge(req.params.token);
+  if (body == null) return res.status(404).type('text/plain').send('not found');
+  res.type('text/plain').send(body);
+});
 
 app.get('/health', (_req, res) => {
   res.json({
