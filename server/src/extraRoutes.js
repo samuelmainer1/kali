@@ -4,7 +4,7 @@ import { nanoid } from 'nanoid';
 import { readDb, updateDb, writeDb, dbPath, actorFrom } from './db.js';
 import { authRequired, requireRole, authOptional } from './auth.js';
 import { persistImages, saveDataUrl, deleteLocalUpload } from './uploads.js';
-import { gscVerificationToken } from './seo.js';
+import { gscVerificationTokens } from './seo.js';
 import { parseWooCommerceCsv, materializeImages, slugifyName } from './wooCommerce.js';
 import { startStk, confirmStk, recordStkCallback, startCard, confirmCard, paymentStatus } from './payments.js';
 import { sendNewsletterIssue, mailConfigured } from './mailer.js';
@@ -321,7 +321,7 @@ router.patch('/admin/site/settings', authRequired, requireRole('admin'), (req, r
     }
     if (body.gaId !== undefined) d.site.gaId = String(body.gaId || '').trim();
     if (body.metaPixelId !== undefined) d.site.metaPixelId = String(body.metaPixelId || '').trim();
-    if (body.gscVerification !== undefined) d.site.gscVerification = gscVerificationToken(body.gscVerification);
+    if (body.gscVerification !== undefined) d.site.gscVerification = gscVerificationTokens(body.gscVerification).join(',');
     if (body.deliveryCopy && typeof body.deliveryCopy === 'object') {
       d.site.deliveryCopy = normalizeDeliveryCopy(body.deliveryCopy);
     }

@@ -2,25 +2,14 @@ import { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { applyShopMeta, defersOwnMeta, pageMetaOwns, SITE_TITLE, SITE_DESCRIPTION } from '../lib/pageMeta';
 
-function setMeta(attr, key, value) {
-  if (!value) return;
-  let el = document.querySelector(`meta[${attr}="${key}"]`);
-  if (!el) {
-    el = document.createElement('meta');
-    el.setAttribute(attr, key);
-    document.head.appendChild(el);
-  }
-  el.setAttribute('content', value);
-}
-
 export default function TrackingScripts({ site }) {
   const location = useLocation();
   const ga = String(site?.gaId || '').trim();
   const pixel = String(site?.metaPixelId || '').replace(/\D/g, '');
-  const gsc = String(site?.gscVerification || '')
-    .trim()
-    .replace(/^google-site-verification\s*=\s*/i, '')
-    .replace(/[^A-Za-z0-9_-]/g, '');
+  const gscTokens = String(site?.gscVerification || '')
+    .split(/[\s,]+/)
+    .map((t) => t.replace(/^google-site-verification\s*=\s*/i, '').replace(/[^A-Za-z0-9_-]/g, ''))
+    .filter((t) => t.length >= 8);
 
   useEffect(() => {
     // Only fall back to the shop-wide head when the current page hasn't claimed it via
@@ -29,8 +18,14 @@ export default function TrackingScripts({ site }) {
     // re-run would wipe a product/article head the page just wrote back to the generic
     // shop title/description.
     if (!pageMetaOwns(location.pathname) && !defersOwnMeta(location.pathname)) applyShopMeta();
-    if (gsc) setMeta('name', 'google-site-verification', gsc);
-  }, [gsc, location.pathname]);
+    document.querySelectorAll('meta[name="google-site-verification"]').forEach((el) => el.remove());
+    for (const gsc of gscTokens) {
+      const el = document.createElement('meta');
+      el.setAttribute('name', 'google-site-verification');
+      el.setAttribute('content', gsc);
+      document.head.appendChild(el);
+    }
+  }, [gscTokens.join(','), location.pathname]);
 
   useEffect(() => {
     if (!ga || !/^G-[A-Z0-9]+$/i.test(ga)) return undefined;

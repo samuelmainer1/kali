@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { STATIC_PAGE_META, organizationJsonLd, websiteJsonLd, gscVerificationToken } from './seo.js';
+import { STATIC_PAGE_META, organizationJsonLd, websiteJsonLd, gscVerificationToken, gscVerificationTokens } from './seo.js';
 
 test('static meta copy does not advertise card while card is coming soon', () => {
   for (const [path, meta] of Object.entries(STATIC_PAGE_META)) {
@@ -31,6 +31,13 @@ test('gscVerificationToken accepts the HTML-tag content and the name= form', () 
   assert.equal(gscVerificationToken(`google-site-verification=${token}`), token);
   assert.equal(gscVerificationToken(''), '');
   assert.equal(gscVerificationToken('<script>'), '');
+});
+
+test('gscVerificationTokens keeps several Search Console properties', () => {
+  const a = 'cr_IIhCzEktaOY0ilDBo1SzLAS2r9xQ7IIMbkLINhrs';
+  const b = 'A50yV5JLsKETOGqSAelgDRzQ9MJ5_dxgWqkcgplWfMY';
+  assert.deepEqual(gscVerificationTokens(`google-site-verification=${a}, google-site-verification=${b}`), [a, b]);
+  assert.deepEqual(gscVerificationTokens([a, a, b]), [a, b]);
 });
 
 test('homepage structured data names the shop and search endpoint', () => {

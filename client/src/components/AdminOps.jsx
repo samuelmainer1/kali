@@ -777,7 +777,7 @@ export function SettingsTab({ site, onSaved, onError, flash }) {
         </label>
         <label className="block text-sm">
           <span className="text-ink-mute">Google Search Console verification</span>
-          <input value={form.gscVerification} onChange={set('gscVerification')} className={field} placeholder="google-site-verification token" />
+          <input value={form.gscVerification} onChange={set('gscVerification')} className={field} placeholder="token, or several tokens separated by commas" />
         </label>
       </section>
 

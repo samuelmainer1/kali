@@ -17,6 +17,17 @@ export function gscVerificationToken(value) {
   return t;
 }
 
+/** One or more GSC tokens (comma/whitespace separated, or an array). */
+export function gscVerificationTokens(value) {
+  const parts = Array.isArray(value) ? value : String(value || '').split(/[\s,]+/);
+  const out = [];
+  for (const part of parts) {
+    const t = gscVerificationToken(part);
+    if (t && !out.includes(t)) out.push(t);
+  }
+  return out;
+}
+
 /**
  * Titles like "BigDrop Kenya: Smart E-commerce Fulfillment" must not become
  * "... | BigDrop Kenya" — a duplicated brand name looks spammy in search results and
@@ -764,8 +775,12 @@ function applyGenericOrigin(html, origin, pathOnly, siteName) {
 }
 
 function withGscMeta(html, db) {
-  const gsc = gscVerificationToken(db.site?.gscVerification);
-  return gsc ? replaceOrInsertMeta(html, 'name', 'google-site-verification', gsc) : html;
+  const tokens = gscVerificationTokens(db.site?.gscVerification);
+  let next = html.replace(/\s*<meta[^>]*name=["']google-site-verification["'][^>]*>/gi, '');
+  for (const gsc of tokens) {
+    next = next.replace(/<\/head>/i, `  <meta name="google-site-verification" content="${xmlEscape(gsc)}" />\n</head>`);
+  }
+  return next;
 }
 
 export function injectIndexHtml(html, reqPath, req) {
