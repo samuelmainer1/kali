@@ -1,0 +1,19 @@
+{
+  "name": "bigdrop-ecommerce",
+  "private": true,
+  "version": "1.0.0",
+  "description": "BigDrop — ecommerce & fulfillment platform by Globeflight Kenya",
+  "scripts": {
+    "dev": "concurrently -n api,web -c cyan,magenta \"npm run dev --prefix server\" \"npm run dev --prefix client\"",
+    "dev:server": "npm run dev --prefix server",
+    "dev:client": "npm run dev --prefix client",
+    "build": "npm run build --prefix client",
+    "start": "npm run start --prefix server",
+    "seed": "npm run seed --prefix server",
+    "test": "npm run test --prefix server",
+    "verify": "node tools/verify-catalogue.mjs && node tools/verify-seo.mjs"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
+}

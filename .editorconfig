@@ -1,0 +1,25 @@
+# BigDrop Kenya — editor defaults.
+# Matches the code as it is checked in: LF line endings, UTF-8, 2-space JS/JSX,
+# final newline, no tabs. Nothing here changes what the app does.
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+indent_size = 2
+
+[*.md]
+# Markdown authors sometimes need trailing spaces for a hard line break.
+trim_trailing_whitespace = false
+
+[*.{json,jsonc}]
+indent_size = 2
+
+[*.{yml,yaml}]
+indent_size = 2
+
+[*.{bat,cmd,ps1}]
+end_of_line = crlf
