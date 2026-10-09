@@ -23,10 +23,32 @@ export async function sendMail({ to, subject, text, html }) {
   const tx = transporter();
   if (!tx) {
     console.log(`[mail:simulated] to=${to} subject=${subject}`);
-    return { ok: true, simulated: true };
+    return { ok: true, simulated: true, to, subject };
   }
-  await tx.sendMail({ from, to, subject, text, html: html || `<p>${text}</p>` });
-  return { ok: true, simulated: false };
+  await tx.sendMail({ from, to, subject, text, html: html || `<p>${String(text || '').replace(/\n/g, '<br/>')}</p>` });
+  return { ok: true, simulated: false, to, subject };
+}
+
+/** Who gets "something happened on the shop" mail. Comma-separate ADMIN_EMAIL. */
+export function adminRecipients(site = {}) {
+  const fromEnv = String(process.env.ADMIN_EMAIL || '')
+    .split(',')
+    .map((s) => s.trim())
+    .filter((s) => s.includes('@'));
+  if (fromEnv.length) return [...new Set(fromEnv)];
+  const fallbacks = [site?.letterhead?.email, site?.notifyEmail, 'orders@bigdrop.co.ke', 'info@bigdrop.co.ke'];
+  return [...new Set(fallbacks.map((s) => String(s || '').trim()).filter((s) => s.includes('@')))];
+}
+
+export async function notifyAdmin({ subject, text, site } = {}) {
+  const recipients = adminRecipients(site);
+  if (!recipients.length) return { ok: false, error: 'No admin email configured' };
+  try {
+    return await sendMail({ to: recipients.join(', '), subject, text });
+  } catch (err) {
+    console.error('Admin email failed:', err.message);
+    return { ok: false, error: err.message };
+  }
 }
 
 export async function sendWelcomeEmail(user) {
@@ -81,10 +103,6 @@ export async function sendPurchaseNotifications(order, site = {}) {
       results.email = { ok: false, error: err.message };
     }
   }
-  const adminTo =
-    (Array.isArray(site.emails) ? site.emails : []).find((e) => /orders@/i.test(String(e))) ||
-    site?.letterhead?.email ||
-    'orders@bigdrop.co.ke';
   const itemLines = (order.items || [])
     .map((i) => `${i.qty || 1}× ${i.name || 'Item'}`)
     .join('\n');
@@ -94,20 +112,16 @@ export async function sendPurchaseNotifications(order, site = {}) {
     `Email: ${order.customerEmail || '—'}`,
     `Phone: ${order.customerPhone || '—'}`,
     `Total: ${kes(order.total)}`,
+    `Payment: ${order.paymentMethod || '—'}`,
     `Tracking: ${order.trackingNumber || '—'}`,
     '',
     itemLines,
   ].join('\n');
-  try {
-    results.admin = await sendMail({
-      to: adminTo,
-      subject: `New BigDrop order ${order.orderNumber || ''}`.trim(),
-      text: adminText,
-    });
-  } catch (err) {
-    console.error('Admin purchase email failed:', err.message);
-    results.admin = { ok: false, error: err.message };
-  }
+  results.admin = await notifyAdmin({
+    subject: `New BigDrop order ${order.orderNumber || ''}`.trim(),
+    text: adminText,
+    site,
+  });
   if (order.customerPhone) {
     try {
       results.sms = await sendSms({ to: order.customerPhone, message: smsBody });
@@ -117,4 +131,19 @@ export async function sendPurchaseNotifications(order, site = {}) {
     }
   }
   return results;
+}
+
+export async function sendVendorDecisionEmail(user, status) {
+  if (!user?.email) return { ok: false, error: 'No vendor email' };
+  const approved = status === 'approved';
+  const subject = approved ? 'Your BigDrop store is approved' : 'Update on your BigDrop vendor application';
+  const text = approved
+    ? `Hi ${user.name},\n\n${user.storeName || 'Your store'} is approved. You can log in and list products.\n\nhttps://www.bigdrop.co.ke/login\n\nBigDrop Kenya`
+    : `Hi ${user.name},\n\nYour vendor application for ${user.storeName || 'your store'} was not approved${user.reviewNote ? `: ${user.reviewNote}` : '.'}\n\nReply to this email if you have questions.\n\nBigDrop Kenya`;
+  try {
+    return await sendMail({ to: user.email, subject, text });
+  } catch (err) {
+    console.error('Vendor decision email failed:', err.message);
+    return { ok: false, error: err.message };
+  }
 }

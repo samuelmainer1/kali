@@ -5,7 +5,7 @@ import { readDb, updateDb, actorFrom } from './db.js';
 import { authRequired, requireRole, signToken, authOptional } from './auth.js';
 import { persistImages, saveDataUrl, deleteLocalUpload, deleteLocalUploads, DEFAULT_HEROES, DEFAULT_JOBS } from './uploads.js';
 import crypto from 'crypto';
-import { sendWelcomeEmail, sendMail, sendPurchaseNotifications } from './mailer.js';
+import { sendWelcomeEmail, sendMail, sendPurchaseNotifications, notifyAdmin, sendVendorDecisionEmail } from './mailer.js';
 import { paymentStatus, reservePayment, releasePayment } from './payments.js';
 import {
   parseSpecifications,
@@ -242,6 +242,15 @@ router.post('/auth/register', async (req, res) => {
   });
 
   sendWelcomeEmail(user).catch(() => {});
+  const site = readDb().site;
+  notifyAdmin({
+    site,
+    subject: role === 'vendor' ? `Vendor application: ${storeName}` : `New customer account: ${email}`,
+    text:
+      role === 'vendor'
+        ? `A vendor applied to sell on BigDrop.\n\nName: ${name}\nStore: ${storeName}\nEmail: ${email}\nPhone: ${phone || '—'}\nNote: ${businessNote || '—'}\n\nApprove them in Admin → Vendors.`
+        : `A shopper created an account.\n\nName: ${name}\nEmail: ${email}\nPhone: ${phone || '—'}`,
+  }).catch(() => {});
 
   const token = signToken(user);
   res.status(201).json({
@@ -721,6 +730,11 @@ router.post('/contact', (req, res) => {
     d.contactMessages = d.contactMessages || [];
     d.contactMessages.unshift(entry);
   });
+  notifyAdmin({
+    site: readDb().site,
+    subject: `Contact form: ${entry.subject}`,
+    text: `From: ${name} <${email}>\nPhone: ${phone || '—'}\n\n${message}`,
+  }).catch(() => {});
   res.status(201).json({ ok: true, message: 'Message received. We will get back to you shortly.' });
 });
 
@@ -954,6 +968,13 @@ router.post('/products', authRequired, requireRole('vendor', 'admin'), async (re
   };
 
   updateDb((d) => d.products.push(product));
+  if (req.user.role === 'vendor') {
+    notifyAdmin({
+      site: readDb().site,
+      subject: `Vendor product submitted: ${product.name}`,
+      text: `${req.user.storeName || req.user.name} uploaded a product.\n\nName: ${product.name}\nPrice: KSh ${product.price}\nSKU: ${product.sku}\nStatus: ${product.status}\n\nReview it in Admin → Products.`,
+    }).catch(() => {});
+  }
   res.status(201).json({
     product,
     message:
@@ -1137,6 +1158,9 @@ router.patch('/admin/vendors/:id', authRequired, requireRole('admin'), (req, res
   updateDb((d) => {
     d.users[idx] = updated;
   }, { actor: actorFrom(req), action: `vendor.${status}`, detail: updated.storeName || updated.email || updated.id });
+  if (status === 'approved' || status === 'rejected') {
+    sendVendorDecisionEmail(updated, status).catch(() => {});
+  }
   res.json({ vendor: publicUser(updated) });
 });
 
@@ -2069,12 +2093,10 @@ router.post('/returns', authOptional, (req, res) => {
     ));
   }, { actor: actorFrom(req), action: 'return.request', detail: `${entry.orderNumber} · ${cleanItems.length} item(s)` });
 
-  // ── Email admin about the new return request ──────────────────────────
-  if (mailConfigured()) {
-    const emailSubject = `New return request — Order ${entry.orderNumber}`;
-    const emailText = [
-      `Hi Admin,`,
-      ``,
+  notifyAdmin({
+    site: readDb().site,
+    subject: `New return request — Order ${entry.orderNumber}`,
+    text: [
       `A customer has requested a return.`,
       ``,
       `Order:  ${entry.orderNumber}`,
@@ -2084,17 +2106,11 @@ router.post('/returns', authOptional, (req, res) => {
       `Refund method: ${entry.refundMethod}`,
       ``,
       `Items:`,
-      ...cleanItems.map((i) => `  ${i.qty}x ${i.name} — ${formatKES(i.price)}`),
+      ...cleanItems.map((i) => `  ${i.qty}x ${i.name}`),
       ``,
       `Reason: ${cleanReason}`,
-      ``,
-      `Please review and action this return from the admin dashboard.`,
-      ``,
-      `— BigDrop Kenya`,
-      `orders@bigdrop.co.ke`,
-    ].join('\n');
-    sendMail({ to: process.env.ADMIN_EMAIL || 'info@bigdrop.co.ke', subject: emailSubject, text: emailText }).catch((err) => console.error('Return email failed:', err.message));
-  }
+    ].join('\n'),
+  }).catch((err) => console.error('Return email failed:', err.message));
 
   res.status(201).json({ request: entry });
 });
@@ -2154,6 +2170,11 @@ router.post('/products/:id/reviews', authRequired, (req, res) => {
     p.reviewList = p.reviewList || [];
     p.reviewList.unshift(review);
   });
+  notifyAdmin({
+    site: db.site,
+    subject: `New review pending: ${product.name}`,
+    text: `${review.author} rated ${product.name} ${review.rating}/5.\n\n${review.title}\n${review.comment}`,
+  }).catch(() => {});
 
   res.status(201).json({ review, message: 'Thank you. Your review will show after Admin approval.' });
 });
@@ -2239,6 +2260,11 @@ router.post('/products/:id/questions', authOptional, (req, res) => {
     p.questions = p.questions || [];
     p.questions.unshift(entry);
   });
+  notifyAdmin({
+    site: db.site,
+    subject: `Product question: ${product.name}`,
+    text: `${entry.asker} asked about ${product.name}:\n\n${question}`,
+  }).catch(() => {});
 
   res.status(201).json({ question: entry });
 });

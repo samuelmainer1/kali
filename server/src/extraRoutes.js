@@ -7,7 +7,7 @@ import { persistImages, saveDataUrl, deleteLocalUpload } from './uploads.js';
 import { gscVerificationTokens } from './seo.js';
 import { parseWooCommerceCsv, materializeImages, slugifyName } from './wooCommerce.js';
 import { startStk, confirmStk, recordStkCallback, startCard, confirmCard, paymentStatus } from './payments.js';
-import { sendNewsletterIssue, mailConfigured } from './mailer.js';
+import { sendNewsletterIssue, mailConfigured, notifyAdmin } from './mailer.js';
 import {
   NAIROBI_ESTATES,
   PICKUP_POINTS,
@@ -586,6 +586,16 @@ router.post('/products/bulk', authRequired, requireRole('vendor', 'admin'), asyn
       created.push({ id: product.id, name: product.name, status: product.status });
     }
   });
+  if (req.user.role === 'vendor' && created.length) {
+    notifyAdmin({
+      site: readDb().site,
+      subject: `Vendor bulk upload: ${created.length} product(s)`,
+      text: `${req.user.storeName || req.user.name} imported ${created.length} product(s).\n\n${created
+        .slice(0, 20)
+        .map((p) => `• ${p.name} (${p.status})`)
+        .join('\n')}${created.length > 20 ? `\n…and ${created.length - 20} more` : ''}`,
+    }).catch(() => {});
+  }
   res.status(201).json({ created, errors, count: created.length });
 });
 
