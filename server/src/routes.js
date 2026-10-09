@@ -1912,6 +1912,11 @@ router.post('/newsletter', async (req, res) => {
     subject: 'You are subscribed to BigDrop',
     text: 'Thank you for subscribing. We will send deals and new arrivals to this address.\n\nBigDrop Kenya\norders@bigdrop.co.ke',
   }).catch(() => {});
+  notifyAdmin({
+    site: readDb().site,
+    subject: `Newsletter signup: ${email}`,
+    text: `${email} subscribed to the BigDrop newsletter.`,
+  }).catch(() => {});
   res.json({ ok: true, message: 'Subscribed! You will get BigDrop deals and diaspora offers.' });
 });
 
