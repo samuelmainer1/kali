@@ -111,6 +111,9 @@ before(async () => {
       PAYSTACK_CALLBACK_URL: '',
       TRUST_PROXY: '',
       PHASE_NOINDEX: '',
+      SMTP_HOST: '',
+      SMTP_FROM: '',
+      SMTP_PASS: '',
     },
     stdio: ['ignore', 'pipe', 'pipe'],
   });
@@ -145,6 +148,7 @@ test('the app boots with every gateway in demo mode', async () => {
   const health = await api('/health');
   assert.equal(health.status, 200);
   assert.equal(health.json.ok, true);
+  assert.equal(health.json.mail, false);
 
   const payments = await api('/api/payments/status');
   assert.equal(payments.json.mpesa, 'simulated', 'no live M-Pesa keys may be in play');

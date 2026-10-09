@@ -1,3 +1,4 @@
+import { loadLocalEnv } from './loadEnv.js';
 import express from 'express';
 import cors from 'cors';
 import bcrypt from 'bcryptjs';
@@ -15,6 +16,7 @@ import { validateRuntimeConfig } from './runtimeConfig.js';
 import { mailConfigured } from './mailer.js';
 import { readAcmeChallenge } from './acmeChallenge.js';
 
+loadLocalEnv();
 const runtimeConfig = validateRuntimeConfig();
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PORT = process.env.PORT || 5000;
@@ -140,6 +142,8 @@ if (runtimeConfig.isProduction) {
     console.error(
       'OPS WARNING: SMTP is not configured. Welcome mail, invoices, password resets, and order emails will only log to the console until SMTP_HOST and SMTP_FROM are set.'
     );
+  } else if (process.env.SMTP_USER && !process.env.SMTP_PASS) {
+    console.error('OPS WARNING: SMTP_USER is set but SMTP_PASS is empty. Outgoing mail will fail until the mailbox password is set.');
   }
 }
 
@@ -225,6 +229,7 @@ app.get('/health', (_req, res) => {
     mode: runtimeConfig.isProduction ? 'production' : 'development',
     uptime: Math.round(process.uptime()),
     timestamp: new Date().toISOString(),
+    mail: mailConfigured(),
   });
 });
 

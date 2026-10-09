@@ -6,15 +6,35 @@ export function mailConfigured() {
   return Boolean(process.env.SMTP_HOST && process.env.SMTP_FROM);
 }
 
+function smtpPort() {
+  return Number(process.env.SMTP_PORT || 465);
+}
+
+function smtpSecure() {
+  if (process.env.SMTP_SECURE === 'true') return true;
+  if (process.env.SMTP_SECURE === 'false') return false;
+  return smtpPort() === 465;
+}
+
 function transporter() {
   if (!mailConfigured()) return null;
+  const host = String(process.env.SMTP_HOST || '').trim();
+  const port = smtpPort();
+  const secure = smtpSecure();
+  const local = /^(localhost|127\.0\.0\.1)$/i.test(host);
   return nodemailer.createTransport({
-    host: process.env.SMTP_HOST,
-    port: Number(process.env.SMTP_PORT || 587),
-    secure: process.env.SMTP_SECURE === 'true',
+    host,
+    port,
+    secure,
+    requireTLS: !secure,
     auth: process.env.SMTP_USER
       ? { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS || '' }
       : undefined,
+    connectionTimeout: 15000,
+    greetingTimeout: 15000,
+    tls: local
+      ? { rejectUnauthorized: false }
+      : { minVersion: 'TLSv1.2', servername: host },
   });
 }
 
@@ -25,8 +45,13 @@ export async function sendMail({ to, subject, text, html }) {
     console.log(`[mail:simulated] to=${to} subject=${subject}`);
     return { ok: true, simulated: true, to, subject };
   }
-  await tx.sendMail({ from, to, subject, text, html: html || `<p>${String(text || '').replace(/\n/g, '<br/>')}</p>` });
-  return { ok: true, simulated: false, to, subject };
+  try {
+    await tx.sendMail({ from, to, subject, text, html: html || `<p>${String(text || '').replace(/\n/g, '<br/>')}</p>` });
+    return { ok: true, simulated: false, to, subject };
+  } catch (err) {
+    console.error(`Mail send failed (${err.code || 'SMTP'}): ${err.message}`);
+    throw err;
+  }
 }
 
 /** Who gets "something happened on the shop" mail. Comma-separate ADMIN_EMAIL. */

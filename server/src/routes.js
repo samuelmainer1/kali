@@ -5,7 +5,7 @@ import { readDb, updateDb, actorFrom } from './db.js';
 import { authRequired, requireRole, signToken, authOptional } from './auth.js';
 import { persistImages, saveDataUrl, deleteLocalUpload, deleteLocalUploads, DEFAULT_HEROES, DEFAULT_JOBS } from './uploads.js';
 import crypto from 'crypto';
-import { sendWelcomeEmail, sendMail, sendPurchaseNotifications, notifyAdmin, sendVendorDecisionEmail } from './mailer.js';
+import { sendWelcomeEmail, sendMail, sendPurchaseNotifications, notifyAdmin, sendVendorDecisionEmail, mailConfigured } from './mailer.js';
 import { paymentStatus, reservePayment, releasePayment } from './payments.js';
 import {
   parseSpecifications,
@@ -1892,7 +1892,7 @@ router.patch('/admin/notifications/read', authRequired, requireRole('admin'), (r
 });
 
 router.get('/health', (_req, res) => {
-  res.json({ ok: true, service: 'BigDrop API', company: 'BigDrop Kenya' });
+  res.json({ ok: true, service: 'BigDrop API', company: 'BigDrop Kenya', mail: mailConfigured() });
 });
 
 
@@ -1911,6 +1911,11 @@ router.post('/newsletter', async (req, res) => {
     to: email,
     subject: 'You are subscribed to BigDrop',
     text: 'Thank you for subscribing. We will send deals and new arrivals to this address.\n\nBigDrop Kenya\norders@bigdrop.co.ke',
+  }).catch(() => {});
+  notifyAdmin({
+    site: readDb().site,
+    subject: `Newsletter signup: ${email}`,
+    text: `${email} subscribed to the BigDrop newsletter.`,
   }).catch(() => {});
   res.json({ ok: true, message: 'Subscribed! You will get BigDrop deals and diaspora offers.' });
 });

@@ -7,7 +7,7 @@ import { persistImages, saveDataUrl, deleteLocalUpload } from './uploads.js';
 import { gscVerificationTokens } from './seo.js';
 import { parseWooCommerceCsv, materializeImages, slugifyName } from './wooCommerce.js';
 import { startStk, confirmStk, recordStkCallback, startCard, confirmCard, paymentStatus } from './payments.js';
-import { sendNewsletterIssue, mailConfigured, notifyAdmin } from './mailer.js';
+import { sendNewsletterIssue, mailConfigured, notifyAdmin, sendMail, adminRecipients } from './mailer.js';
 import {
   NAIROBI_ESTATES,
   PICKUP_POINTS,
@@ -659,6 +659,21 @@ router.get('/admin/newsletter', authRequired, requireRole('admin'), (_req, res) 
     (a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0)
   );
   res.json({ subscribers: list, count: list.length, mailConfigured: mailConfigured() });
+});
+
+router.post('/admin/mail-test', authRequired, requireRole('admin'), async (req, res) => {
+  const to = String(req.body?.to || '').trim() || adminRecipients(readDb().site)[0];
+  if (!to || !to.includes('@')) return res.status(400).json({ error: 'No recipient' });
+  try {
+    const result = await sendMail({
+      to,
+      subject: 'BigDrop SMTP test',
+      text: 'If you received this, shop email is working.\n\nBigDrop Kenya',
+    });
+    res.json({ ok: true, configured: mailConfigured(), ...result });
+  } catch (err) {
+    res.status(502).json({ ok: false, configured: mailConfigured(), error: err.message });
+  }
 });
 
 router.post('/admin/newsletter/ack', authRequired, requireRole('admin'), (_req, res) => {
