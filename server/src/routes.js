@@ -957,6 +957,7 @@ router.post('/products', authRequired, requireRole('vendor', 'admin'), async (re
     sku: resolveProductSku(sku, skuTakenSet(readDb().products)),
     images: imageList,
     featured: Boolean(featured),
+    flashDeal: req.user.role === 'admin' && Boolean(req.body.flashDeal),
     rating: 0,
     reviews: 0,
     reviewList: [],
@@ -994,6 +995,7 @@ router.patch('/products/:id', authRequired, requireRole('vendor', 'admin'), asyn
   }
 
   const fields = ['name', 'description', 'price', 'compareAt', 'stock', 'categoryId', 'images', 'tags', 'featured', 'sku', 'brand', 'hidden'];
+  if (req.user.role === 'admin') fields.push('flashDeal');
   const updated = { ...product };
   const changed = [];
   for (const field of fields) {
@@ -1012,6 +1014,7 @@ router.patch('/products/:id', authRequired, requireRole('vendor', 'admin'), asyn
   }
   if (updated.price != null) updated.price = Number(updated.price);
   if (updated.stock != null) updated.stock = Number(updated.stock);
+  if (updated.flashDeal !== undefined) updated.flashDeal = updated.flashDeal === true || updated.flashDeal === 'true';
   if (updated.compareAt === '' || updated.compareAt == null) updated.compareAt = null;
   else if (updated.compareAt !== undefined) updated.compareAt = Number(updated.compareAt);
   // Admins may hand the product to a different vendor; validate the target exists.

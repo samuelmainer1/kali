@@ -29,8 +29,8 @@ export default function Deals() {
     [products]
   );
 
-  const flash = deals.slice(0, 8);
-  const more = deals.slice(8, 24);
+  const flash = products.filter((p) => p.flashDeal).slice(0, 20);
+  const more = deals.filter((p) => !p.flashDeal).slice(0, 24);
 
   return (
     <div>
@@ -62,7 +62,7 @@ export default function Deals() {
           <p className="text-sm text-ink-mute">Loading offers…</p>
         ) : flash.length === 0 ? (
           <p className="text-sm text-ink-mute">
-            No discounted items right now.{' '}
+            No Flash Deals selected yet.{' '}
             <Link to="/shop" className="font-semibold text-leaf">
               Explore the shop
             </Link>

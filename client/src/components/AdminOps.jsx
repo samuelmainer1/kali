@@ -18,6 +18,7 @@ export function AdminAddProduct({ categories, vendors, onSaved, onError }) {
     sku: '',
     images: [],
     featured: false,
+    flashDeal: false,
   });
   const [saving, setSaving] = useState(false);
 
@@ -42,8 +43,9 @@ export function AdminAddProduct({ categories, vendors, onSaved, onError }) {
         sku: form.sku || undefined,
         images: (form.images || []).slice(0, 3),
         featured: Boolean(form.featured),
+        flashDeal: Boolean(form.flashDeal),
       });
-      setForm((f) => ({ ...f, name: '', description: '', specifications: '', variants: '', price: '', compareAt: '', sku: '', images: [], featured: false }));
+      setForm((f) => ({ ...f, name: '', description: '', specifications: '', variants: '', price: '', compareAt: '', sku: '', images: [], featured: false, flashDeal: false }));
       onSaved();
     } catch (err) {
       onError(err.message);
@@ -119,6 +121,18 @@ export function AdminAddProduct({ categories, vendors, onSaved, onError }) {
         <div>
           <span className="text-sm font-semibold block text-ink">Feature on Homepage</span>
           <span className="text-xs text-ink-mute block">Show immediately in the "Featured Products" section on the front page.</span>
+        </div>
+      </label>
+      <label className="flex items-center gap-3 rounded-xl border border-ink/10 p-3 bg-mist/50 cursor-pointer">
+        <input
+          type="checkbox"
+          checked={form.flashDeal}
+          onChange={(e) => setForm((f) => ({ ...f, flashDeal: e.target.checked }))}
+          className="h-4 w-4 rounded border-ink/20 text-ember focus:ring-ember"
+        />
+        <div>
+          <span className="text-sm font-semibold block text-ink">Show in Flash Deals</span>
+          <span className="text-xs text-ink-mute block">Homepage Flash Deals strip only. Not Featured Products. Up to 20.</span>
         </div>
       </label>
       <ProductImagesField images={form.images} onChange={(images) => setForm((f) => ({ ...f, images }))} />

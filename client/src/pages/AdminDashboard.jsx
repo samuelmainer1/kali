@@ -24,6 +24,7 @@ import {
   Tag,
   Settings,
   Star,
+  Zap,
   HelpCircle,
   Trash2,
   EyeOff,
@@ -112,7 +113,7 @@ const TABS = [
   { id: 'audit', label: 'Audit log', icon: History },
 ];
 
-const PRODUCT_STATUS_FILTERS = ['pending', 'approved', 'rejected', 'featured', 'all'];
+const PRODUCT_STATUS_FILTERS = ['pending', 'approved', 'rejected', 'featured', 'flash', 'all'];
 
 function downloadOrdersCsv(orders) {
   const esc = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`;
@@ -247,12 +248,12 @@ export default function AdminDashboard() {
       setProducts(results.flatMap((r) => r.products));
       return;
     }
-    if (status === 'featured') {
+    if (status === 'featured' || status === 'flash') {
       const results = await Promise.all(
         ['pending', 'approved', 'rejected'].map((s) => api.get(`/products?status=${s}`))
       );
       const all = results.flatMap((r) => r.products);
-      setProducts(all.filter((p) => p.featured));
+      setProducts(all.filter((p) => (status === 'flash' ? p.flashDeal : p.featured)));
       return;
     }
     const p = await api.get(`/products?status=${status}`);
@@ -409,6 +410,17 @@ export default function AdminDashboard() {
       const next = !p.featured;
       await api.patch(`/products/${p.id}`, { featured: next });
       flash(next ? 'Product marked as featured' : 'Product removed from featured');
+      await loadProducts();
+    } catch (e) {
+      setError(e.message);
+    }
+  }
+
+  async function toggleFlashDealProduct(p) {
+    try {
+      const next = !p.flashDeal;
+      await api.patch(`/products/${p.id}`, { flashDeal: next });
+      flash(next ? 'Product added to Flash Deals' : 'Product removed from Flash Deals');
       await loadProducts();
     } catch (e) {
       setError(e.message);
@@ -1076,6 +1088,11 @@ export default function AdminDashboard() {
                                     <Star className="h-2.5 w-2.5 fill-current" /> Featured
                                   </span>
                                 )}
+                                {p.flashDeal && (
+                                  <span className="inline-flex items-center gap-0.5 rounded px-1.5 py-0.5 text-[10px] font-semibold bg-orange-100 text-orange-800">
+                                    <Zap className="h-2.5 w-2.5 fill-current" /> Flash
+                                  </span>
+                                )}
                                 {p.hidden && <span className="text-[10px] uppercase text-ink-mute">Unpublished</span>}
                               </div>
                             </div>
@@ -1089,6 +1106,19 @@ export default function AdminDashboard() {
                         </td>
                         <td className="p-4 text-right">
                           <div className="flex justify-end gap-2">
+                            <button
+                              type="button"
+                              onClick={() => toggleFlashDealProduct(p)}
+                              title={p.flashDeal ? 'Remove from Flash Deals' : 'Add to Flash Deals'}
+                              className={`inline-flex items-center gap-1 rounded-lg border px-3 py-1.5 text-xs font-semibold ${
+                                p.flashDeal
+                                  ? 'border-orange-300 bg-orange-50 text-orange-800 hover:bg-orange-100'
+                                  : 'border-ink/10 hover:bg-mist text-ink-mute hover:text-ink'
+                              }`}
+                            >
+                              <Zap className={`h-3.5 w-3.5 ${p.flashDeal ? 'fill-orange-500 text-orange-500' : ''}`} />
+                              {p.flashDeal ? 'In Flash Deals' : 'Flash Deals'}
+                            </button>
                             <button
                               type="button"
                               onClick={() => toggleFeaturedProduct(p)}
