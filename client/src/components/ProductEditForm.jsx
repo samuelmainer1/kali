@@ -18,6 +18,7 @@ export default function ProductEditForm({ product, categories = [], vendors = []
     images: product.images || [],
     variants: variantsToText(product.variants),
     featured: Boolean(product.featured),
+    flashDeal: Boolean(product.flashDeal),
   });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
@@ -51,6 +52,7 @@ export default function ProductEditForm({ product, categories = [], vendors = []
         brand: form.brand || undefined,
         variants: form.variants,
         featured: Boolean(form.featured),
+        flashDeal: Boolean(form.flashDeal),
       };
       // Only admins editing from the dashboard get the vendor list; their choice
       // reassigns the product. Vendors editing their own products omit it.
@@ -169,19 +171,35 @@ export default function ProductEditForm({ product, categories = [], vendors = []
           </div>
         )}
 
-        <div className="mt-4 rounded-xl border border-ink/10 p-3 bg-mist/50">
-          <label className="flex items-center gap-3 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={form.featured}
-              onChange={(e) => setForm((f) => ({ ...f, featured: e.target.checked }))}
-              className="h-4 w-4 rounded border-ink/20 text-ember focus:ring-ember"
-            />
-            <div>
-              <span className="text-sm font-semibold block text-ink">Feature on Homepage</span>
-              <span className="text-xs text-ink-mute block">Display this product in the "Featured Products" section on the front page.</span>
-            </div>
-          </label>
+        <div className="mt-4 space-y-3">
+          <div className="rounded-xl border border-ink/10 p-3 bg-mist/50">
+            <label className="flex items-center gap-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={form.featured}
+                onChange={(e) => setForm((f) => ({ ...f, featured: e.target.checked }))}
+                className="h-4 w-4 rounded border-ink/20 text-ember focus:ring-ember"
+              />
+              <div>
+                <span className="text-sm font-semibold block text-ink">Feature on Homepage</span>
+                <span className="text-xs text-ink-mute block">Display this product in the "Featured Products" section on the front page.</span>
+              </div>
+            </label>
+          </div>
+          <div className="rounded-xl border border-ink/10 p-3 bg-mist/50">
+            <label className="flex items-center gap-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={form.flashDeal}
+                onChange={(e) => setForm((f) => ({ ...f, flashDeal: e.target.checked }))}
+                className="h-4 w-4 rounded border-ink/20 text-ember focus:ring-ember"
+              />
+              <div>
+                <span className="text-sm font-semibold block text-ink">Show in Flash Deals</span>
+                <span className="text-xs text-ink-mute block">Puts this product in the homepage Flash Deals strip. Does not add it to Featured Products. Up to 20.</span>
+              </div>
+            </label>
+          </div>
         </div>
 
         <div className="mt-4">

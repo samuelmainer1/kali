@@ -262,7 +262,7 @@ export default function Home() {
 
   const isTodayUpload = (p) => p.source === 'manual';
   const catalogue = products.filter((p) => !isTodayUpload(p));
-  const flash = catalogue.filter((p) => p.compareAt && p.compareAt > p.price).slice(0, 20);
+  const flash = products.filter((p) => p.flashDeal).slice(0, 20);
   const bestPool = [...catalogue].sort(
     (a, b) => (b.soldCount || b.reviews || 0) - (a.soldCount || a.reviews || 0)
   );
