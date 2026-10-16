@@ -61,12 +61,7 @@ class RolePermissionSeeder extends Seeder
 
         $map = [
             'administrator' => Permission::all()->pluck('name')->all(),
-            'management' => [
-                'dashboard.management', 'customers.view', 'quotations.view', 'quotations.approve',
-                'quotations.reject', 'shipments.view', 'shipments.track', 'warehouse.view',
-                'invoices.view', 'finance.reports', 'reports.view_all', 'reports.export',
-                'reports.weekly.review', 'audit.view', 'support.view',
-            ],
+            'management' => Permission::all()->pluck('name')->all(),
             'sales' => [
                 'dashboard.sales', 'customers.view', 'customers.create', 'customers.update',
                 'quotations.view', 'quotations.create', 'quotations.update', 'quotations.convert',

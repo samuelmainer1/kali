@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Exports\UserDirectoryExport;
 use App\Models\CompanySetting;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Maatwebsite\Excel\Facades\Excel;
 use Symfony\Component\HttpFoundation\Response;
@@ -32,12 +33,11 @@ class DocumentController extends Controller
     /**
      * Staff directory spreadsheet. Passwords and tokens are not included.
      */
-    public function userDirectory(): Response
+    public function userDirectory(Request $request): Response
     {
         $disk = config('filesystems.documents_disk');
         $path = 'exports/user-directory.xlsx';
-
-        Excel::store(new UserDirectoryExport, $path, $disk);
+        Excel::store(new UserDirectoryExport($request->user()), $path, $disk);
 
         return Storage::disk($disk)->download($path, 'globeflight-staff.xlsx');
     }

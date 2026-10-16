@@ -18,10 +18,16 @@ class DashboardController extends Controller
         $user = $request->user()->load(['department', 'branch']);
         $role = $user->primaryRole() ?? 'customer';
 
-        $stats = $this->statsForRole($role);
-        $recentActivities = ActivityLog::query()
-            ->with('user:id,name')
-            ->latest()
+        $stats = $this->statsForRole($role, $user);
+        $activity = ActivityLog::query()->with('user:id,name')->latest();
+
+        if (! $user->hasRole('administrator')) {
+            $activity->whereDoesntHave('user', function ($query) {
+                $query->whereHas('roles', fn ($roles) => $roles->where('name', 'administrator'));
+            });
+        }
+
+        $recentActivities = $activity
             ->limit(8)
             ->get()
             ->map(fn (ActivityLog $log) => [
@@ -46,27 +52,31 @@ class DashboardController extends Controller
     }
 
     /**
+     * Company-wide cards. Management sees the same board, without administrator accounts.
+     *
+     * @return list<array{label: string, value: string|int, hint: string}>
+     */
+    private function companyStats(User $viewer): array
+    {
+        return [
+            ['label' => 'Total Users', 'value' => User::query()->visibleTo($viewer)->count(), 'hint' => 'Active directory'],
+            ['label' => 'Active Shipments', 'value' => '—', 'hint' => 'Module pending'],
+            ['label' => 'Quotations', 'value' => '—', 'hint' => 'Module pending'],
+            ['label' => 'Weekly Reports', 'value' => '—', 'hint' => 'Module pending'],
+            ['label' => 'Customers', 'value' => '—', 'hint' => 'CRM pending'],
+            ['label' => 'Revenue (KES)', 'value' => '—', 'hint' => 'Placeholder'],
+        ];
+    }
+
+    /**
      * Placeholder KPIs per role — replaced when CRM/Shipments/Finance modules ship.
      *
      * @return list<array{label: string, value: string|int, hint: string}>
      */
-    private function statsForRole(string $role): array
+    private function statsForRole(string $role, User $viewer): array
     {
         return match ($role) {
-            'administrator' => [
-                ['label' => 'Total Users', 'value' => User::query()->count(), 'hint' => 'Active directory'],
-                ['label' => 'Active Shipments', 'value' => '—', 'hint' => 'Module pending'],
-                ['label' => 'Quotations', 'value' => '—', 'hint' => 'Module pending'],
-                ['label' => 'Weekly Reports', 'value' => '—', 'hint' => 'Module pending'],
-                ['label' => 'Customers', 'value' => '—', 'hint' => 'CRM pending'],
-                ['label' => 'Revenue (KES)', 'value' => '—', 'hint' => 'Placeholder'],
-            ],
-            'management' => [
-                ['label' => 'Business KPI', 'value' => '—', 'hint' => 'On-time delivery'],
-                ['label' => 'Pipeline Value', 'value' => '—', 'hint' => 'Quotations'],
-                ['label' => 'Active Shipments', 'value' => '—', 'hint' => 'Network-wide'],
-                ['label' => 'Open Reports', 'value' => '—', 'hint' => 'Awaiting review'],
-            ],
+            'administrator', 'management' => $this->companyStats($viewer),
             'sales' => [
                 ['label' => 'Leads', 'value' => '—', 'hint' => 'This month'],
                 ['label' => 'Quotations', 'value' => '—', 'hint' => 'Open'],

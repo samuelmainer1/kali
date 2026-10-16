@@ -100,6 +100,8 @@ Password for all: `Password1!`
 | Marketing | marketing@globeflight.co.ke |
 | Customer | customer@example.com |
 
+Management has the same permissions and screens as the administrator. Administrator accounts are omitted from management's user counts, staff export, and activity feed. An administrator sees every account and can delete any account. Management cannot delete an administrator account.
+
 ## Out of scope (later modules)
 
 User CRUD UI, full audit viewer, CRM, shipments, real KPI metrics.

@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\User;
+use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -64,6 +65,27 @@ class ProfileTest extends TestCase
     public function test_user_can_delete_their_account(): void
     {
         $user = User::factory()->create();
+
+        $response = $this
+            ->actingAs($user)
+            ->delete('/profile', [
+                'password' => 'password',
+            ]);
+
+        $response
+            ->assertSessionHasNoErrors()
+            ->assertRedirect('/');
+
+        $this->assertGuest();
+        $this->assertNull($user->fresh());
+    }
+
+    public function test_administrator_can_delete_their_account(): void
+    {
+        $this->seed(RolePermissionSeeder::class);
+
+        $user = User::factory()->create();
+        $user->assignRole('administrator');
 
         $response = $this
             ->actingAs($user)

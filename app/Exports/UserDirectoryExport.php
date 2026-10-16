@@ -10,12 +10,17 @@ use Maatwebsite\Excel\Concerns\WithMapping;
 
 class UserDirectoryExport implements FromQuery, WithHeadings, WithMapping
 {
+    public function __construct(private readonly User $viewer) {}
+
     /**
      * @return Builder<User>
      */
     public function query(): Builder
     {
-        return User::query()->with(['department', 'branch'])->orderBy('name');
+        return User::query()
+            ->visibleTo($this->viewer)
+            ->with(['department', 'branch'])
+            ->orderBy('name');
     }
 
     /**
