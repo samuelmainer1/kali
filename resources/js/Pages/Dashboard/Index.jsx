@@ -27,7 +27,7 @@ function StatCard({ label, value, hint, index }) {
     );
 }
 
-export default function DashboardIndex({ role, stats, recentActivities, userSummary }) {
+export default function DashboardIndex({ role, stats, recentActivities, userSummary, showRoadmap }) {
     const roleLabel = userSummary?.role_label || role;
     const permissions = usePage().props.auth?.user?.permissions ?? [];
     const can = (permission) => permissions.includes(permission);
@@ -87,8 +87,8 @@ export default function DashboardIndex({ role, stats, recentActivities, userSumm
                 ))}
             </section>
 
-            <section className="grid gap-6 lg:grid-cols-5">
-                <div className="rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900 lg:col-span-3">
+            <section className={`grid gap-6 ${showRoadmap ? 'lg:grid-cols-5' : ''}`}>
+                <div className={`rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900 ${showRoadmap ? 'lg:col-span-3' : ''}`}>
                     <div className="mb-4 flex items-center justify-between">
                         <div className="flex items-center gap-2">
                             <Activity className="h-4 w-4 text-gf-forest" />
@@ -118,6 +118,7 @@ export default function DashboardIndex({ role, stats, recentActivities, userSumm
                     </div>
                 </div>
 
+                {showRoadmap && (
                 <div className="rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900 lg:col-span-2">
                     <h3 className="font-display text-lg font-bold">Module roadmap</h3>
                     <p className="mt-1 text-sm text-slate-500">Next builds after Module 1 approval</p>
@@ -138,6 +139,7 @@ export default function DashboardIndex({ role, stats, recentActivities, userSumm
                         ))}
                     </ul>
                 </div>
+                )}
             </section>
         </AppLayout>
     );

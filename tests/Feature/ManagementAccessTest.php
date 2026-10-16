@@ -42,6 +42,7 @@ class ManagementAccessTest extends TestCase
                 ->has('stats', 6)
                 ->where('stats.0.label', 'Total Users')
                 ->where('stats.0.value', 1)
+                ->where('showRoadmap', false)
                 ->where('recentActivities', [])
                 ->where('auth.user.permissions', function ($permissions) use ($admin) {
                     return collect($permissions)->sort()->values()->all()
@@ -53,6 +54,7 @@ class ManagementAccessTest extends TestCase
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->where('stats.0.value', 2)
+                ->where('showRoadmap', true)
                 ->has('recentActivities', 1));
     }
 

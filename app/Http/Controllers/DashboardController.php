@@ -42,6 +42,7 @@ class DashboardController extends Controller
             'role' => $role,
             'stats' => $stats,
             'recentActivities' => $recentActivities,
+            'showRoadmap' => $role === 'administrator',
             'userSummary' => [
                 'name' => $user->name,
                 'department' => $user->department?->name,
