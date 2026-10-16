@@ -93,5 +93,11 @@ class DatabaseSeeder extends Seeder
 
             $user->syncRoles([$data['role']]);
         }
+
+        $this->call(CrmQuotationSeeder::class);
+        $this->call(AnnouncementSeeder::class);
+        $this->call(PipelineSeeder::class);
+        $this->call(ProcurementSeeder::class);
+        $this->call(LeaveSeeder::class);
     }
 }

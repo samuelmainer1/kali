@@ -1,6 +1,5 @@
 <?php
 
-use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -24,13 +23,6 @@ return Application::configure(basePath: dirname(__DIR__))
             'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,
             'role_or_permission' => \Spatie\Permission\Middleware\RoleOrPermissionMiddleware::class,
         ]);
-    })
-    ->withSchedule(function (Schedule $schedule): void {
-        // Shared hosting has no always-on worker. Cron calls schedule:run
-        // every minute, and this drains whatever jobs are waiting.
-        $schedule->command('queue:work --stop-when-empty --max-time=50')
-            ->everyMinute()
-            ->withoutOverlapping();
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(

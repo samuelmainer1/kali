@@ -1,13 +1,20 @@
 import {
-    Boxes,
+    Bell,
+    Building2,
+    CalendarDays,
+    CheckSquare,
+    ClipboardCheck,
     ClipboardList,
     FileText,
+    GitBranch,
+    KanbanSquare,
     LayoutDashboard,
     Megaphone,
-    Package,
+    ScrollText,
     Settings,
     Shield,
     Ship,
+    ShoppingCart,
     Users,
     Warehouse,
     Headset,
@@ -16,93 +23,173 @@ import {
 /**
  * Sidebar navigation filtered by Spatie permissions shared via Inertia.
  */
-export function navigationForUser(permissions = []) {
-    const can = (permission) =>
-        permissions.includes(permission) || permissions.includes('settings.manage');
+export function navigationForUser(permissions = [], role = null, options = {}) {
+    const can = (permission) => permissions.includes(permission);
+    const canViewAnnouncements = options.canViewAnnouncements
+        ?? Boolean(role && role !== 'customer');
+    const isStaff = Boolean(role && role !== 'customer');
 
     const items = [
         {
             label: 'Dashboard',
-            href: route('dashboard'),
+            href: 'dashboard',
+            routeName: 'dashboard',
             icon: LayoutDashboard,
             show: true,
         },
         {
+            label: 'Approvals',
+            href: 'approvals.index',
+            routeName: 'approvals.*',
+            icon: ClipboardCheck,
+            show: can('leave.approve') || can('procurement.approve') || can('quotations.approve') || can('reports.weekly.review'),
+        },
+        {
+            label: 'Users',
+            href: 'admin.users.index',
+            routeName: 'admin.users.*',
+            icon: Users,
+            show: can('users.view'),
+        },
+        {
+            label: 'Roles',
+            href: 'admin.roles.index',
+            routeName: 'admin.roles.*',
+            icon: Shield,
+            show: can('roles.view') || can('roles.manage'),
+        },
+        {
+            label: 'Departments',
+            href: 'admin.departments.index',
+            routeName: 'admin.departments.*',
+            icon: Building2,
+            show: can('departments.manage'),
+        },
+        {
+            label: 'Branches',
+            href: 'admin.branches.index',
+            routeName: 'admin.branches.*',
+            icon: GitBranch,
+            show: can('branches.manage'),
+        },
+        {
+            label: 'Company Settings',
+            href: 'admin.settings.edit',
+            routeName: 'admin.settings.*',
+            icon: Settings,
+            show: can('settings.manage'),
+        },
+        {
+            label: 'Audit Logs',
+            href: 'admin.audit-logs.index',
+            routeName: 'admin.audit-logs.*',
+            icon: ScrollText,
+            show: can('audit.view'),
+        },
+        {
             label: 'Customers',
-            href: '#',
+            href: 'crm.customers.index',
+            routeName: 'crm.customers.*',
             icon: Users,
             show: can('customers.view'),
-            soon: true,
         },
         {
             label: 'Quotations',
-            href: '#',
+            href: 'sales.quotations.index',
+            routeName: 'sales.quotations.*',
             icon: FileText,
             show: can('quotations.view'),
-            soon: true,
+        },
+        {
+            label: 'Pipeline',
+            href: 'pipeline.index',
+            routeName: 'pipeline.*',
+            icon: KanbanSquare,
+            show: can('pipeline.view') || can('pipeline.view_all') || can('pipeline.manage'),
         },
         {
             label: 'Shipments',
-            href: '#',
+            href: 'operations.shipments.index',
+            routeName: 'operations.shipments.*',
             icon: Ship,
             show: can('shipments.view') || can('portal.shipments'),
-            soon: true,
         },
         {
             label: 'Warehouse',
-            href: '#',
+            href: 'warehouse.index',
+            routeName: 'warehouse.*',
             icon: Warehouse,
             show: can('warehouse.view'),
-            soon: true,
+        },
+        {
+            label: 'Tasks',
+            href: 'tasks.index',
+            routeName: 'tasks.*',
+            icon: CheckSquare,
+            show: can('tasks.view') || can('tasks.manage'),
+        },
+        {
+            label: 'Announcements',
+            href: 'announcements.index',
+            routeName: 'announcements.*',
+            icon: Bell,
+            show: canViewAnnouncements,
+        },
+        {
+            label: 'Invoices',
+            href: 'finance.invoices.index',
+            routeName: 'finance.invoices.*',
+            icon: FileText,
+            show: can('invoices.view'),
+        },
+        {
+            label: 'Procurement',
+            href: 'procurement.index',
+            routeName: 'procurement.*',
+            icon: ShoppingCart,
+            show: isStaff || can('procurement.request') || can('procurement.view_all') || can('procurement.approve') || can('procurement.process'),
+        },
+        {
+            label: 'Leave',
+            href: 'leave.index',
+            routeName: 'leave.*',
+            icon: CalendarDays,
+            show: isStaff || can('leave.request') || can('leave.view_all') || can('leave.approve'),
         },
         {
             label: 'Reports',
-            href: '#',
+            href: 'reports.index',
+            routeName: 'reports.*',
             icon: ClipboardList,
-            show: can('reports.weekly.submit') || can('reports.view_all'),
-            soon: true,
+            show: can('reports.weekly.submit') || can('reports.view_all') || can('reports.weekly.review'),
         },
         {
             label: 'Support',
-            href: '#',
+            href: 'support.index',
+            routeName: 'support.*',
             icon: Headset,
             show: can('support.view'),
-            soon: true,
         },
         {
             label: 'Marketing',
-            href: '#',
+            href: 'marketing.campaigns.index',
+            routeName: 'marketing.*',
             icon: Megaphone,
             show: can('marketing.view'),
-            soon: true,
         },
         {
-            label: 'Inventory',
-            href: '#',
-            icon: Boxes,
-            show: can('warehouse.manage'),
-            soon: true,
-        },
-        {
-            label: 'Administration',
-            href: '#',
-            icon: Shield,
-            show: can('roles.manage') || can('settings.manage'),
-            soon: true,
-        },
-        {
-            label: 'Settings',
-            href: route('profile.edit'),
+            label: 'My Profile',
+            href: 'profile.edit',
+            routeName: 'profile.*',
             icon: Settings,
             show: true,
         },
-        {
-            label: 'Packages',
-            href: '#',
-            icon: Package,
-            show: false,
-        },
     ];
 
-    return items.filter((item) => item.show);
+    return items
+        .filter((item) => item.show)
+        .map((item) => ({
+            ...item,
+            url: item.href ? route(item.href) : '#',
+        }));
 }

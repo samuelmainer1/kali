@@ -19,8 +19,8 @@ export default function GuestLayout({ children, title, subtitle }) {
             </div>
 
             <div className="relative z-10 flex min-h-screen flex-col">
-                <div className="flex items-center justify-between px-6 py-5">
-                    <BrandMark className="h-11 w-11" showWordmark />
+                <div className="flex items-center justify-between gap-4 px-5 py-4 sm:px-8 sm:py-5">
+                    <BrandMark className="h-14 w-auto sm:h-16" showWordmark stacked />
                     <ThemeToggle />
                 </div>
 
@@ -29,7 +29,7 @@ export default function GuestLayout({ children, title, subtitle }) {
                         {(title || subtitle) && (
                             <div className="mb-6 text-center">
                                 {title && (
-                                    <h1 className="font-display text-3xl font-extrabold tracking-tight text-gf-ink dark:text-white">
+                                    <h1 className="font-display text-2xl font-extrabold tracking-tight text-gf-ink dark:text-white">
                                         {title}
                                     </h1>
                                 )}

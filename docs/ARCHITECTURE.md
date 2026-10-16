@@ -1,8 +1,8 @@
-# Globeflight Portal — Architecture
+# Globeflight ILMS — Architecture
 
 ## Product
 
-**Globeflight Portal** is an Integrated Logistics Management System (ILMS) for Globeflight Kenya. It centralizes CRM, quotations, shipments, warehouse, reporting, customer self-service, and administration.
+**Globeflight ILMS** is an Integrated Logistics Management System for Globeflight Kenya. It centralizes CRM, quotations, shipments, warehouse, reporting, customer self-service, and administration.
 
 ## Stack decision
 
@@ -61,16 +61,21 @@ Permissions are module-scoped (`users.view`, `shipments.update`, …). Controlle
 
 ## Module roadmap (build order)
 
-1. **Foundation + Authentication + RBAC + App shell + role dashboards (stubs)** ← current
-2. Administration (users, departments, branches, settings, audit logs)
-3. CRM (companies, contacts, addresses)
-4. Quotations
-5. Shipments + tracking lifecycle
-6. Warehouse
-7. Weekly / monthly employee reports
-8. Customer portal self-service
-9. Reporting exports (PDF/Excel)
-10. Notification adapters (Email → WhatsApp/SMS)
+> Internal planning only — shown on admin/management dashboards.
+
+1. Foundation + Authentication + RBAC + App shell + role dashboards (stubs)
+2. Administration (users, roles, departments, branches, settings, audit logs)
+3. CRM + Quotations (combined)
+4. Shipments + Warehouse (combined)
+5. Weekly / monthly employee reports
+6. Support + Marketing (combined)
+7. Invoices (Finance) + admin protections
+8. **Task & Workflow Management** ← current
+9. Customer portal self-service
+10. Reporting exports (PDF/Excel)
+11. Notification adapters (Email → WhatsApp/SMS)
+
+See `docs/modules/` for per-module designs.
 
 Each module gets a DB design doc and approval gate before implementation continues.
 

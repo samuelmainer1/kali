@@ -2,6 +2,8 @@
 
 namespace App\Http\Middleware;
 
+use App\Services\AnnouncementService;
+use App\Services\AppNotificationService;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -20,6 +22,52 @@ class HandleInertiaRequests extends Middleware
     public function share(Request $request): array
     {
         $user = $request->user()?->loadMissing(['department', 'branch']);
+        $announcementService = app(AnnouncementService::class);
+        $notificationService = app(AppNotificationService::class);
+
+        $canViewAnnouncements = $user ? $announcementService->canView($user) : false;
+
+        $announcementBell = [
+            'enabled' => $canViewAnnouncements,
+            'unread_count' => 0,
+            'items' => [],
+        ];
+
+        if ($canViewAnnouncements) {
+            $announcementBell = [
+                'enabled' => true,
+                'unread_count' => $announcementService->unreadCount($user),
+                'items' => $announcementService->unreadPreview($user)->map(fn ($item) => [
+                    'id' => $item->id,
+                    'title' => $item->title,
+                    'type' => $item->type,
+                    'is_urgent' => $item->is_urgent,
+                    'published_at' => $item->published_at?->diffForHumans(),
+                ])->values()->all(),
+            ];
+        }
+
+        $systemNotifications = [
+            'enabled' => (bool) $user,
+            'unread_count' => 0,
+            'items' => [],
+        ];
+
+        if ($user) {
+            $systemNotifications = [
+                'enabled' => true,
+                'unread_count' => $notificationService->unreadCount($user),
+                'items' => $notificationService->unreadPreview($user)->map(fn ($item) => [
+                    'id' => $item->id,
+                    'type' => $item->type,
+                    'title' => $item->title,
+                    'body' => $item->body,
+                    'link' => $item->link,
+                    'is_read' => (bool) $item->read_at,
+                    'created_at' => $item->created_at?->diffForHumans(),
+                ])->values()->all(),
+            ];
+        }
 
         return [
             ...parent::share($request),
@@ -36,13 +84,15 @@ class HandleInertiaRequests extends Middleware
                     'branch' => $user->branch?->only(['id', 'name', 'code']),
                 ] : null,
             ],
+            'announcementBell' => $announcementBell,
+            'systemNotifications' => $systemNotifications,
             'flash' => [
                 'success' => fn () => $request->session()->get('success'),
                 'error' => fn () => $request->session()->get('error'),
                 'status' => fn () => $request->session()->get('status'),
             ],
             'app' => [
-                'name' => config('app.name', 'Globeflight Portal'),
+                'name' => config('app.name', 'Globeflight ILMS'),
                 'tagline' => '24 • seven • 365',
             ],
         ];

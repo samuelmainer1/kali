@@ -3,46 +3,111 @@
 namespace App\Http\Controllers;
 
 use App\Models\ActivityLog;
+use App\Models\CargoMovement;
+use App\Models\Customer;
+use App\Models\EmployeeReport;
+use App\Models\InventoryItem;
+use App\Models\Invoice;
+use App\Models\MarketingCampaign;
+use App\Models\MarketingLead;
+use App\Models\Quotation;
+use App\Models\Shipment;
+use App\Models\SupportTicket;
+use App\Models\Task;
 use App\Models\User;
+use App\Models\PurchaseRequest;
+use App\Services\ApprovalsService;
+use App\Services\PipelineService;
+use App\Services\ProcurementService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
 /**
- * Role-aware dashboard entry point. KPI values are placeholders until domain modules land.
+ * Role-aware dashboard entry point.
  */
 class DashboardController extends Controller
 {
+    public function __construct(
+        private readonly PipelineService $pipeline,
+        private readonly ProcurementService $procurement,
+        private readonly ApprovalsService $approvals,
+    ) {}
+
     public function __invoke(Request $request): Response
     {
         $user = $request->user()->load(['department', 'branch']);
         $role = $user->primaryRole() ?? 'customer';
+        $showOpsPanels = in_array($role, ['administrator', 'management'], true);
 
         $stats = $this->statsForRole($role, $user);
-        $activity = ActivityLog::query()->with('user:id,name')->latest();
 
-        if (! $user->hasRole('administrator')) {
-            $activity->whereDoesntHave('user', function ($query) {
-                $query->whereHas('roles', fn ($roles) => $roles->where('name', 'administrator'));
-            });
+        $recentActivities = [];
+        if ($showOpsPanels) {
+            $recentActivities = ActivityLog::query()
+                ->with('user:id,name')
+                ->latest()
+                ->limit(8)
+                ->get()
+                ->map(fn (ActivityLog $log) => [
+                    'id' => $log->id,
+                    'action' => $log->action,
+                    'description' => $log->description,
+                    'user' => $log->user?->name,
+                    'created_at' => $log->created_at?->diffForHumans(),
+                ]);
         }
 
-        $recentActivities = $activity
-            ->limit(8)
-            ->get()
-            ->map(fn (ActivityLog $log) => [
-                'id' => $log->id,
-                'action' => $log->action,
-                'description' => $log->description,
-                'user' => $log->user?->name,
-                'created_at' => $log->created_at?->diffForHumans(),
-            ]);
+        $pipelineSummary = null;
+        if ($user->can('pipeline.view') || $user->can('pipeline.view_all') || $user->can('pipeline.manage')) {
+            $pipelineSummary = $this->pipeline->dashboardSummary($user);
+        }
+
+        $procurementSummary = null;
+        if ($this->procurement->canRequest($user) || $this->procurement->canViewAll($user)) {
+            $statsData = $this->procurement->summaryStats($user);
+            $procurementSummary = [
+                'subtitle' => $this->procurement->canViewAll($user)
+                    ? 'Internal spending overview'
+                    : 'Your purchase requests',
+                'cards' => [
+                    ['label' => 'Pending approval', 'value' => $statsData['pending']],
+                    ['label' => 'Approved', 'value' => $statsData['approved']],
+                    ['label' => 'Processed this month', 'value' => $statsData['processed_month']],
+                    ['label' => 'Spend this month (KES)', 'value' => number_format($statsData['spend_month'], 0)],
+                ],
+                'latest' => $this->procurement->scopedQuery($user)
+                    ->latest()
+                    ->limit(4)
+                    ->get(['id', 'title', 'reference', 'status', 'total_amount'])
+                    ->map(fn (PurchaseRequest $item) => [
+                        'id' => $item->id,
+                        'title' => $item->title,
+                        'reference' => $item->reference,
+                        'status_label' => PurchaseRequest::statusLabel($item->status),
+                        'total_amount' => (float) $item->total_amount,
+                    ])->all(),
+            ];
+        }
+
+        $approvalsSummary = null;
+        if ($this->approvals->canAccess($user)) {
+            $pending = $this->approvals->pendingFor($user);
+            $approvalsSummary = [
+                'total' => $pending['total'],
+                'counts' => $pending['counts'],
+                'latest' => array_slice($pending['items'], 0, 5),
+            ];
+        }
 
         return Inertia::render('Dashboard/Index', [
             'role' => $role,
             'stats' => $stats,
             'recentActivities' => $recentActivities,
-            'showRoadmap' => $role === 'administrator',
+            'showOpsPanels' => $showOpsPanels,
+            'pipelineSummary' => $pipelineSummary,
+            'procurementSummary' => $procurementSummary,
+            'approvalsSummary' => $approvalsSummary,
             'userSummary' => [
                 'name' => $user->name,
                 'department' => $user->department?->name,
@@ -53,72 +118,85 @@ class DashboardController extends Controller
     }
 
     /**
-     * Company-wide cards. Management sees the same board, without administrator accounts.
+     * Administrator and management share one board: company totals, then the approval and finance cards.
      *
      * @return list<array{label: string, value: string|int, hint: string}>
      */
-    private function companyStats(User $viewer): array
+    private function leadershipStats(User $user, int $activeShipments, int $quotations, int $customers, float $pipeline): array
     {
         return [
-            ['label' => 'Total Users', 'value' => User::query()->visibleTo($viewer)->count(), 'hint' => 'Active directory'],
-            ['label' => 'Active Shipments', 'value' => '—', 'hint' => 'Module pending'],
-            ['label' => 'Quotations', 'value' => '—', 'hint' => 'Module pending'],
-            ['label' => 'Weekly Reports', 'value' => '—', 'hint' => 'Module pending'],
-            ['label' => 'Customers', 'value' => '—', 'hint' => 'CRM pending'],
-            ['label' => 'Revenue (KES)', 'value' => '—', 'hint' => 'Placeholder'],
+            ['label' => 'Total Users', 'value' => User::query()->count(), 'hint' => 'Active directory'],
+            ['label' => 'Active Shipments', 'value' => $activeShipments, 'hint' => 'Not delivered'],
+            ['label' => 'Quotations', 'value' => $quotations, 'hint' => 'All time'],
+            ['label' => 'Pending Reports', 'value' => EmployeeReport::query()->where('status', 'submitted')->count(), 'hint' => 'Awaiting review'],
+            ['label' => 'Customers', 'value' => $customers, 'hint' => 'CRM companies'],
+            ['label' => 'Invoices Paid', 'value' => Invoice::query()->where('status', 'paid')->count(), 'hint' => 'Finance'],
+            ['label' => 'Pending Approvals', 'value' => $this->approvals->pendingFor($user)['total'], 'hint' => 'Leave · PR · Quotes · Reports'],
+            ['label' => 'Pipeline Value', 'value' => number_format($pipeline, 0), 'hint' => 'KES open quotes'],
+            ['label' => 'Unpaid Invoices', 'value' => Invoice::query()->whereIn('status', ['sent', 'overdue'])->count(), 'hint' => 'Finance'],
         ];
     }
 
     /**
-     * Placeholder KPIs per role — replaced when CRM/Shipments/Finance modules ship.
-     *
      * @return list<array{label: string, value: string|int, hint: string}>
      */
-    private function statsForRole(string $role, User $viewer): array
+    private function statsForRole(string $role, User $user): array
     {
+        $activeShipments = Shipment::query()->whereNotIn('status', ['delivered'])->count();
+        $quotations = Quotation::query()->count();
+        $customers = Customer::query()->count();
+        $openQuotes = Quotation::query()->whereIn('status', ['draft', 'pending_approval', 'approved'])->count();
+        $pipeline = (float) Quotation::query()->whereIn('status', ['pending_approval', 'approved'])->sum('total');
+
         return match ($role) {
-            'administrator', 'management' => $this->companyStats($viewer),
+            'administrator', 'management' => $this->leadershipStats($user, $activeShipments, $quotations, $customers, $pipeline),
+            'finance' => [
+                ['label' => 'Draft Invoices', 'value' => Invoice::query()->where('status', 'draft')->count(), 'hint' => 'To send'],
+                ['label' => 'Sent', 'value' => Invoice::query()->where('status', 'sent')->count(), 'hint' => 'Awaiting payment'],
+                ['label' => 'Paid', 'value' => Invoice::query()->where('status', 'paid')->count(), 'hint' => 'Collected'],
+                ['label' => 'Overdue', 'value' => Invoice::query()->where('status', 'overdue')->count(), 'hint' => 'Follow up'],
+            ],
             'sales' => [
-                ['label' => 'Leads', 'value' => '—', 'hint' => 'This month'],
-                ['label' => 'Quotations', 'value' => '—', 'hint' => 'Open'],
-                ['label' => 'Customers', 'value' => '—', 'hint' => 'Assigned'],
-                ['label' => 'Follow-ups', 'value' => '—', 'hint' => 'Due today'],
+                ['label' => 'Leads', 'value' => Customer::query()->where('status', 'lead')->count(), 'hint' => 'CRM'],
+                ['label' => 'Open Quotations', 'value' => $openQuotes, 'hint' => 'Active pipeline'],
+                ['label' => 'My Tasks', 'value' => Task::query()->where('assigned_to', $user->id)->whereIn('status', ['todo', 'in_progress'])->count(), 'hint' => 'Open'],
+                ['label' => 'My Reports', 'value' => EmployeeReport::query()->where('user_id', $user->id)->count(), 'hint' => 'Submitted / drafts'],
             ],
             'operations' => [
-                ['label' => 'In Transit', 'value' => '—', 'hint' => 'Shipments'],
-                ['label' => 'At Warehouse', 'value' => '—', 'hint' => 'Awaiting booking'],
-                ['label' => 'Customs', 'value' => '—', 'hint' => 'Clearance'],
-                ['label' => 'Delivered (7d)', 'value' => '—', 'hint' => 'Completed'],
+                ['label' => 'Created', 'value' => Shipment::query()->where('status', 'created')->count(), 'hint' => 'Shipments'],
+                ['label' => 'In Transit', 'value' => Shipment::query()->whereIn('status', ['departed', 'arrived', 'customs_clearance', 'out_for_delivery'])->count(), 'hint' => 'Moving'],
+                ['label' => 'At Warehouse', 'value' => Shipment::query()->where('status', 'warehouse')->count(), 'hint' => 'Staging'],
+                ['label' => 'My Tasks', 'value' => Task::query()->where('assigned_to', $user->id)->whereIn('status', ['todo', 'in_progress'])->count(), 'hint' => 'Open'],
             ],
             'warehouse' => [
-                ['label' => 'Inventory Lots', 'value' => '—', 'hint' => 'On hand'],
-                ['label' => 'Inbound', 'value' => '—', 'hint' => 'Today'],
-                ['label' => 'Outbound', 'value' => '—', 'hint' => 'Today'],
-                ['label' => 'Exceptions', 'value' => '—', 'hint' => 'Needs attention'],
-            ],
-            'finance' => [
-                ['label' => 'Open Invoices', 'value' => '—', 'hint' => 'Receivables'],
-                ['label' => 'Paid (MTD)', 'value' => '—', 'hint' => 'KES'],
-                ['label' => 'Overdue', 'value' => '—', 'hint' => 'Follow-up'],
-                ['label' => 'Quotes Pending', 'value' => '—', 'hint' => 'Finance review'],
+                ['label' => 'Inventory Lots', 'value' => InventoryItem::query()->count(), 'hint' => 'On record'],
+                ['label' => 'Inbound Today', 'value' => CargoMovement::query()->where('type', 'inbound')->whereDate('moved_at', today())->count(), 'hint' => 'Movements'],
+                ['label' => 'Outbound Today', 'value' => CargoMovement::query()->where('type', 'outbound')->whereDate('moved_at', today())->count(), 'hint' => 'Movements'],
+                ['label' => 'My Reports', 'value' => EmployeeReport::query()->where('user_id', $user->id)->count(), 'hint' => 'All periods'],
             ],
             'customer_care' => [
-                ['label' => 'Open Tickets', 'value' => '—', 'hint' => 'Support'],
-                ['label' => 'Avg Response', 'value' => '—', 'hint' => 'Hours'],
-                ['label' => 'Shipments Tracked', 'value' => '—', 'hint' => 'Today'],
-                ['label' => 'Escalations', 'value' => '—', 'hint' => 'Active'],
+                ['label' => 'Open Tickets', 'value' => SupportTicket::query()->whereIn('status', ['open', 'in_progress', 'waiting_customer'])->count(), 'hint' => 'Support queue'],
+                ['label' => 'Urgent', 'value' => SupportTicket::query()->where('priority', 'urgent')->whereNotIn('status', ['resolved', 'closed'])->count(), 'hint' => 'Priority'],
+                ['label' => 'Assigned to Me', 'value' => SupportTicket::query()->where('assigned_to', $user->id)->whereNotIn('status', ['closed'])->count(), 'hint' => 'Active'],
+                ['label' => 'Resolved', 'value' => SupportTicket::query()->where('status', 'resolved')->count(), 'hint' => 'Awaiting close'],
             ],
             'marketing' => [
-                ['label' => 'Campaigns', 'value' => '—', 'hint' => 'Active'],
-                ['label' => 'Leads Captured', 'value' => '—', 'hint' => 'This week'],
-                ['label' => 'Engagement', 'value' => '—', 'hint' => 'Placeholder'],
-                ['label' => 'Content Pieces', 'value' => '—', 'hint' => 'In progress'],
+                ['label' => 'Active Campaigns', 'value' => MarketingCampaign::query()->where('status', 'active')->count(), 'hint' => 'Live'],
+                ['label' => 'New Leads', 'value' => MarketingLead::query()->where('status', 'new')->count(), 'hint' => 'Pipeline'],
+                ['label' => 'Qualified', 'value' => MarketingLead::query()->where('status', 'qualified')->count(), 'hint' => 'Ready for sales'],
+                ['label' => 'Converted', 'value' => MarketingLead::query()->where('status', 'converted')->count(), 'hint' => 'Won'],
+            ],
+            'customer' => [
+                ['label' => 'My Tickets', 'value' => SupportTicket::query()->where('requester_id', $user->id)->whereNotIn('status', ['closed'])->count(), 'hint' => 'Open support'],
+                ['label' => 'Quotations', 'value' => '—', 'hint' => 'Portal pending'],
+                ['label' => 'Shipments', 'value' => '—', 'hint' => 'Portal pending'],
+                ['label' => 'Documents', 'value' => '—', 'hint' => 'Portal pending'],
             ],
             default => [
-                ['label' => 'My Shipments', 'value' => '—', 'hint' => 'Portal'],
-                ['label' => 'Open Quotes', 'value' => '—', 'hint' => 'Requests'],
-                ['label' => 'Invoices', 'value' => '—', 'hint' => 'Payable'],
-                ['label' => 'Documents', 'value' => '—', 'hint' => 'Available'],
+                ['label' => 'Customers', 'value' => $customers, 'hint' => 'CRM'],
+                ['label' => 'Quotations', 'value' => $quotations, 'hint' => 'All'],
+                ['label' => 'Shipments', 'value' => Shipment::query()->count(), 'hint' => 'Created'],
+                ['label' => 'Open Tickets', 'value' => SupportTicket::query()->whereIn('status', ['open', 'in_progress'])->count(), 'hint' => 'Support'],
             ],
         };
     }

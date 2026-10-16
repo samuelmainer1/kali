@@ -25,6 +25,7 @@ export default {
             fontFamily: {
                 sans: ['Manrope', ...defaultTheme.fontFamily.sans],
                 display: ['Outfit', ...defaultTheme.fontFamily.sans],
+                alice: ['Alice', 'Georgia', ...defaultTheme.fontFamily.serif],
             },
             keyframes: {
                 'fade-in': {

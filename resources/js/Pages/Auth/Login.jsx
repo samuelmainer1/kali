@@ -83,12 +83,12 @@ export default function Login({ status, canResetPassword }) {
                 </div>
 
                 <PrimaryButton className="w-full justify-center" disabled={processing}>
-                    {processing ? 'Signing in…' : 'Sign in to Portal'}
+                    {processing ? 'Signing in…' : 'Sign in to Integrated Logistic Portal'}
                 </PrimaryButton>
             </form>
 
             <p className="mt-6 text-center text-xs text-slate-500 dark:text-slate-400">
-                Accounts are provisioned by administrators. Demo password: <code>Password1!</code>
+                Accounts are provisioned by administrators.
             </p>
         </GuestLayout>
     );

@@ -1,4 +1,6 @@
+import AnnouncementBell from '@/Components/AnnouncementBell';
 import BrandMark from '@/Components/BrandMark';
+import SystemNotificationBell from '@/Components/SystemNotificationBell';
 import ThemeToggle from '@/Components/ThemeToggle';
 import ToastStack from '@/Components/ToastStack';
 import { navigationForUser } from '@/Config/navigation';
@@ -7,17 +9,18 @@ import { LogOut, Menu, UserRound, X } from 'lucide-react';
 import { useState } from 'react';
 
 export default function AppLayout({ title, children }) {
-    const { auth, app } = usePage().props;
+    const { auth, app, announcementBell } = usePage().props;
     const user = auth.user;
     const permissions = user?.permissions ?? [];
-    const nav = navigationForUser(permissions);
+    const nav = navigationForUser(permissions, user?.role, {
+        canViewAnnouncements: Boolean(announcementBell?.enabled),
+    });
     const [sidebarOpen, setSidebarOpen] = useState(false);
 
     return (
         <div className="min-h-screen bg-slate-50 text-gf-ink dark:bg-slate-950 dark:text-slate-100">
             <ToastStack />
 
-            {/* Mobile overlay */}
             {sidebarOpen && (
                 <button
                     type="button"
@@ -33,8 +36,8 @@ export default function AppLayout({ title, children }) {
                 }`}
             >
                 <div className="flex items-center justify-between gap-2 border-b border-slate-200 px-5 py-4 dark:border-slate-800">
-                    <Link href={route('dashboard')} className="flex items-center gap-3">
-                        <BrandMark className="h-10 w-10" showWordmark />
+                    <Link href={route('dashboard')} className="flex min-w-0 items-center rounded-lg bg-white px-1 py-0.5 dark:bg-white">
+                        <BrandMark className="h-12 w-auto max-w-[11.5rem]" showWordmark />
                     </Link>
                     <button
                         type="button"
@@ -48,15 +51,12 @@ export default function AppLayout({ title, children }) {
                 <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-4">
                     {nav.map((item) => {
                         const Icon = item.icon;
-                        const active =
-                            !item.soon &&
-                            ((item.label === 'Dashboard' && route().current('dashboard')) ||
-                                (item.label === 'Settings' && route().current('profile.*')));
+                        const active = !item.soon && item.routeName && route().current(item.routeName);
 
                         return (
                             <Link
                                 key={item.label}
-                                href={item.soon ? '#' : item.href}
+                                href={item.soon ? '#' : item.url}
                                 onClick={(event) => {
                                     if (item.soon) {
                                         event.preventDefault();
@@ -83,7 +83,9 @@ export default function AppLayout({ title, children }) {
 
                 <div className="border-t border-slate-200 p-4 dark:border-slate-800">
                     <div className="rounded-xl bg-gradient-to-br from-gf-forest to-slate-900 p-3 text-white">
-                        <p className="text-xs uppercase tracking-[0.2em] text-white/70">Portal</p>
+                        <p className="font-alice whitespace-nowrap text-[11px] uppercase tracking-wide text-white/80">
+                            INTEGRATED LOGISTIC PORTAL
+                        </p>
                         <p className="mt-1 text-sm font-semibold">{app?.name}</p>
                         <p className="text-xs text-white/70">{app?.tagline}</p>
                     </div>
@@ -109,6 +111,8 @@ export default function AppLayout({ title, children }) {
                     </div>
 
                     <div className="flex items-center gap-2 sm:gap-3">
+                        <SystemNotificationBell />
+                        <AnnouncementBell />
                         <ThemeToggle />
                         <Link
                             href={route('profile.edit')}

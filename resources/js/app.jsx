@@ -5,7 +5,7 @@ import { createInertiaApp } from '@inertiajs/react';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { createRoot } from 'react-dom/client';
 
-const appName = import.meta.env.VITE_APP_NAME || 'Globeflight Portal';
+const appName = import.meta.env.VITE_APP_NAME || 'Globeflight ILMS';
 
 createInertiaApp({
     title: (title) => `${title} - ${appName}`,

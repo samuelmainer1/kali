@@ -54,6 +54,57 @@ class AuthenticationPortalTest extends TestCase
         $response->assertInertia(fn ($page) => $page
             ->component('Dashboard/Index')
             ->where('role', 'administrator')
-            ->has('stats'));
+            ->has('stats', 9)
+            ->where('stats.0.label', 'Total Users')
+            ->where('stats.6.label', 'Pending Approvals')
+            ->where('stats.8.label', 'Unpaid Invoices'));
+    }
+
+    public function test_administrator_and_management_share_the_same_dashboard_cards(): void
+    {
+        $this->seed(RolePermissionSeeder::class);
+
+        $administrator = User::factory()->create();
+        $administrator->assignRole('administrator');
+
+        $management = User::factory()->create();
+        $management->assignRole('management');
+
+        $labels = [
+            'Total Users',
+            'Active Shipments',
+            'Quotations',
+            'Pending Reports',
+            'Customers',
+            'Invoices Paid',
+            'Pending Approvals',
+            'Pipeline Value',
+            'Unpaid Invoices',
+        ];
+
+        $administratorStats = null;
+        $managementStats = null;
+
+        $this->actingAs($administrator)
+            ->get('/dashboard')
+            ->assertOk()
+            ->assertInertia(function ($page) use (&$administratorStats, $labels) {
+                $page->where('role', 'administrator')
+                    ->where('stats.0.label', $labels[0])
+                    ->where('stats.8.label', $labels[8]);
+
+                $administratorStats = $page->toArray()['props']['stats'];
+            });
+
+        $this->actingAs($management)
+            ->get('/dashboard')
+            ->assertOk()
+            ->assertInertia(function ($page) use (&$managementStats) {
+                $page->where('role', 'management');
+                $managementStats = $page->toArray()['props']['stats'];
+            });
+
+        $this->assertSame($labels, array_column($administratorStats, 'label'));
+        $this->assertSame($administratorStats, $managementStats);
     }
 }
