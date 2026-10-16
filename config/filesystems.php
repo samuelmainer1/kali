@@ -16,6 +16,12 @@ return [
     'default' => env('FILESYSTEM_DISK', 'local'),
 
     /*
+    | Documents stay on the private "documents" disk while the app is on
+    | shared hosting. Set DOCUMENTS_DISK=s3 once a bucket is available.
+    */
+    'documents_disk' => env('DOCUMENTS_DISK', 'documents'),
+
+    /*
     |--------------------------------------------------------------------------
     | Filesystem Disks
     |--------------------------------------------------------------------------
@@ -43,6 +49,13 @@ return [
             'root' => storage_path('app/public'),
             'url' => rtrim(env('APP_URL', 'http://localhost'), '/').'/storage',
             'visibility' => 'public',
+            'throw' => false,
+            'report' => false,
+        ],
+
+        'documents' => [
+            'driver' => 'local',
+            'root' => storage_path('app/private/documents'),
             'throw' => false,
             'report' => false,
         ],

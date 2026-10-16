@@ -1,6 +1,6 @@
 import AppLayout from '@/Layouts/AppLayout';
-import { Head } from '@inertiajs/react';
-import { Activity, ArrowUpRight } from 'lucide-react';
+import { Head, usePage } from '@inertiajs/react';
+import { Activity, ArrowUpRight, FileSpreadsheet, FileText } from 'lucide-react';
 
 function StatCard({ label, value, hint, index }) {
     const accents = ['bg-gf-yellow/20 text-amber-800', 'bg-gf-green/15 text-gf-forest', 'bg-gf-blue/15 text-sky-800', 'bg-gf-red/10 text-red-700'];
@@ -29,6 +29,14 @@ function StatCard({ label, value, hint, index }) {
 
 export default function DashboardIndex({ role, stats, recentActivities, userSummary }) {
     const roleLabel = userSummary?.role_label || role;
+    const permissions = usePage().props.auth?.user?.permissions ?? [];
+    const can = (permission) => permissions.includes(permission);
+    const downloads = [
+        { href: route('documents.company-profile'), label: 'Company profile PDF', icon: FileText },
+        can('users.view')
+            ? { href: route('documents.user-directory'), label: 'Staff directory Excel', icon: FileSpreadsheet }
+            : null,
+    ].filter(Boolean);
 
     return (
         <AppLayout title="Dashboard">
@@ -57,6 +65,21 @@ export default function DashboardIndex({ role, stats, recentActivities, userSumm
                     </div>
                 </div>
             </section>
+
+            {downloads.length > 0 && (
+                <section className="mb-8 flex flex-wrap gap-3">
+                    {downloads.map((item) => (
+                        <a
+                            key={item.href}
+                            href={item.href}
+                            className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-gf-ink shadow-sm hover:border-gf-forest hover:text-gf-forest dark:border-slate-800 dark:bg-slate-900 dark:text-white"
+                        >
+                            <item.icon className="h-4 w-4" />
+                            {item.label}
+                        </a>
+                    ))}
+                </section>
+            )}
 
             <section className="mb-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
                 {stats.map((stat, index) => (
