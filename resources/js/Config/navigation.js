@@ -87,7 +87,7 @@ export function navigationForUser(permissions = []) {
             label: 'Administration',
             href: '#',
             icon: Shield,
-            show: can('users.view') || can('roles.manage'),
+            show: can('roles.manage') || can('settings.manage'),
             soon: true,
         },
         {
