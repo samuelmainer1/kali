@@ -15,10 +15,10 @@ export default {
             colors: {
                 gf: {
                     yellow: '#F5C400',
-                    green: '#2EAF4A',
+                    green: '#88c300',
                     red: '#E30613',
                     blue: '#00A5E3',
-                    forest: '#1A5C2E',
+                    forest: '#4C7000',
                     ink: '#0B1220',
                 },
             },

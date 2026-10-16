@@ -102,7 +102,7 @@ export default function BranchesIndex({ branches }) {
                     <button
                         type="button"
                         onClick={() => setMode({ type: 'create' })}
-                        className="rounded-xl bg-gf-forest px-4 py-2.5 text-sm font-semibold text-white"
+                        className="rounded-xl bg-gf-green px-4 py-2.5 text-sm font-semibold text-gf-ink"
                     >
                         Add branch
                     </button>

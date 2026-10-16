@@ -28,7 +28,7 @@ export default function Pagination({ links = [] }) {
                         href={link.url}
                         className={`rounded-lg border px-3 py-1.5 text-sm transition ${
                             link.active
-                                ? 'border-gf-forest bg-gf-forest text-white'
+                                ? 'border-gf-green bg-gf-green text-gf-ink'
                                 : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200'
                         }`}
                         dangerouslySetInnerHTML={{ __html: label }}

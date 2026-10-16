@@ -20,7 +20,7 @@ export function HeaderLink({ href, children }) {
     return (
         <Link
             href={href}
-            className="inline-flex items-center rounded-xl bg-gf-forest px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-gf-ink"
+            className="inline-flex items-center rounded-xl bg-gf-green px-4 py-2.5 text-sm font-semibold text-gf-ink transition hover:bg-gf-forest hover:text-white"
         >
             {children}
         </Link>

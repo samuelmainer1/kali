@@ -65,7 +65,7 @@ export default function AppLayout({ title, children }) {
                                 }}
                                 className={`group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition ${
                                     active
-                                        ? 'bg-gf-forest text-white shadow-sm'
+                                        ? 'bg-gf-green text-gf-ink shadow-sm'
                                         : 'text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800'
                                 }`}
                             >
@@ -82,12 +82,12 @@ export default function AppLayout({ title, children }) {
                 </nav>
 
                 <div className="border-t border-slate-200 p-4 dark:border-slate-800">
-                    <div className="rounded-xl bg-gradient-to-br from-gf-forest to-slate-900 p-3 text-white">
-                        <p className="font-alice whitespace-nowrap text-[11px] uppercase tracking-wide text-white/80">
+                    <div className="rounded-xl bg-gf-green p-3 text-gf-ink">
+                        <p className="font-alice whitespace-nowrap text-[11px] uppercase tracking-wide text-gf-ink/70">
                             INTEGRATED LOGISTIC PORTAL
                         </p>
                         <p className="mt-1 text-sm font-semibold">{app?.name}</p>
-                        <p className="text-xs text-white/70">{app?.tagline}</p>
+                        <p className="text-xs text-gf-ink/70">{app?.tagline}</p>
                     </div>
                 </div>
             </aside>

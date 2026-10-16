@@ -53,7 +53,7 @@ export default function ShipmentShow({ shipment }) {
                         const stepIndex = shipment.lifecycle.indexOf(step);
                         const done = stepIndex <= currentIndex;
                         return (
-                            <div key={step} className={`rounded-xl px-3 py-2 text-xs font-semibold capitalize ${done ? 'bg-gf-forest text-white' : 'bg-slate-100 text-slate-500 dark:bg-slate-800'}`}>
+                            <div key={step} className={`rounded-xl px-3 py-2 text-xs font-semibold capitalize ${done ? 'bg-gf-green text-gf-ink' : 'bg-slate-100 text-slate-500 dark:bg-slate-800'}`}>
                                 {step.replaceAll('_', ' ')}
                             </div>
                         );
