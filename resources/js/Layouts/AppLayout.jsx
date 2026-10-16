@@ -9,7 +9,7 @@ import { LogOut, Menu, UserRound, X } from 'lucide-react';
 import { useState } from 'react';
 
 export default function AppLayout({ title, children }) {
-    const { auth, app, announcementBell, company } = usePage().props;
+    const { auth, app, announcementBell } = usePage().props;
     const user = auth.user;
     const permissions = user?.permissions ?? [];
     const nav = navigationForUser(permissions, user?.role, {
@@ -88,8 +88,6 @@ export default function AppLayout({ title, children }) {
                         </p>
                         <p className="mt-1 text-sm font-semibold">{app?.name}</p>
                         <p className="text-xs text-gf-ink/70">{app?.tagline}</p>
-                        {company?.phone && <p className="mt-2 text-xs font-semibold">{company.phone}</p>}
-                        {company?.email && <p className="text-xs">{company.email}</p>}
                     </div>
                 </div>
             </aside>
