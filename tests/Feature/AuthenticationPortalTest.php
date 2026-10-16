@@ -13,7 +13,12 @@ class AuthenticationPortalTest extends TestCase
 
     public function test_login_screen_can_be_rendered(): void
     {
-        $this->get('/login')->assertOk();
+        $this->get('/login')
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->where('company.email', 'cs@globeflight.co.ke')
+                ->where('company.phone', '+254 729 341 277')
+                ->where('company.address', 'Nextgen Mall, 3rd Floor, Suite 39/40. Mombasa Road, Nairobi, Kenya.'));
     }
 
     public function test_users_can_authenticate_using_the_login_screen(): void

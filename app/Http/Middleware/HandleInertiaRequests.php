@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\CompanySetting;
 use App\Services\AnnouncementService;
 use App\Services\AppNotificationService;
 use Illuminate\Http\Request;
@@ -95,6 +96,17 @@ class HandleInertiaRequests extends Middleware
                 'name' => config('app.name', 'Globeflight ILMS'),
                 'tagline' => '24 • seven • 365',
             ],
+            'company' => function () {
+                $company = CompanySetting::current();
+
+                return [
+                    'name' => $company->company_name,
+                    'email' => $company->email,
+                    'phone' => $company->phone,
+                    'address' => $company->address,
+                    'website' => $company->website,
+                ];
+            },
         ];
     }
 }

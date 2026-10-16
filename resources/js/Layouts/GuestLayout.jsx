@@ -1,7 +1,10 @@
 import BrandMark from '@/Components/BrandMark';
 import ThemeToggle from '@/Components/ThemeToggle';
+import { usePage } from '@inertiajs/react';
 
 export default function GuestLayout({ children, title, subtitle }) {
+    const { company } = usePage().props;
+    const phoneHref = company?.phone ? `tel:${company.phone.replace(/[^\d+]/g, '')}` : null;
     return (
         <div className="relative min-h-screen overflow-hidden bg-slate-50 text-gf-ink dark:bg-slate-950 dark:text-slate-100">
             <div className="pointer-events-none absolute inset-0">
@@ -24,7 +27,7 @@ export default function GuestLayout({ children, title, subtitle }) {
                     <ThemeToggle />
                 </div>
 
-                <div className="flex flex-1 items-center justify-center px-4 pb-16">
+                <div className="flex flex-1 items-center justify-center px-4 pb-8">
                     <div className="w-full max-w-md animate-fade-in">
                         {(title || subtitle) && (
                             <div className="mb-6 text-center">
@@ -43,6 +46,25 @@ export default function GuestLayout({ children, title, subtitle }) {
                         </div>
                     </div>
                 </div>
+
+                {company?.email && (
+                    <footer className="px-6 pb-8 text-center text-xs leading-5 text-slate-500 dark:text-slate-400">
+                        <p>{company.address}</p>
+                        <p className="mt-1">
+                            <a className="font-semibold text-gf-forest hover:underline" href={`mailto:${company.email}`}>
+                                {company.email}
+                            </a>
+                            {company.phone && (
+                                <>
+                                    {' · '}
+                                    <a className="font-semibold text-gf-forest hover:underline" href={phoneHref}>
+                                        {company.phone}
+                                    </a>
+                                </>
+                            )}
+                        </p>
+                    </footer>
+                )}
             </div>
         </div>
     );

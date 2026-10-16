@@ -34,8 +34,9 @@ class CompanySetting extends Model
         return static::query()->firstOrCreate([], [
             'company_name' => 'Globeflight Kenya',
             'trading_name' => 'Globeflight',
-            'email' => 'info@globeflight.co.ke',
-            'phone' => '+254 700 000 000',
+            'email' => 'cs@globeflight.co.ke',
+            'phone' => '+254 729 341 277',
+            'address' => 'Nextgen Mall, 3rd Floor, Suite 39/40. Mombasa Road, Nairobi, Kenya.',
             'website' => 'https://www.globeflight.co.ke',
             'timezone' => 'Africa/Nairobi',
             'currency' => 'KES',

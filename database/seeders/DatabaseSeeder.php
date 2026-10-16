@@ -36,9 +36,9 @@ class DatabaseSeeder extends Seeder
                 'name' => 'Nairobi HQ',
                 'city' => 'Nairobi',
                 'country' => 'Kenya',
-                'phone' => '+254 700 000 001',
-                'email' => 'nairobi@globeflight.co.ke',
-                'address' => 'Nairobi, Kenya',
+                'phone' => '+254 729 341 277',
+                'email' => 'cs@globeflight.co.ke',
+                'address' => 'Nextgen Mall, 3rd Floor, Suite 39/40. Mombasa Road, Nairobi, Kenya.',
                 'is_active' => true,
             ]
         );
@@ -56,7 +56,12 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
-        CompanySetting::current();
+        $settings = CompanySetting::current();
+        $settings->fill([
+            'email' => 'cs@globeflight.co.ke',
+            'phone' => '+254 729 341 277',
+            'address' => 'Nextgen Mall, 3rd Floor, Suite 39/40. Mombasa Road, Nairobi, Kenya.',
+        ])->save();
 
         $password = Hash::make('Password1!');
 
