@@ -4,11 +4,14 @@ Integrated Logistics Management System (ILMS) for **Globeflight Kenya**.
 
 ## Stack
 
-- Laravel 13 + Inertia.js + React 18
-- Tailwind CSS + Lucide Icons + ApexCharts
-- MySQL / MariaDB
-- Spatie Laravel Permission (RBAC)
-- Laravel Breeze / Sanctum session auth
+- PHP 8.4, Laravel 13, Inertia.js, React 19
+- Tailwind CSS
+- MySQL 8
+- Redis for cache and queues
+- Private document disk, S3-compatible storage when `DOCUMENTS_DISK=s3`
+- Session login now, Sanctum tokens for a later mobile app
+- Spatie Laravel Permission
+- Queued PDF (DomPDF) and Excel (PhpSpreadsheet) documents
 
 ## Modules included
 
@@ -31,10 +34,13 @@ cp .env.example .env
 php artisan key:generate
 # Configure MySQL credentials in .env
 php artisan migrate --seed
-npm install --legacy-peer-deps
+npm install
 npm run build
 php artisan serve
+php artisan queue:work
 ```
+
+Redis must be running. Cache, tracking notifications, invoice PDFs, and spreadsheet exports use it. Set `DOCUMENTS_DISK=s3` when air waybills and proof-of-delivery photos should move to S3-compatible storage.
 
 In another terminal (optional for HMR):
 

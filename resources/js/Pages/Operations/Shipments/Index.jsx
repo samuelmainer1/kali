@@ -32,7 +32,7 @@ export default function ShipmentsIndex({ shipments, filters, statuses }) {
             />
 
             <form onSubmit={apply} className="mb-4 grid gap-3 rounded-2xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900 md:grid-cols-4">
-                <TextInput className="md:col-span-2" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search reference, tracking, customer" />
+                <TextInput className="md:col-span-2" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Job number, airway bill, or customer name" />
                 <select value={status} onChange={(e) => setStatus(e.target.value)} className="rounded-md border-slate-300 dark:border-slate-700 dark:bg-slate-800">
                     <option value="">All statuses</option>
                     {statuses.map((item) => <option key={item} value={item}>{item.replaceAll('_', ' ')}</option>)}

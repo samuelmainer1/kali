@@ -3,7 +3,7 @@ import PrimaryButton from '@/Components/PrimaryButton';
 import AppLayout from '@/Layouts/AppLayout';
 import { Head, Link, router, usePage } from '@inertiajs/react';
 
-export default function InvoiceShow({ invoice, company }) {
+export default function InvoiceShow({ invoice, company, pdf_ready = false }) {
     const permissions = usePage().props.auth.user?.permissions ?? [];
     const canManage = permissions.includes('invoices.manage');
 
@@ -17,6 +17,21 @@ export default function InvoiceShow({ invoice, company }) {
                 description={`${invoice.customer?.name || 'Customer'} · ${invoice.status_label}`}
                 actions={
                     <div className="flex flex-wrap gap-2">
+                        <button
+                            type="button"
+                            onClick={() => router.post(route('finance.invoices.pdf', invoice.id))}
+                            className="rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold dark:border-slate-700"
+                        >
+                            Queue PDF
+                        </button>
+                        {pdf_ready && (
+                            <a
+                                href={route('finance.invoices.pdf.download', invoice.id)}
+                                className="rounded-xl bg-gf-green px-4 py-2.5 text-sm font-semibold text-gf-ink"
+                            >
+                                Download PDF
+                            </a>
+                        )}
                         <Link
                             href={route('finance.invoices.print', invoice.id)}
                             className="rounded-xl bg-gf-ink px-4 py-2.5 text-sm font-semibold text-white dark:bg-gf-forest"

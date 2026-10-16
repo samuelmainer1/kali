@@ -8,14 +8,17 @@
 
 | Layer | Choice | Why |
 | --- | --- | --- |
-| Backend | Laravel 13 (latest stable) | Mature ecosystem, strong auth/security defaults, HostAfrica-friendly |
-| Frontend | React 18 + Inertia.js | SPA UX without a separate API/CORS deploy for VPS |
-| Auth | Laravel Breeze + Sanctum (session) | CSRF-safe cookie sessions; Sanctum ready for future API/mobile tokens |
-| CSS | Tailwind CSS | Rapid enterprise UI; design tokens for brand |
-| Charts | ApexCharts | Rich KPI dashboards |
-| Icons | Lucide React | Consistent, lightweight |
-| RBAC | Spatie Laravel Permission | Roles + fine-grained permissions |
-| DB | MySQL / MariaDB | Production target on HostAfrica |
+| Language | PHP 8.4 | Server application |
+| Framework | Laravel 13 | Jobs, permissions, documents, queues, mail, and invoices |
+| Screens | React 19 with Inertia | Staff app and the customer tracking portal in one project |
+| Styling | Tailwind CSS | Forms, tables, and the job timeline |
+| Database | MySQL 8 | Customers, jobs, warehouse stock, and invoices. Tests use SQLite |
+| Cache and queues | Redis | Tracking notifications, PDF generation, and imports. Tests use array cache and the sync queue |
+| Files | Private disk, S3-compatible later | Air waybills, packing lists, and proof-of-delivery photos. Set `DOCUMENTS_DISK=s3` when the bucket is ready |
+| Auth | Laravel session login, Sanctum tokens | Staff login now, a driver app later via `/api/login` |
+| Permissions | Spatie Laravel Permission | Branch and role access |
+| PDF and Excel | Queued DomPDF and PhpSpreadsheet | Invoices, manifests, and reports |
+| Search | MySQL | Job number, airway bill, and customer name |
 
 ### Why Inertia monolith (not split SPA + API)?
 

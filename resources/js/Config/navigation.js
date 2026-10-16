@@ -108,9 +108,9 @@ export function navigationForUser(permissions = [], role = null, options = {}) {
             show: can('pipeline.view') || can('pipeline.view_all') || can('pipeline.manage'),
         },
         {
-            label: 'Shipments',
-            href: 'operations.shipments.index',
-            routeName: 'operations.shipments.*',
+            label: can('shipments.view') ? 'Shipments' : 'Track shipments',
+            href: can('shipments.view') ? 'operations.shipments.index' : 'portal.shipments.index',
+            routeName: can('shipments.view') ? 'operations.shipments.*' : 'portal.shipments.*',
             icon: Ship,
             show: can('shipments.view') || can('portal.shipments'),
         },

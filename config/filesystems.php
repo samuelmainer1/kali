@@ -15,6 +15,8 @@ return [
 
     'default' => env('FILESYSTEM_DISK', 'local'),
 
+    'documents_disk' => env('DOCUMENTS_DISK', 'documents'),
+
     /*
     |--------------------------------------------------------------------------
     | Filesystem Disks
@@ -43,6 +45,14 @@ return [
             'root' => storage_path('app/public'),
             'url' => rtrim(env('APP_URL', 'http://localhost'), '/').'/storage',
             'visibility' => 'public',
+            'throw' => false,
+            'report' => false,
+        ],
+
+        'documents' => [
+            'driver' => 'local',
+            'root' => storage_path('app/private/documents'),
+            'serve' => false,
             'throw' => false,
             'report' => false,
         ],

@@ -3,22 +3,24 @@
 namespace App\Http\Controllers\Finance;
 
 use App\Http\Controllers\Controller;
+use App\Jobs\ExportInvoicesSpreadsheet;
+use App\Jobs\GenerateInvoicePdf;
 use App\Models\CompanySetting;
 use App\Models\Customer;
 use App\Models\Invoice;
 use App\Models\Quotation;
 use App\Services\InvoiceService;
+use App\Support\DocumentStorage;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class InvoiceController extends Controller
 {
-    public function __construct(private readonly InvoiceService $invoices)
-    {
-    }
+    public function __construct(private readonly InvoiceService $invoices) {}
 
     public function index(Request $request): Response
     {
@@ -57,6 +59,7 @@ class InvoiceController extends Controller
                 'paid' => Invoice::query()->where('status', 'paid')->count(),
                 'overdue' => Invoice::query()->where('status', 'overdue')->count(),
             ],
+            'export_ready' => DocumentStorage::disk()->exists(ExportInvoicesSpreadsheet::PATH),
         ]);
     }
 
@@ -103,6 +106,7 @@ class InvoiceController extends Controller
         return Inertia::render('Finance/Invoices/Show', [
             'invoice' => $this->detailPayload($invoice),
             'company' => $this->companyPayload(),
+            'pdf_ready' => DocumentStorage::disk()->exists((new GenerateInvoicePdf($invoice->id))->path()),
         ]);
     }
 
@@ -119,6 +123,35 @@ class InvoiceController extends Controller
             'invoice' => $this->detailPayload($invoice),
             'company' => $this->companyPayload(),
         ]);
+    }
+
+    public function queuePdf(Invoice $invoice): RedirectResponse
+    {
+        GenerateInvoicePdf::dispatch($invoice->id);
+
+        return back()->with('success', 'Invoice PDF queued.');
+    }
+
+    public function downloadPdf(Invoice $invoice): StreamedResponse
+    {
+        $path = (new GenerateInvoicePdf($invoice->id))->path();
+        abort_unless(DocumentStorage::disk()->exists($path), 404);
+
+        return DocumentStorage::disk()->download($path, $invoice->reference.'.pdf');
+    }
+
+    public function queueExport(): RedirectResponse
+    {
+        ExportInvoicesSpreadsheet::dispatch();
+
+        return back()->with('success', 'Invoice spreadsheet queued.');
+    }
+
+    public function downloadExport(): StreamedResponse
+    {
+        abort_unless(DocumentStorage::disk()->exists(ExportInvoicesSpreadsheet::PATH), 404);
+
+        return DocumentStorage::disk()->download(ExportInvoicesSpreadsheet::PATH, 'invoices.xlsx');
     }
 
     public function edit(Invoice $invoice): Response

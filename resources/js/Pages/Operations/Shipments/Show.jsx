@@ -2,13 +2,25 @@ import PageHeader from '@/Components/PageHeader';
 import PrimaryButton from '@/Components/PrimaryButton';
 import TextInput from '@/Components/TextInput';
 import AppLayout from '@/Layouts/AppLayout';
-import { Head, Link, router, usePage } from '@inertiajs/react';
+import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 
 export default function ShipmentShow({ shipment }) {
     const permissions = usePage().props.auth.user?.permissions ?? [];
     const [notes, setNotes] = useState('');
     const [location, setLocation] = useState(shipment.current_location || '');
+    const documentForm = useForm({
+        type: 'air_waybill',
+        file: null,
+    });
+
+    const uploadDocument = (event) => {
+        event.preventDefault();
+        documentForm.post(route('operations.shipments.documents.store', shipment.id), {
+            forceFormData: true,
+            preserveScroll: true,
+        });
+    };
 
     const advance = () => {
         router.post(route('operations.shipments.advance', shipment.id), {
@@ -66,7 +78,7 @@ export default function ShipmentShow({ shipment }) {
                     <div className="rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900">
                         <h3 className="font-display font-bold">Shipment details</h3>
                         <dl className="mt-3 grid gap-3 text-sm sm:grid-cols-2">
-                            <div><dt className="text-slate-500">Tracking</dt><dd>{shipment.tracking_number || '—'}</dd></div>
+                            <div><dt className="text-slate-500">Air waybill</dt><dd>{shipment.tracking_number || '—'}</dd></div>
                             <div><dt className="text-slate-500">Service</dt><dd className="capitalize">{shipment.service_type || '—'}</dd></div>
                             <div><dt className="text-slate-500">Route</dt><dd>{shipment.origin_country || '—'} → {shipment.destination_country || '—'}</dd></div>
                             <div><dt className="text-slate-500">Location</dt><dd>{shipment.current_location || '—'}</dd></div>
@@ -113,6 +125,49 @@ export default function ShipmentShow({ shipment }) {
                             </PrimaryButton>
                         </div>
                     )}
+
+                    <div className="rounded-2xl border border-slate-200 bg-white p-5 text-sm dark:border-slate-800 dark:bg-slate-900">
+                        <h3 className="font-display font-bold">Documents</h3>
+                        <p className="mt-1 text-slate-500">Air waybills, packing lists, and proof-of-delivery photos stay on the private disk.</p>
+                        <ul className="mt-3 space-y-2">
+                            {(shipment.documents || []).map((document) => (
+                                <li key={document.id} className="flex items-center justify-between gap-3">
+                                    <span>
+                                        <span className="font-medium">{document.type_label}</span>
+                                        <span className="block text-xs text-slate-500">{document.original_name}</span>
+                                    </span>
+                                    <a
+                                        href={route('operations.shipments.documents.download', [shipment.id, document.id])}
+                                        className="text-gf-forest hover:underline"
+                                    >
+                                        Download
+                                    </a>
+                                </li>
+                            ))}
+                            {!shipment.documents?.length && <li className="text-slate-500">No documents stored yet.</li>}
+                        </ul>
+                        {permissions.includes('shipments.update') && (
+                            <form onSubmit={uploadDocument} className="mt-4 space-y-2">
+                                <select
+                                    value={documentForm.data.type}
+                                    onChange={(event) => documentForm.setData('type', event.target.value)}
+                                    className="w-full rounded-md border-slate-300 dark:border-slate-700 dark:bg-slate-800"
+                                >
+                                    {Object.entries(shipment.document_types || {}).map(([value, label]) => (
+                                        <option key={value} value={value}>{label}</option>
+                                    ))}
+                                </select>
+                                <input
+                                    type="file"
+                                    onChange={(event) => documentForm.setData('file', event.target.files?.[0] ?? null)}
+                                    className="block w-full text-sm"
+                                />
+                                {documentForm.errors.file && <p className="text-xs text-gf-red">{documentForm.errors.file}</p>}
+                                {documentForm.errors.type && <p className="text-xs text-gf-red">{documentForm.errors.type}</p>}
+                                <PrimaryButton disabled={documentForm.processing}>Store document</PrimaryButton>
+                            </form>
+                        )}
+                    </div>
 
                     <div className="rounded-2xl border border-slate-200 bg-white p-5 text-sm dark:border-slate-800 dark:bg-slate-900">
                         <h3 className="font-display font-bold">Warehouse link</h3>

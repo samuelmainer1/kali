@@ -13,7 +13,7 @@ const statusClass = {
     cancelled: 'bg-slate-100 text-slate-500',
 };
 
-export default function InvoicesIndex({ invoices, filters, statuses, stats }) {
+export default function InvoicesIndex({ invoices, filters, statuses, stats, export_ready = false }) {
     const permissions = usePage().props.auth.user?.permissions ?? [];
     const [search, setSearch] = useState(filters.search || '');
     const [status, setStatus] = useState(filters.status || '');
@@ -33,9 +33,26 @@ export default function InvoicesIndex({ invoices, filters, statuses, stats }) {
                 title="Invoices"
                 description="Bill customers and track payment status."
                 actions={
-                    permissions.includes('invoices.manage') ? (
-                        <HeaderLink href={route('finance.invoices.create')}>New invoice</HeaderLink>
-                    ) : null
+                    <div className="flex flex-wrap gap-2">
+                        <button
+                            type="button"
+                            onClick={() => router.post(route('finance.invoices.export'))}
+                            className="rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold dark:border-slate-700"
+                        >
+                            Queue spreadsheet
+                        </button>
+                        {export_ready && (
+                            <a
+                                href={route('finance.invoices.export.download')}
+                                className="rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold dark:border-slate-700"
+                            >
+                                Download spreadsheet
+                            </a>
+                        )}
+                        {permissions.includes('invoices.manage') && (
+                            <HeaderLink href={route('finance.invoices.create')}>New invoice</HeaderLink>
+                        )}
+                    </div>
                 }
             />
 

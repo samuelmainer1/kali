@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Branch;
 use App\Models\Customer;
 use App\Models\Shipment;
+use App\Models\ShipmentDocument;
 use App\Services\ActivityLogService;
 use App\Services\ShipmentService;
 use Illuminate\Http\RedirectResponse;
@@ -19,8 +20,7 @@ class ShipmentController extends Controller
     public function __construct(
         private readonly ShipmentService $shipments,
         private readonly ActivityLogService $activityLog,
-    ) {
-    }
+    ) {}
 
     public function index(Request $request): Response
     {
@@ -116,6 +116,7 @@ class ShipmentController extends Controller
             'quotation:id,reference,status',
             'creator:id,name',
             'statusHistories.changer:id,name',
+            'documents',
             'inventoryItems',
             'cargoMovements' => fn ($q) => $q->with('performer:id,name')->limit(20),
         ]);
@@ -153,6 +154,13 @@ class ShipmentController extends Controller
                     'created_at' => $h->created_at?->toDateTimeString(),
                     'created_at_human' => $h->created_at?->diffForHumans(),
                 ]),
+                'documents' => $shipment->documents->map(fn ($document) => [
+                    'id' => $document->id,
+                    'type' => $document->type,
+                    'type_label' => $document->typeLabel(),
+                    'original_name' => $document->original_name,
+                ]),
+                'document_types' => ShipmentDocument::TYPES,
                 'inventory_items' => $shipment->inventoryItems,
                 'cargo_movements' => $shipment->cargoMovements->map(fn ($m) => [
                     'id' => $m->id,

@@ -10,12 +10,13 @@ use App\Models\InventoryItem;
 use App\Models\Invoice;
 use App\Models\MarketingCampaign;
 use App\Models\MarketingLead;
+use App\Models\PurchaseRequest;
 use App\Models\Quotation;
 use App\Models\Shipment;
+use App\Models\ShipmentDocument;
 use App\Models\SupportTicket;
 use App\Models\Task;
 use App\Models\User;
-use App\Models\PurchaseRequest;
 use App\Services\ApprovalsService;
 use App\Services\PipelineService;
 use App\Services\ProcurementService;
@@ -188,9 +189,9 @@ class DashboardController extends Controller
             ],
             'customer' => [
                 ['label' => 'My Tickets', 'value' => SupportTicket::query()->where('requester_id', $user->id)->whereNotIn('status', ['closed'])->count(), 'hint' => 'Open support'],
-                ['label' => 'Quotations', 'value' => '—', 'hint' => 'Portal pending'],
-                ['label' => 'Shipments', 'value' => '—', 'hint' => 'Portal pending'],
-                ['label' => 'Documents', 'value' => '—', 'hint' => 'Portal pending'],
+                ['label' => 'Quotations', 'value' => Quotation::query()->whereHas('customer', fn ($query) => $query->where('email', $user->email))->count(), 'hint' => 'Your quotes'],
+                ['label' => 'Shipments', 'value' => Shipment::query()->forCustomerUser($user)->count(), 'hint' => 'Track in the portal'],
+                ['label' => 'Documents', 'value' => ShipmentDocument::query()->whereHas('shipment', fn ($query) => $query->forCustomerUser($user))->count(), 'hint' => 'Waybills and proof of delivery'],
             ],
             default => [
                 ['label' => 'Customers', 'value' => $customers, 'hint' => 'CRM'],

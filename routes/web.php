@@ -7,15 +7,17 @@ use App\Http\Controllers\Admin\DepartmentController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Announcements\AnnouncementController;
+use App\Http\Controllers\Approvals\ApprovalsController;
 use App\Http\Controllers\Crm\CustomerController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Finance\InvoiceController;
+use App\Http\Controllers\Leave\LeaveRequestController;
 use App\Http\Controllers\Marketing\CampaignController;
 use App\Http\Controllers\Marketing\LeadController;
 use App\Http\Controllers\Notifications\UserNotificationController;
 use App\Http\Controllers\Operations\ShipmentController;
-use App\Http\Controllers\Approvals\ApprovalsController;
-use App\Http\Controllers\Leave\LeaveRequestController;
+use App\Http\Controllers\Operations\ShipmentDocumentController;
+use App\Http\Controllers\Portal\TrackingController;
 use App\Http\Controllers\Procurement\PurchaseRequestController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Reports\EmployeeReportController;
@@ -32,6 +34,11 @@ Route::middleware(['auth', 'verified', 'active'])->group(function () {
     Route::get('/dashboard', DashboardController::class)->name('dashboard');
 
     Route::get('/approvals', [ApprovalsController::class, 'index'])->name('approvals.index');
+
+    Route::prefix('portal')->name('portal.')->middleware('permission:portal.shipments')->group(function () {
+        Route::get('/shipments', [TrackingController::class, 'index'])->name('shipments.index');
+        Route::get('/shipments/{shipment}', [TrackingController::class, 'show'])->name('shipments.show');
+    });
 
     Route::get('/notifications', [UserNotificationController::class, 'index'])->name('notifications.index');
     Route::post('/notifications/read-all', [UserNotificationController::class, 'markAllRead'])->name('notifications.read-all');
@@ -164,6 +171,10 @@ Route::middleware(['auth', 'verified', 'active'])->group(function () {
             Route::get('/shipments/{shipment}/edit', [ShipmentController::class, 'edit'])->name('shipments.edit');
             Route::put('/shipments/{shipment}', [ShipmentController::class, 'update'])->name('shipments.update');
             Route::post('/shipments/{shipment}/advance', [ShipmentController::class, 'advance'])->name('shipments.advance');
+            Route::post('/shipments/{shipment}/documents', [ShipmentDocumentController::class, 'store'])->name('shipments.documents.store');
+        });
+        Route::middleware('permission:shipments.view|portal.shipments')->group(function () {
+            Route::get('/shipments/{shipment}/documents/{document}', [ShipmentDocumentController::class, 'download'])->name('shipments.documents.download');
         });
     });
 
@@ -215,9 +226,13 @@ Route::middleware(['auth', 'verified', 'active'])->group(function () {
         });
 
         Route::middleware('permission:invoices.view')->group(function () {
+            Route::post('/invoices/export', [InvoiceController::class, 'queueExport'])->name('invoices.export');
+            Route::get('/invoices/export', [InvoiceController::class, 'downloadExport'])->name('invoices.export.download');
             Route::get('/invoices', [InvoiceController::class, 'index'])->name('invoices.index');
             Route::get('/invoices/{invoice}', [InvoiceController::class, 'show'])->name('invoices.show');
             Route::get('/invoices/{invoice}/print', [InvoiceController::class, 'print'])->name('invoices.print');
+            Route::post('/invoices/{invoice}/pdf', [InvoiceController::class, 'queuePdf'])->name('invoices.pdf');
+            Route::get('/invoices/{invoice}/pdf', [InvoiceController::class, 'downloadPdf'])->name('invoices.pdf.download');
         });
 
         Route::middleware('permission:invoices.manage')->group(function () {

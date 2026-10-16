@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -73,6 +74,16 @@ class Shipment extends Model
     public function statusHistories(): HasMany
     {
         return $this->hasMany(ShipmentStatusHistory::class)->latest('created_at');
+    }
+
+    public function documents(): HasMany
+    {
+        return $this->hasMany(ShipmentDocument::class)->latest();
+    }
+
+    public function scopeForCustomerUser(Builder $query, User $user): Builder
+    {
+        return $query->whereHas('customer', fn (Builder $customers) => $customers->where('email', $user->email));
     }
 
     public function inventoryItems(): HasMany
