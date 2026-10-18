@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Announcements\AnnouncementController;
 use App\Http\Controllers\Approvals\ApprovalsController;
+use App\Http\Controllers\Chat\ChatController;
 use App\Http\Controllers\Crm\CustomerController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Finance\InvoiceController;
@@ -39,6 +40,14 @@ Route::middleware(['auth', 'verified', 'active'])->group(function () {
     Route::prefix('portal')->name('portal.')->middleware('permission:portal.shipments')->group(function () {
         Route::get('/shipments', [TrackingController::class, 'index'])->name('shipments.index');
         Route::get('/shipments/{shipment}', [TrackingController::class, 'show'])->name('shipments.show');
+    });
+
+    Route::prefix('chat')->name('chat.')->middleware('permission:chat.use')->group(function () {
+        Route::get('/', [ChatController::class, 'index'])->name('index');
+        Route::get('/new', [ChatController::class, 'create'])->name('create');
+        Route::post('/', [ChatController::class, 'store'])->name('store');
+        Route::get('/{conversation}', [ChatController::class, 'show'])->name('show');
+        Route::post('/{conversation}', [ChatController::class, 'reply'])->name('reply');
     });
 
     Route::get('/notifications', [UserNotificationController::class, 'index'])->name('notifications.index');
