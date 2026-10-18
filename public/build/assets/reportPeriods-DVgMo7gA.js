@@ -1,0 +1,1 @@
+var e={daily:`Daily`,weekly:`Weekly`,monthly:`Monthly`};function t(t){return e[t]||t}export{t};

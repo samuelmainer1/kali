@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class EmployeeReport extends Model
 {
-    public const PERIOD_TYPES = ['weekly', 'monthly'];
+    public const PERIOD_TYPES = ['daily', 'weekly', 'monthly'];
 
     public const STATUSES = [
         'draft',

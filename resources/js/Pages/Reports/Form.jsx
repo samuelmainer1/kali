@@ -3,6 +3,7 @@ import InputLabel from '@/Components/InputLabel';
 import PageHeader from '@/Components/PageHeader';
 import PrimaryButton from '@/Components/PrimaryButton';
 import TextInput from '@/Components/TextInput';
+import { periodLabel } from '@/Config/reportPeriods';
 import AppLayout from '@/Layouts/AppLayout';
 import { Head, Link, useForm } from '@inertiajs/react';
 
@@ -16,6 +17,17 @@ function toLocalDateString(date) {
 
 function periodDefaults(periodType) {
     const now = new Date();
+    if (periodType === 'daily') {
+        const day = toLocalDateString(now);
+        const title = `Daily report — ${now.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}`;
+
+        return {
+            period_start: day,
+            period_end: day,
+            title,
+        };
+    }
+
     if (periodType === 'monthly') {
         const start = new Date(now.getFullYear(), now.getMonth(), 1);
         const end = new Date(now.getFullYear(), now.getMonth() + 1, 0);
@@ -45,10 +57,11 @@ function periodDefaults(periodType) {
 
 export default function ReportForm({ report, defaults, periodTypes }) {
     const editing = Boolean(report?.id);
-    const initial = report || defaults || periodDefaults('weekly');
+    const periodType = report?.period_type || defaults?.period_type || 'weekly';
+    const initial = report || defaults || periodDefaults(periodType);
 
     const form = useForm({
-        period_type: report?.period_type || 'weekly',
+        period_type: periodType,
         period_start: initial.period_start || '',
         period_end: initial.period_end || '',
         title: initial.title || '',
@@ -95,12 +108,14 @@ export default function ReportForm({ report, defaults, periodTypes }) {
 
     const errorList = Object.values(errors).filter(Boolean);
 
+    const heading = editing ? 'Edit report' : `New ${periodLabel(data.period_type).toLowerCase()} report`;
+
     return (
-        <AppLayout title={editing ? 'Edit report' : 'New report'}>
-            <Head title={editing ? 'Edit report' : 'New report'} />
+        <AppLayout title={heading}>
+            <Head title={heading} />
             <PageHeader
-                title={editing ? 'Edit report' : 'New report'}
-                description="Capture accomplishments, challenges, and next plans for the period."
+                title={heading}
+                description="Write a daily, weekly, or monthly report for the period."
                 actions={<Link href={route('reports.index')} className="text-sm text-gf-forest">Back</Link>}
             />
 
@@ -131,7 +146,7 @@ export default function ReportForm({ report, defaults, periodTypes }) {
                             onChange={(e) => applyPeriodType(e.target.value)}
                             disabled={editing}
                         >
-                            {periodTypes.map((t) => <option key={t} value={t}>{t}</option>)}
+                            {periodTypes.map((t) => <option key={t} value={t}>{periodLabel(t)}</option>)}
                         </select>
                         <InputError message={errors.period_type} className="mt-1" />
                     </div>
@@ -141,15 +156,29 @@ export default function ReportForm({ report, defaults, periodTypes }) {
                         <InputError message={errors.title} className="mt-1" />
                     </div>
                     <div>
-                        <InputLabel value="Period start" />
-                        <TextInput type="date" className="mt-1 w-full" value={data.period_start} onChange={(e) => setData('period_start', e.target.value)} />
+                        <InputLabel value={data.period_type === 'daily' ? 'Date' : 'Period start'} />
+                        <TextInput
+                            type="date"
+                            className="mt-1 w-full"
+                            value={data.period_start}
+                            onChange={(e) => {
+                                const value = e.target.value;
+                                if (data.period_type === 'daily') {
+                                    setData({ ...data, period_start: value, period_end: value });
+                                } else {
+                                    setData('period_start', value);
+                                }
+                            }}
+                        />
                         <InputError message={errors.period_start} className="mt-1" />
                     </div>
-                    <div>
-                        <InputLabel value="Period end" />
-                        <TextInput type="date" className="mt-1 w-full" value={data.period_end} onChange={(e) => setData('period_end', e.target.value)} />
-                        <InputError message={errors.period_end} className="mt-1" />
-                    </div>
+                    {data.period_type !== 'daily' && (
+                        <div>
+                            <InputLabel value="Period end" />
+                            <TextInput type="date" className="mt-1 w-full" value={data.period_end} onChange={(e) => setData('period_end', e.target.value)} />
+                            <InputError message={errors.period_end} className="mt-1" />
+                        </div>
+                    )}
                 </div>
 
                 <div>

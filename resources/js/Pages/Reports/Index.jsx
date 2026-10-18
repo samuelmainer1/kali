@@ -1,5 +1,6 @@
+import { periodLabel } from '@/Config/reportPeriods';
 import Pagination from '@/Components/Pagination';
-import PageHeader, { HeaderLink } from '@/Components/PageHeader';
+import PageHeader from '@/Components/PageHeader';
 import TextInput from '@/Components/TextInput';
 import AppLayout from '@/Layouts/AppLayout';
 import { Head, Link, router, usePage } from '@inertiajs/react';
@@ -35,7 +36,7 @@ export default function ReportsIndex({ reports, filters, canViewAll, statuses, p
             <Head title="Employee Reports" />
             <PageHeader
                 title="Employee Reports"
-                description={canViewAll ? 'Review weekly and monthly team reports.' : 'Submit your weekly and monthly work reports.'}
+                description={canViewAll ? 'Review daily, weekly, and monthly team reports.' : 'Submit your daily, weekly, and monthly work reports.'}
                 actions={
                     <div className="flex flex-wrap gap-2">
                         {permissions.includes('reports.export') && (
@@ -55,9 +56,15 @@ export default function ReportsIndex({ reports, filters, canViewAll, statuses, p
                                 Download spreadsheet
                             </a>
                         )}
-                        {permissions.includes('reports.weekly.submit') && (
-                            <HeaderLink href={route('reports.create')}>New report</HeaderLink>
-                        )}
+                        {permissions.includes('reports.weekly.submit') && periodTypes.map((type) => (
+                            <Link
+                                key={type}
+                                href={route('reports.create', { period_type: type })}
+                                className="inline-flex items-center rounded-xl bg-gf-green px-4 py-2.5 text-sm font-semibold text-gf-ink transition hover:bg-gf-forest hover:text-white"
+                            >
+                                {periodLabel(type)} report
+                            </Link>
+                        ))}
                     </div>
                 }
             />
@@ -85,7 +92,7 @@ export default function ReportsIndex({ reports, filters, canViewAll, statuses, p
                 </select>
                 <select value={periodType} onChange={(e) => setPeriodType(e.target.value)} className="rounded-md border-slate-300 dark:border-slate-700 dark:bg-slate-800">
                     <option value="">All periods</option>
-                    {periodTypes.map((item) => <option key={item} value={item}>{item}</option>)}
+                    {periodTypes.map((item) => <option key={item} value={item}>{periodLabel(item)}</option>)}
                 </select>
                 {canViewAll ? (
                     <select value={departmentId} onChange={(e) => setDepartmentId(e.target.value)} className="rounded-md border-slate-300 dark:border-slate-700 dark:bg-slate-800">
@@ -117,9 +124,13 @@ export default function ReportsIndex({ reports, filters, canViewAll, statuses, p
                             <tr key={report.id}>
                                 <td className="px-4 py-3 font-medium">{report.reference}</td>
                                 {canViewAll && <td className="px-4 py-3">{report.author_name}</td>}
-                                <td className="px-4 py-3 capitalize">
-                                    {report.period_type}
-                                    <div className="text-xs text-slate-500">{report.period_start} → {report.period_end}</div>
+                                <td className="px-4 py-3">
+                                    {periodLabel(report.period_type)}
+                                    <div className="text-xs text-slate-500">
+                                        {report.period_type === 'daily'
+                                            ? report.period_start
+                                            : `${report.period_start} → ${report.period_end}`}
+                                    </div>
                                 </td>
                                 <td className="px-4 py-3">{report.title}</td>
                                 <td className="px-4 py-3">
