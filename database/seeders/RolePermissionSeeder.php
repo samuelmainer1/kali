@@ -61,8 +61,9 @@ class RolePermissionSeeder extends Seeder
             'support.view', 'support.manage',
             'portal.shipments', 'portal.quotes', 'portal.documents', 'portal.invoices',
 
-            // Marketing
+            // IT & Marketing
             'marketing.view', 'marketing.manage',
+            'it.request', 'it.manage',
 
             // Dashboards
             'dashboard.admin', 'dashboard.management', 'dashboard.sales',
@@ -86,6 +87,7 @@ class RolePermissionSeeder extends Seeder
                 'dashboard.sales', 'customers.view', 'customers.create', 'customers.update',
                 'quotations.view', 'quotations.create', 'quotations.update', 'quotations.convert',
                 'shipments.view', 'reports.weekly.submit', 'portal.quotes',
+                'it.request',
                 'tasks.view', 'tasks.create',
                 'announcements.view',
                 'pipeline.view', 'pipeline.manage',
@@ -95,6 +97,7 @@ class RolePermissionSeeder extends Seeder
             'operations' => [
                 'dashboard.operations', 'shipments.view', 'shipments.create', 'shipments.update',
                 'shipments.track', 'quotations.view', 'warehouse.view', 'reports.weekly.submit',
+                'it.request',
                 'tasks.view', 'tasks.create',
                 'announcements.view',
                 'procurement.request',
@@ -103,6 +106,7 @@ class RolePermissionSeeder extends Seeder
             'warehouse' => [
                 'dashboard.warehouse', 'warehouse.view', 'warehouse.manage',
                 'shipments.view', 'shipments.update', 'reports.weekly.submit',
+                'it.request',
                 'tasks.view', 'tasks.create',
                 'announcements.view',
                 'procurement.request',
@@ -111,6 +115,7 @@ class RolePermissionSeeder extends Seeder
             'finance' => [
                 'dashboard.finance', 'invoices.view', 'invoices.manage', 'finance.reports',
                 'quotations.view', 'customers.view', 'reports.export', 'reports.weekly.submit',
+                'it.request',
                 'tasks.view', 'tasks.create',
                 'announcements.view',
                 'procurement.request', 'procurement.process', 'procurement.view_all',
@@ -120,6 +125,7 @@ class RolePermissionSeeder extends Seeder
                 'dashboard.customer_care', 'support.view', 'support.manage',
                 'customers.view', 'shipments.view', 'shipments.track',
                 'quotations.view', 'reports.weekly.submit',
+                'it.request',
                 'tasks.view', 'tasks.create',
                 'announcements.view',
                 'procurement.request',
@@ -127,6 +133,7 @@ class RolePermissionSeeder extends Seeder
             ],
             'marketing' => [
                 'dashboard.marketing', 'marketing.view', 'marketing.manage',
+                'it.request', 'it.manage',
                 'customers.view', 'reports.weekly.submit',
                 'tasks.view', 'tasks.create',
                 'announcements.view',

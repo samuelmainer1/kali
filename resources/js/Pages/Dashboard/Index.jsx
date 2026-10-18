@@ -234,7 +234,7 @@ export default function DashboardIndex({
                                 'CRM + Quotations',
                                 'Shipments + Warehouse',
                                 'Employee reports',
-                                'Support + Marketing',
+                                'Support + IT & Marketing',
                                 'Invoices + Tasks',
                                 'Announcements',
                                 'Sales pipeline',

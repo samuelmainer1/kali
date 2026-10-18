@@ -4,6 +4,7 @@ import SystemNotificationBell from '@/Components/SystemNotificationBell';
 import ThemeToggle from '@/Components/ThemeToggle';
 import ToastStack from '@/Components/ToastStack';
 import { navigationForUser } from '@/Config/navigation';
+import { roleLabel } from '@/Config/roleLabels';
 import { Link, usePage } from '@inertiajs/react';
 import { LogOut, Menu, UserRound, X } from 'lucide-react';
 import { useState } from 'react';
@@ -104,8 +105,8 @@ export default function AppLayout({ title, children }) {
                         </button>
                         <div>
                             <h1 className="font-display text-lg font-bold tracking-tight">{title}</h1>
-                            <p className="text-xs capitalize text-slate-500 dark:text-slate-400">
-                                {user?.role ? String(user.role).replaceAll('_', ' ') : 'User'} workspace
+                            <p className="text-xs text-slate-500 dark:text-slate-400">
+                                {user?.role_label || roleLabel(user?.role) || 'User'} workspace
                             </p>
                         </div>
                     </div>

@@ -8,6 +8,7 @@ use App\Models\Customer;
 use App\Models\EmployeeReport;
 use App\Models\InventoryItem;
 use App\Models\Invoice;
+use App\Models\ItRequest;
 use App\Models\MarketingCampaign;
 use App\Models\MarketingLead;
 use App\Models\PurchaseRequest;
@@ -20,6 +21,7 @@ use App\Models\User;
 use App\Services\ApprovalsService;
 use App\Services\PipelineService;
 use App\Services\ProcurementService;
+use App\Support\RoleLabel;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -113,7 +115,7 @@ class DashboardController extends Controller
                 'name' => $user->name,
                 'department' => $user->department?->name,
                 'branch' => $user->branch?->name,
-                'role_label' => str_replace('_', ' ', $role),
+                'role_label' => RoleLabel::get($role),
             ],
         ]);
     }
@@ -182,10 +184,10 @@ class DashboardController extends Controller
                 ['label' => 'Resolved', 'value' => SupportTicket::query()->where('status', 'resolved')->count(), 'hint' => 'Awaiting close'],
             ],
             'marketing' => [
+                ['label' => 'Open IT Requests', 'value' => ItRequest::query()->whereIn('status', ['open', 'in_progress'])->count(), 'hint' => 'IT & Marketing'],
                 ['label' => 'Active Campaigns', 'value' => MarketingCampaign::query()->where('status', 'active')->count(), 'hint' => 'Live'],
                 ['label' => 'New Leads', 'value' => MarketingLead::query()->where('status', 'new')->count(), 'hint' => 'Pipeline'],
                 ['label' => 'Qualified', 'value' => MarketingLead::query()->where('status', 'qualified')->count(), 'hint' => 'Ready for sales'],
-                ['label' => 'Converted', 'value' => MarketingLead::query()->where('status', 'converted')->count(), 'hint' => 'Won'],
             ],
             'customer' => [
                 ['label' => 'My Tickets', 'value' => SupportTicket::query()->where('requester_id', $user->id)->whereNotIn('status', ['closed'])->count(), 'hint' => 'Open support'],

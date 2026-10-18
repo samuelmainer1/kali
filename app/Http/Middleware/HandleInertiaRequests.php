@@ -5,6 +5,7 @@ namespace App\Http\Middleware;
 use App\Models\CompanySetting;
 use App\Services\AnnouncementService;
 use App\Services\AppNotificationService;
+use App\Support\RoleLabel;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -79,6 +80,7 @@ class HandleInertiaRequests extends Middleware
                     'email' => $user->email,
                     'phone' => $user->phone,
                     'role' => $user->primaryRole(),
+                    'role_label' => RoleLabel::get($user->primaryRole()),
                     'roles' => $user->getRoleNames(),
                     'permissions' => $user->getAllPermissions()->pluck('name'),
                     'department' => $user->department?->only(['id', 'name', 'code']),

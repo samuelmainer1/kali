@@ -23,7 +23,7 @@ class DatabaseSeeder extends Seeder
             ['name' => 'Warehouse', 'code' => 'WHS', 'description' => 'Cargo handling and inventory'],
             ['name' => 'Finance', 'code' => 'FIN', 'description' => 'Billing, invoices, and accounts'],
             ['name' => 'Customer Care', 'code' => 'CCR', 'description' => 'Customer support and service'],
-            ['name' => 'Marketing', 'code' => 'MKT', 'description' => 'Brand and growth'],
+            ['name' => 'IT & Marketing', 'code' => 'MKT', 'description' => 'IT support, brand, and growth'],
         ];
 
         foreach ($departments as $department) {
@@ -73,7 +73,7 @@ class DatabaseSeeder extends Seeder
             ['name' => 'Warehouse Officer', 'email' => 'warehouse@globeflight.co.ke', 'role' => 'warehouse', 'dept' => 'WHS', 'code' => 'GF-WHS-001'],
             ['name' => 'Finance Officer', 'email' => 'finance@globeflight.co.ke', 'role' => 'finance', 'dept' => 'FIN', 'code' => 'GF-FIN-001'],
             ['name' => 'Customer Care Agent', 'email' => 'care@globeflight.co.ke', 'role' => 'customer_care', 'dept' => 'CCR', 'code' => 'GF-CCR-001'],
-            ['name' => 'Marketing Officer', 'email' => 'marketing@globeflight.co.ke', 'role' => 'marketing', 'dept' => 'MKT', 'code' => 'GF-MKT-001'],
+            ['name' => 'IT & Marketing Officer', 'email' => 'marketing@globeflight.co.ke', 'role' => 'marketing', 'dept' => 'MKT', 'code' => 'GF-MKT-001'],
             ['name' => 'Demo Customer', 'email' => 'customer@example.com', 'role' => 'customer', 'dept' => null, 'code' => null],
         ];
 

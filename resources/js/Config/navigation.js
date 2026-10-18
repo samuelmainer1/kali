@@ -10,6 +10,7 @@ import {
     KanbanSquare,
     LayoutDashboard,
     Megaphone,
+    Monitor,
     ScrollText,
     Settings,
     Shield,
@@ -171,7 +172,14 @@ export function navigationForUser(permissions = [], role = null, options = {}) {
             show: can('support.view'),
         },
         {
-            label: 'Marketing',
+            label: 'IT requests',
+            href: 'it.requests.index',
+            routeName: 'it.*',
+            icon: Monitor,
+            show: can('it.request') || can('it.manage'),
+        },
+        {
+            label: 'IT & Marketing',
             href: 'marketing.campaigns.index',
             routeName: 'marketing.*',
             icon: Megaphone,
