@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Services\ActivityLogService;
 use App\Services\DepartmentPrivilegeService;
+use App\Support\RoleLabel;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -33,7 +34,7 @@ class RoleController extends Controller
                 'name' => $role->name,
                 'permissions_count' => $role->permissions_count,
                 'users_count' => $role->users_count,
-                'label' => str_replace('_', ' ', $role->name),
+                'label' => RoleLabel::get($role->name),
                 'can_manage' => $role->name !== 'administrator' || $actorIsAdmin,
             ]);
 
@@ -63,7 +64,7 @@ class RoleController extends Controller
             'role' => [
                 'id' => $role->id,
                 'name' => $role->name,
-                'label' => str_replace('_', ' ', $role->name),
+                'label' => RoleLabel::get($role->name),
                 'permissions' => $role->permissions->pluck('name'),
             ],
             'permissionGroups' => $grouped,

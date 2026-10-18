@@ -2,6 +2,7 @@ import Pagination from '@/Components/Pagination';
 import PageHeader, { HeaderLink } from '@/Components/PageHeader';
 import StatusBadge from '@/Components/StatusBadge';
 import TextInput from '@/Components/TextInput';
+import { roleLabel } from '@/Config/roleLabels';
 import AppLayout from '@/Layouts/AppLayout';
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import { useState } from 'react';
@@ -59,7 +60,7 @@ export default function UsersIndex({ users, filters, roles, departments }) {
                     <option value="">All roles</option>
                     {roles.map((item) => (
                         <option key={item} value={item}>
-                            {item.replaceAll('_', ' ')}
+                            {roleLabel(item)}
                         </option>
                     ))}
                 </select>
@@ -115,7 +116,7 @@ export default function UsersIndex({ users, filters, roles, departments }) {
                                         <div className="font-medium text-gf-ink dark:text-white">{user.name}</div>
                                         <div className="text-xs text-slate-500">{user.email}</div>
                                     </td>
-                                    <td className="px-4 py-3 capitalize">{user.role?.replaceAll('_', ' ') || '—'}</td>
+                                    <td className="px-4 py-3">{user.role ? roleLabel(user.role) : '—'}</td>
                                     <td className="px-4 py-3">{user.department || '—'}</td>
                                     <td className="px-4 py-3">{user.branch || '—'}</td>
                                     <td className="px-4 py-3">

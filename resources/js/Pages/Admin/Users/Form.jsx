@@ -4,6 +4,7 @@ import InputLabel from '@/Components/InputLabel';
 import PageHeader from '@/Components/PageHeader';
 import PrimaryButton from '@/Components/PrimaryButton';
 import TextInput from '@/Components/TextInput';
+import { roleLabel } from '@/Config/roleLabels';
 import AppLayout from '@/Layouts/AppLayout';
 import { Head, Link, useForm } from '@inertiajs/react';
 
@@ -123,7 +124,7 @@ export default function UserForm({ user, roles, departments, branches }) {
                         >
                             {roles.map((role) => (
                                 <option key={role} value={role}>
-                                    {role.replaceAll('_', ' ')}
+                                    {roleLabel(role)}
                                 </option>
                             ))}
                         </select>

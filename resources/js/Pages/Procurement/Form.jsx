@@ -61,7 +61,7 @@ export default function ProcurementForm({ purchaseRequest, departments, defaultD
             <form onSubmit={submit} className="max-w-4xl space-y-4 rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900">
                 <div>
                     <InputLabel value="Title" />
-                    <TextInput className="mt-1 w-full" value={data.title} onChange={(e) => setData('title', e.target.value)} placeholder="e.g. Marketing tripod purchase" />
+                    <TextInput className="mt-1 w-full" value={data.title} onChange={(e) => setData('title', e.target.value)} placeholder="e.g. Office laptop" />
                     <InputError message={errors.title} className="mt-1" />
                 </div>
                 <div className="grid gap-4 sm:grid-cols-2">

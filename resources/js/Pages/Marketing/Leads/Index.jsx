@@ -20,10 +20,10 @@ export default function LeadsIndex({ leads, filters, statuses, stats }) {
 
     return (
         <AppLayout title="Leads">
-            <Head title="Marketing Leads" />
+            <Head title="Leads" />
             <PageHeader
-                title="Marketing Leads"
-                description="Track prospects from campaigns into the pipeline."
+                title="Leads"
+                description="Prospects handled by IT & Marketing."
                 actions={
                     <div className="flex flex-wrap gap-2">
                         <Link href={route('marketing.campaigns.index')} className="rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold dark:border-slate-700">

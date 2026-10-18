@@ -22,10 +22,10 @@ export default function CampaignsIndex({ campaigns, filters, statuses, channels,
 
     return (
         <AppLayout title="Campaigns">
-            <Head title="Marketing Campaigns" />
+            <Head title="Campaigns" />
             <PageHeader
-                title="Marketing Campaigns"
-                description="Plan and track outreach campaigns."
+                title="Campaigns"
+                description="Outreach campaigns for IT & Marketing."
                 actions={
                     <div className="flex flex-wrap gap-2">
                         <Link href={route('marketing.leads.index')} className="rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold dark:border-slate-700">

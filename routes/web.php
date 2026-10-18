@@ -11,6 +11,7 @@ use App\Http\Controllers\Approvals\ApprovalsController;
 use App\Http\Controllers\Crm\CustomerController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Finance\InvoiceController;
+use App\Http\Controllers\It\ItRequestController;
 use App\Http\Controllers\Leave\LeaveRequestController;
 use App\Http\Controllers\Marketing\CampaignController;
 use App\Http\Controllers\Marketing\LeadController;
@@ -313,6 +314,18 @@ Route::middleware(['auth', 'verified', 'active'])->group(function () {
         Route::post('/{leaveRequest}/approve', [LeaveRequestController::class, 'approve'])->name('approve');
         Route::post('/{leaveRequest}/reject', [LeaveRequestController::class, 'reject'])->name('reject');
         Route::post('/{leaveRequest}/cancel', [LeaveRequestController::class, 'cancel'])->name('cancel');
+    });
+
+    Route::prefix('it')->name('it.')->group(function () {
+        Route::middleware('permission:it.request|it.manage')->group(function () {
+            Route::get('/requests/create', [ItRequestController::class, 'create'])->name('requests.create');
+            Route::post('/requests', [ItRequestController::class, 'store'])->name('requests.store');
+            Route::get('/requests', [ItRequestController::class, 'index'])->name('requests.index');
+            Route::get('/requests/{itRequest}', [ItRequestController::class, 'show'])->name('requests.show');
+        });
+        Route::middleware('permission:it.manage')->group(function () {
+            Route::put('/requests/{itRequest}', [ItRequestController::class, 'update'])->name('requests.update');
+        });
     });
 
     Route::prefix('marketing')->name('marketing.')->middleware('permission:marketing.view')->group(function () {
