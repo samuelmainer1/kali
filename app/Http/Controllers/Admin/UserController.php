@@ -9,18 +9,19 @@ use App\Models\Branch;
 use App\Models\Department;
 use App\Models\User;
 use App\Services\ActivityLogService;
+use App\Services\DepartmentPrivilegeService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Inertia\Inertia;
 use Inertia\Response;
-use Spatie\Permission\Models\Role;
 
 class UserController extends Controller
 {
-    public function __construct(private readonly ActivityLogService $activityLog)
-    {
-    }
+    public function __construct(
+        private readonly ActivityLogService $activityLog,
+        private readonly DepartmentPrivilegeService $privileges,
+    ) {}
 
     public function index(Request $request): Response
     {
@@ -58,7 +59,7 @@ class UserController extends Controller
         return Inertia::render('Admin/Users/Index', [
             'users' => $users,
             'filters' => $request->only(['search', 'role', 'department_id', 'status']),
-            'roles' => Role::query()->orderBy('name')->pluck('name'),
+            'roles' => $this->privileges->staffRoles()->pluck('name'),
             'departments' => Department::query()->orderBy('name')->get(['id', 'name']),
         ]);
     }
@@ -67,7 +68,7 @@ class UserController extends Controller
     {
         return Inertia::render('Admin/Users/Form', [
             'user' => null,
-            'roles' => Role::query()->orderBy('name')->pluck('name'),
+            'roles' => $this->privileges->staffRoles()->pluck('name'),
             'departments' => Department::query()->where('is_active', true)->orderBy('name')->get(['id', 'name']),
             'branches' => Branch::query()->where('is_active', true)->orderBy('name')->get(['id', 'name']),
         ]);
@@ -88,6 +89,7 @@ class UserController extends Controller
 
         $user = User::query()->create($data);
         $user->syncRoles([$role]);
+        $this->privileges->attachUser($user);
 
         $this->activityLog->log('users.created', "Created user {$user->name}", $user, [
             'email' => $user->email,
@@ -117,7 +119,7 @@ class UserController extends Controller
                 'is_active' => $user->is_active,
                 'role' => $user->primaryRole(),
             ],
-            'roles' => Role::query()->orderBy('name')->pluck('name'),
+            'roles' => $this->privileges->staffRoles()->pluck('name'),
             'departments' => Department::query()->orderBy('name')->get(['id', 'name', 'is_active']),
             'branches' => Branch::query()->orderBy('name')->get(['id', 'name', 'is_active']),
         ]);
@@ -143,6 +145,7 @@ class UserController extends Controller
 
         $user->update($data);
         $user->syncRoles([$role]);
+        $this->privileges->attachUser($user);
 
         $this->activityLog->log('users.updated', "Updated user {$user->name}", $user, [
             'role' => $role,

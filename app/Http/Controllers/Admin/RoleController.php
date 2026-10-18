@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Services\ActivityLogService;
+use App\Services\DepartmentPrivilegeService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -15,15 +16,14 @@ use Spatie\Permission\PermissionRegistrar;
 
 class RoleController extends Controller
 {
-    public function __construct(private readonly ActivityLogService $activityLog)
-    {
-    }
+    public function __construct(private readonly ActivityLogService $activityLog) {}
 
     public function index(Request $request): Response
     {
         $actorIsAdmin = $request->user()->hasRole('administrator');
 
         $roles = Role::query()
+            ->where('name', 'not like', DepartmentPrivilegeService::ROLE_PREFIX.'%')
             ->withCount('permissions')
             ->withCount('users')
             ->orderBy('name')

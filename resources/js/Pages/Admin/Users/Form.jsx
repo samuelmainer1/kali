@@ -145,6 +145,7 @@ export default function UserForm({ user, roles, departments, branches }) {
                             ))}
                         </select>
                         <InputError message={errors.department_id} className="mt-1" />
+                        <p className="mt-1 text-xs text-slate-500">They also receive the privileges set on this department.</p>
                     </div>
                     <div>
                         <InputLabel htmlFor="branch_id" value="Branch" />

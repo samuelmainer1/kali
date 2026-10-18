@@ -9,14 +9,24 @@ import AppLayout from '@/Layouts/AppLayout';
 import { Head, router, useForm } from '@inertiajs/react';
 import { useState } from 'react';
 
-function DepartmentForm({ department, onClose }) {
+function DepartmentForm({ department, permissionGroups, onClose }) {
     const editing = Boolean(department);
     const { data, setData, post, put, processing, errors, reset } = useForm({
         name: department?.name || '',
         code: department?.code || '',
         description: department?.description || '',
         is_active: department?.is_active ?? true,
+        permissions: department?.permissions || [],
     });
+
+    const toggle = (name) => {
+        setData(
+            'permissions',
+            data.permissions.includes(name)
+                ? data.permissions.filter((item) => item !== name)
+                : [...data.permissions, name],
+        );
+    };
 
     const submit = (event) => {
         event.preventDefault();
@@ -63,6 +73,31 @@ function DepartmentForm({ department, onClose }) {
                 <Checkbox checked={data.is_active} onChange={(e) => setData('is_active', e.target.checked)} />
                 Active
             </label>
+            <div>
+                <InputLabel value="Privileges" />
+                <p className="mt-1 text-xs text-slate-500">Everyone in this department receives these privileges, in addition to their own role.</p>
+                <div className="mt-3 max-h-80 space-y-3 overflow-y-auto pr-1">
+                    {permissionGroups.map((group) => (
+                        <div key={group.group}>
+                            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{group.group}</p>
+                            <div className="mt-2 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                                {group.permissions.map((permission) => (
+                                    <label key={permission.id} className="flex items-center gap-2 rounded-lg border border-slate-100 px-3 py-2 text-sm dark:border-slate-800">
+                                        <input
+                                            type="checkbox"
+                                            checked={data.permissions.includes(permission.name)}
+                                            onChange={() => toggle(permission.name)}
+                                            className="rounded border-slate-300 text-gf-forest focus:ring-gf-forest"
+                                        />
+                                        <span>{permission.name}</span>
+                                    </label>
+                                ))}
+                            </div>
+                        </div>
+                    ))}
+                </div>
+                <InputError message={errors.permissions} className="mt-1" />
+            </div>
             <div className="flex gap-2">
                 <PrimaryButton disabled={processing}>{editing ? 'Update' : 'Create'}</PrimaryButton>
                 <button type="button" onClick={onClose} className="text-sm text-slate-500">
@@ -73,7 +108,7 @@ function DepartmentForm({ department, onClose }) {
     );
 }
 
-export default function DepartmentsIndex({ departments }) {
+export default function DepartmentsIndex({ departments, permissionGroups }) {
     const [mode, setMode] = useState(null);
 
     return (
@@ -82,7 +117,7 @@ export default function DepartmentsIndex({ departments }) {
 
             <PageHeader
                 title="Departments"
-                description="Organize staff into operational departments."
+                description="Organize staff, then choose the privileges everyone in that department receives."
                 actions={
                     <button
                         type="button"
@@ -94,9 +129,11 @@ export default function DepartmentsIndex({ departments }) {
                 }
             />
 
-            {mode?.type === 'create' && <DepartmentForm onClose={() => setMode(null)} />}
+            {mode?.type === 'create' && (
+                <DepartmentForm permissionGroups={permissionGroups} onClose={() => setMode(null)} />
+            )}
             {mode?.type === 'edit' && (
-                <DepartmentForm department={mode.department} onClose={() => setMode(null)} />
+                <DepartmentForm department={mode.department} permissionGroups={permissionGroups} onClose={() => setMode(null)} />
             )}
 
             <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
@@ -106,6 +143,7 @@ export default function DepartmentsIndex({ departments }) {
                             <th className="px-4 py-3">Name</th>
                             <th className="px-4 py-3">Code</th>
                             <th className="px-4 py-3">Users</th>
+                            <th className="px-4 py-3">Privileges</th>
                             <th className="px-4 py-3">Status</th>
                             <th className="px-4 py-3 text-right">Actions</th>
                         </tr>
@@ -119,6 +157,7 @@ export default function DepartmentsIndex({ departments }) {
                                 </td>
                                 <td className="px-4 py-3">{department.code}</td>
                                 <td className="px-4 py-3">{department.users_count}</td>
+                                <td className="px-4 py-3">{department.permissions_count || 0}</td>
                                 <td className="px-4 py-3">
                                     <StatusBadge active={department.is_active} />
                                 </td>

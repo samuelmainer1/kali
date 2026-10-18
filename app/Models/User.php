@@ -81,6 +81,8 @@ class User extends Authenticatable
      */
     public function primaryRole(): ?string
     {
-        return $this->getRoleNames()->first();
+        return $this->getRoleNames()
+            ->reject(fn (string $name) => str_starts_with($name, 'department:'))
+            ->first();
     }
 }
