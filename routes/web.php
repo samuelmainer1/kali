@@ -19,12 +19,14 @@ use App\Http\Controllers\Marketing\LeadController;
 use App\Http\Controllers\Notifications\UserNotificationController;
 use App\Http\Controllers\Operations\ShipmentController;
 use App\Http\Controllers\Operations\ShipmentDocumentController;
+use App\Http\Controllers\Operations\VehicleController;
 use App\Http\Controllers\Portal\TrackingController;
 use App\Http\Controllers\Procurement\PurchaseRequestController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Reports\EmployeeReportController;
 use App\Http\Controllers\Sales\PipelineController;
 use App\Http\Controllers\Sales\QuotationController;
+use App\Http\Controllers\Sales\ShippingRateController;
 use App\Http\Controllers\Support\SupportTicketController;
 use App\Http\Controllers\Tasks\TaskController;
 use App\Http\Controllers\Warehouse\WarehouseController;
@@ -148,6 +150,14 @@ Route::middleware(['auth', 'verified', 'active'])->group(function () {
         Route::middleware('permission:invoices.manage')->group(function () {
             Route::post('/quotations/{quotation}/invoice', [InvoiceController::class, 'fromQuotation'])->name('quotations.invoice');
         });
+
+        Route::middleware('permission:rates.view')->group(function () {
+            Route::get('/rates', [ShippingRateController::class, 'index'])->name('rates.index');
+        });
+        Route::middleware('permission:rates.manage')->group(function () {
+            Route::post('/rates', [ShippingRateController::class, 'store'])->name('rates.store');
+            Route::put('/rates/{shippingRate}', [ShippingRateController::class, 'update'])->name('rates.update');
+        });
     });
 
     Route::prefix('pipeline')->name('pipeline.')->group(function () {
@@ -185,10 +195,21 @@ Route::middleware(['auth', 'verified', 'active'])->group(function () {
             Route::get('/shipments/{shipment}/edit', [ShipmentController::class, 'edit'])->name('shipments.edit');
             Route::put('/shipments/{shipment}', [ShipmentController::class, 'update'])->name('shipments.update');
             Route::post('/shipments/{shipment}/advance', [ShipmentController::class, 'advance'])->name('shipments.advance');
+            Route::post('/shipments/{shipment}/assignment', [ShipmentController::class, 'assign'])->name('shipments.assign');
+            Route::post('/shipments/{shipment}/proof', [ShipmentController::class, 'storeProof'])->name('shipments.proof');
             Route::post('/shipments/{shipment}/documents', [ShipmentDocumentController::class, 'store'])->name('shipments.documents.store');
         });
         Route::middleware('permission:shipments.view|portal.shipments')->group(function () {
             Route::get('/shipments/{shipment}/documents/{document}', [ShipmentDocumentController::class, 'download'])->name('shipments.documents.download');
+            Route::get('/shipments/{shipment}/proof', [ShipmentController::class, 'downloadProof'])->name('shipments.proof.download');
+        });
+
+        Route::middleware('permission:vehicles.view')->group(function () {
+            Route::get('/vehicles', [VehicleController::class, 'index'])->name('vehicles.index');
+        });
+        Route::middleware('permission:vehicles.manage')->group(function () {
+            Route::post('/vehicles', [VehicleController::class, 'store'])->name('vehicles.store');
+            Route::put('/vehicles/{vehicle}', [VehicleController::class, 'update'])->name('vehicles.update');
         });
     });
 
@@ -260,6 +281,7 @@ Route::middleware(['auth', 'verified', 'active'])->group(function () {
             Route::get('/invoices/{invoice}/edit', [InvoiceController::class, 'edit'])->name('invoices.edit');
             Route::put('/invoices/{invoice}', [InvoiceController::class, 'update'])->name('invoices.update');
             Route::post('/invoices/{invoice}/status', [InvoiceController::class, 'markStatus'])->name('invoices.status');
+            Route::post('/invoices/{invoice}/payments', [InvoiceController::class, 'recordPayment'])->name('invoices.payments.store');
         });
     });
 

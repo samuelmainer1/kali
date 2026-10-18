@@ -48,7 +48,7 @@ class TrackingController extends Controller
     {
         abort_unless($shipment->customer?->email === $request->user()->email, 403);
 
-        $shipment->load(['statusHistories.changer:id,name', 'documents']);
+        $shipment->load(['statusHistories.changer:id,name', 'documents', 'driver:id,name', 'vehicle:id,registration,name', 'proofOfDelivery']);
 
         return Inertia::render('Portal/Shipment', [
             'shipment' => [
@@ -59,6 +59,14 @@ class TrackingController extends Controller
                 'origin_country' => $shipment->origin_country,
                 'destination_country' => $shipment->destination_country,
                 'current_location' => $shipment->current_location,
+                'driver' => $shipment->driver?->name,
+                'vehicle' => $shipment->vehicle ? $shipment->vehicle->registration.' · '.$shipment->vehicle->name : null,
+                'proof' => $shipment->proofOfDelivery ? [
+                    'received_by' => $shipment->proofOfDelivery->received_by,
+                    'received_at' => $shipment->proofOfDelivery->received_at?->format('d M Y H:i'),
+                    'notes' => $shipment->proofOfDelivery->notes,
+                    'has_photo' => (bool) $shipment->proofOfDelivery->photo_path,
+                ] : null,
                 'lifecycle' => Shipment::STATUSES,
                 'status' => $shipment->status,
                 'history' => $shipment->statusHistories->map(fn ($history) => [

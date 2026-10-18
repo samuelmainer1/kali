@@ -65,6 +65,21 @@ class Invoice extends Model
         return $this->hasMany(InvoiceItem::class)->orderBy('sort_order');
     }
 
+    public function payments(): HasMany
+    {
+        return $this->hasMany(InvoicePayment::class)->latest('paid_on');
+    }
+
+    public function amountPaid(): float
+    {
+        return round((float) $this->payments()->sum('amount'), 2);
+    }
+
+    public function balance(): float
+    {
+        return round(max(0, (float) $this->total - $this->amountPaid()), 2);
+    }
+
     public function isEditable(): bool
     {
         return $this->status === 'draft';

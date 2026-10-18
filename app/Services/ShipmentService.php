@@ -5,16 +5,16 @@ namespace App\Services;
 use App\Models\CargoMovement;
 use App\Models\InventoryItem;
 use App\Models\Shipment;
+use App\Models\ShipmentCustomerNotice;
 use App\Models\ShipmentStatusHistory;
 use App\Models\User;
+use App\Services\Notifications\NotificationDispatcher;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 class ShipmentService
 {
-    public function __construct(private readonly ActivityLogService $activityLog)
-    {
-    }
+    public function __construct(private readonly ActivityLogService $activityLog) {}
 
     public function nextReference(): string
     {
@@ -131,6 +131,78 @@ class ShipmentService
             true,
             $actor->id,
         );
+
+        $this->notifyCustomer($shipment, $next);
+    }
+
+    public function notifyCustomer(Shipment $shipment, string $status): void
+    {
+        $shipment->loadMissing(['customer', 'driver', 'vehicle']);
+        $customer = $shipment->customer;
+        if (! $customer) {
+            return;
+        }
+
+        $label = Shipment::label($status);
+        $subject = "Shipment {$shipment->reference} is now {$label}";
+        $message = "Your shipment {$shipment->reference} is now {$label}.";
+        if ($shipment->current_location) {
+            $message .= " Current location: {$shipment->current_location}.";
+        }
+        if ($status === 'out_for_delivery' && $shipment->driver) {
+            $message .= " Driver: {$shipment->driver->name}.";
+            if ($shipment->vehicle) {
+                $message .= " Vehicle: {$shipment->vehicle->registration}.";
+            }
+        }
+
+        $dispatcher = app(NotificationDispatcher::class);
+
+        if ($customer->email) {
+            $dispatcher->via('email')->send($customer->email, $subject, $message, [
+                'shipment_id' => $shipment->id,
+                'status' => $status,
+            ]);
+            ShipmentCustomerNotice::query()->create([
+                'shipment_id' => $shipment->id,
+                'channel' => 'email',
+                'destination' => $customer->email,
+                'status' => 'sent',
+                'subject' => $subject,
+                'body' => $message,
+            ]);
+
+            $portalUser = User::query()->where('email', $customer->email)->where('is_active', true)->first();
+            if ($portalUser) {
+                app(AppNotificationService::class)->notify(
+                    $portalUser,
+                    'shipment.customer',
+                    $subject,
+                    $message,
+                    url(route('portal.shipments.show', $shipment, false)),
+                    "shipment-customer-{$shipment->id}-{$status}",
+                    ['shipment_id' => $shipment->id, 'status' => $status],
+                    false,
+                );
+            }
+        }
+
+        if ($customer->phone) {
+            foreach (['sms', 'whatsapp'] as $channel) {
+                $dispatcher->via($channel)->send($customer->phone, $subject, $message, [
+                    'shipment_id' => $shipment->id,
+                    'status' => $status,
+                ]);
+                ShipmentCustomerNotice::query()->create([
+                    'shipment_id' => $shipment->id,
+                    'channel' => $channel,
+                    'destination' => $customer->phone,
+                    'status' => 'pending_gateway',
+                    'subject' => $subject,
+                    'body' => $message,
+                ]);
+            }
+        }
     }
 
     private function ensureWarehouseInventory(Shipment $shipment, User $user): void

@@ -9,6 +9,8 @@ use App\Models\Branch;
 use App\Models\Customer;
 use App\Models\Shipment;
 use App\Models\ShipmentDocument;
+use App\Models\User;
+use App\Models\Vehicle;
 use App\Services\ActivityLogService;
 use App\Services\ShipmentService;
 use App\Support\DocumentStorage;
@@ -122,6 +124,10 @@ class ShipmentController extends Controller
             'creator:id,name',
             'statusHistories.changer:id,name',
             'documents',
+            'driver:id,name',
+            'vehicle:id,registration,name',
+            'proofOfDelivery.recorder:id,name',
+            'customerNotices',
             'inventoryItems',
             'cargoMovements' => fn ($q) => $q->with('performer:id,name')->limit(20),
         ]);
@@ -145,6 +151,24 @@ class ShipmentController extends Controller
                 'expected_arrival' => $shipment->expected_arrival?->toDateString(),
                 'delivered_at' => $shipment->delivered_at?->toDateTimeString(),
                 'notes' => $shipment->notes,
+                'driver' => $shipment->driver,
+                'vehicle' => $shipment->vehicle,
+                'proof' => $shipment->proofOfDelivery ? [
+                    'received_by' => $shipment->proofOfDelivery->received_by,
+                    'received_at' => $shipment->proofOfDelivery->received_at?->format('d M Y H:i'),
+                    'notes' => $shipment->proofOfDelivery->notes,
+                    'photo_name' => $shipment->proofOfDelivery->photo_name,
+                    'has_photo' => (bool) $shipment->proofOfDelivery->photo_path,
+                    'recorded_by' => $shipment->proofOfDelivery->recorder?->name,
+                ] : null,
+                'customer_notices' => $shipment->customerNotices->map(fn ($notice) => [
+                    'id' => $notice->id,
+                    'channel' => $notice->channel,
+                    'destination' => $notice->destination,
+                    'status' => $notice->status === 'sent' ? 'Sent' : 'Waiting for SMS or WhatsApp gateway',
+                    'subject' => $notice->subject,
+                    'created_at' => $notice->created_at?->format('d M Y H:i'),
+                ]),
                 'customer' => $shipment->customer,
                 'branch' => $shipment->branch,
                 'quotation' => $shipment->quotation,
@@ -168,6 +192,18 @@ class ShipmentController extends Controller
                 'document_types' => ShipmentDocument::TYPES,
                 'manifest_ready' => DocumentStorage::disk()->exists((new GenerateCargoManifestPdf($shipment->id))->path()),
                 'inventory_items' => $shipment->inventoryItems,
+                'drivers' => User::query()
+                    ->where('is_active', true)
+                    ->whereDoesntHave('roles', fn ($query) => $query->where('name', 'customer'))
+                    ->with('department:id,name')
+                    ->orderBy('name')
+                    ->get()
+                    ->map(fn (User $driver) => [
+                        'id' => $driver->id,
+                        'name' => $driver->name,
+                        'department' => $driver->department?->name,
+                    ]),
+                'vehicles' => Vehicle::query()->where('is_active', true)->orderBy('registration')->get(['id', 'registration', 'name']),
                 'cargo_movements' => $shipment->cargoMovements->map(fn ($m) => [
                     'id' => $m->id,
                     'type' => $m->type,
@@ -235,6 +271,84 @@ class ShipmentController extends Controller
         );
 
         return back()->with('success', 'Shipment status advanced.');
+    }
+
+    public function assign(Request $request, Shipment $shipment): RedirectResponse
+    {
+        $data = $request->validate([
+            'driver_id' => ['nullable', 'exists:users,id'],
+            'vehicle_id' => ['nullable', 'exists:vehicles,id'],
+        ]);
+
+        if (! empty($data['driver_id'])) {
+            $driver = User::query()->findOrFail($data['driver_id']);
+            if (! $driver->is_active || $driver->hasRole('customer')) {
+                return back()->withErrors(['driver_id' => 'Choose a staff member.'])->withInput();
+            }
+        }
+
+        $shipment->update([
+            'driver_id' => $data['driver_id'] ?: null,
+            'vehicle_id' => $data['vehicle_id'] ?: null,
+        ]);
+
+        $this->activityLog->log('shipments.assigned', "Assigned driver and vehicle on {$shipment->reference}", $shipment);
+
+        return back()->with('success', 'Driver and vehicle saved. Only the selected driver is assigned.');
+    }
+
+    public function storeProof(Request $request, Shipment $shipment): RedirectResponse
+    {
+        if (! in_array($shipment->status, ['out_for_delivery', 'delivered'], true)) {
+            return back()->withErrors(['received_by' => 'Record proof when the shipment is out for delivery or delivered.']);
+        }
+
+        $data = $request->validate([
+            'received_by' => ['required', 'string', 'max:255'],
+            'notes' => ['nullable', 'string', 'max:2000'],
+            'photo' => ['nullable', 'image', 'max:10240'],
+        ]);
+
+        if ($shipment->status === 'out_for_delivery') {
+            $this->shipments->advanceStatus($shipment, $request->user(), 'Proof of delivery recorded');
+            $shipment->refresh();
+        }
+
+        $proof = $shipment->proofOfDelivery()->firstOrNew([]);
+        $proof->fill([
+            'received_by' => $data['received_by'],
+            'received_at' => now(),
+            'notes' => $data['notes'] ?? null,
+            'recorded_by' => $request->user()->id,
+        ]);
+
+        if ($request->hasFile('photo')) {
+            $file = $request->file('photo');
+            $proof->photo_path = $file->store("shipments/{$shipment->id}/pod", DocumentStorage::name());
+            $proof->photo_disk = DocumentStorage::name();
+            $proof->photo_name = $file->getClientOriginalName();
+        }
+
+        $proof->shipment_id = $shipment->id;
+        $proof->save();
+
+        $this->activityLog->log('shipments.pod', "Recorded proof of delivery for {$shipment->reference}", $shipment);
+
+        return back()->with('success', 'Proof of delivery saved.');
+    }
+
+    public function downloadProof(Request $request, Shipment $shipment): StreamedResponse
+    {
+        $proof = $shipment->proofOfDelivery;
+        abort_unless($proof?->photo_path, 404);
+
+        $user = $request->user();
+        $canView = $user->can('shipments.view')
+            || ($user->can('portal.shipments') && $shipment->customer?->email === $user->email);
+        abort_unless($canView, 403);
+        abort_unless(DocumentStorage::disk()->exists($proof->photo_path), 404);
+
+        return DocumentStorage::disk()->download($proof->photo_path, $proof->photo_name ?: 'proof-of-delivery.jpg');
     }
 
     public function queueManifest(Shipment $shipment): RedirectResponse

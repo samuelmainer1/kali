@@ -16,6 +16,8 @@ import {
     Settings,
     Shield,
     Ship,
+    Tags,
+    Truck,
     ShoppingCart,
     Users,
     Warehouse,
@@ -111,6 +113,13 @@ export function navigationForUser(permissions = [], role = null, options = {}) {
             show: can('quotations.view'),
         },
         {
+            label: 'Rate card',
+            href: 'sales.rates.index',
+            routeName: 'sales.rates.*',
+            icon: Tags,
+            show: can('rates.view') || can('rates.manage'),
+        },
+        {
             label: 'Pipeline',
             href: 'pipeline.index',
             routeName: 'pipeline.*',
@@ -123,6 +132,13 @@ export function navigationForUser(permissions = [], role = null, options = {}) {
             routeName: can('shipments.view') ? 'operations.shipments.*' : 'portal.shipments.*',
             icon: Ship,
             show: can('shipments.view') || can('portal.shipments'),
+        },
+        {
+            label: 'Vehicles',
+            href: 'operations.vehicles.index',
+            routeName: 'operations.vehicles.*',
+            icon: Truck,
+            show: can('vehicles.view') || can('vehicles.manage'),
         },
         {
             label: 'Warehouse',

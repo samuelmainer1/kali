@@ -13,6 +13,15 @@ export default function ShipmentShow({ shipment }) {
         type: 'air_waybill',
         file: null,
     });
+    const assignment = useForm({
+        driver_id: shipment.driver?.id || '',
+        vehicle_id: shipment.vehicle?.id || '',
+    });
+    const proof = useForm({
+        received_by: '',
+        notes: '',
+        photo: null,
+    });
 
     const uploadDocument = (event) => {
         event.preventDefault();
@@ -98,6 +107,8 @@ export default function ShipmentShow({ shipment }) {
                             <div><dt className="text-slate-500">Route</dt><dd>{shipment.origin_country || '—'} → {shipment.destination_country || '—'}</dd></div>
                             <div><dt className="text-slate-500">Location</dt><dd>{shipment.current_location || '—'}</dd></div>
                             <div><dt className="text-slate-500">Pieces / Weight</dt><dd>{shipment.pieces} / {shipment.weight_kg || '—'} kg</dd></div>
+                            <div><dt className="text-slate-500">Driver</dt><dd>{shipment.driver?.name || 'Not assigned'}</dd></div>
+                            <div><dt className="text-slate-500">Vehicle</dt><dd>{shipment.vehicle ? `${shipment.vehicle.registration} · ${shipment.vehicle.name}` : 'Not assigned'}</dd></div>
                             <div><dt className="text-slate-500">Branch</dt><dd>{shipment.branch?.name || '—'}</dd></div>
                             {shipment.quotation && (
                                 <div>
@@ -129,6 +140,71 @@ export default function ShipmentShow({ shipment }) {
                 </section>
 
                 <section className="space-y-4">
+                    {permissions.includes('shipments.update') && (
+                        <div className="rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900">
+                            <h3 className="font-display font-bold">Driver and vehicle</h3>
+                            <p className="mt-1 text-sm text-slate-500">Pick one person. Other people in the same department do not get this job.</p>
+                            <form onSubmit={(event) => { event.preventDefault(); assignment.post(route('operations.shipments.assign', shipment.id), { preserveScroll: true }); }} className="mt-3 space-y-2">
+                                <select className="w-full rounded-md border-slate-300 dark:border-slate-700 dark:bg-slate-800" value={assignment.data.driver_id} onChange={(event) => assignment.setData('driver_id', event.target.value)}>
+                                    <option value="">No driver</option>
+                                    {(shipment.drivers || []).map((driver) => (
+                                        <option key={driver.id} value={driver.id}>
+                                            {driver.name}{driver.department ? ` · ${driver.department}` : ''}
+                                        </option>
+                                    ))}
+                                </select>
+                                <select className="w-full rounded-md border-slate-300 dark:border-slate-700 dark:bg-slate-800" value={assignment.data.vehicle_id} onChange={(event) => assignment.setData('vehicle_id', event.target.value)}>
+                                    <option value="">No vehicle</option>
+                                    {(shipment.vehicles || []).map((vehicle) => (
+                                        <option key={vehicle.id} value={vehicle.id}>{vehicle.registration} · {vehicle.name}</option>
+                                    ))}
+                                </select>
+                                <PrimaryButton disabled={assignment.processing}>Save assignment</PrimaryButton>
+                            </form>
+                        </div>
+                    )}
+
+                    {['out_for_delivery', 'delivered'].includes(shipment.status) && (
+                        <div className="rounded-2xl border border-slate-200 bg-white p-5 text-sm dark:border-slate-800 dark:bg-slate-900">
+                            <h3 className="font-display font-bold">Proof of delivery</h3>
+                            {shipment.proof ? (
+                                <dl className="mt-3 space-y-2">
+                                    <div><dt className="text-slate-500">Received by</dt><dd>{shipment.proof.received_by}</dd></div>
+                                    <div><dt className="text-slate-500">When</dt><dd>{shipment.proof.received_at}</dd></div>
+                                    <div><dt className="text-slate-500">Recorded by</dt><dd>{shipment.proof.recorded_by || '—'}</dd></div>
+                                    {shipment.proof.notes && <div><dt className="text-slate-500">Notes</dt><dd>{shipment.proof.notes}</dd></div>}
+                                    {shipment.proof.has_photo && (
+                                        <a href={route('operations.shipments.proof.download', shipment.id)} className="text-gf-forest hover:underline">Download photo</a>
+                                    )}
+                                </dl>
+                            ) : (
+                                <p className="mt-1 text-slate-500">No proof recorded yet.</p>
+                            )}
+                            {permissions.includes('shipments.update') && (
+                                <form onSubmit={(event) => { event.preventDefault(); proof.post(route('operations.shipments.proof', shipment.id), { forceFormData: true, preserveScroll: true }); }} className="mt-3 space-y-2">
+                                    <TextInput className="w-full" placeholder="Receiver name" value={proof.data.received_by} onChange={(event) => proof.setData('received_by', event.target.value)} />
+                                    <textarea className="w-full rounded-md border-slate-300 dark:border-slate-700 dark:bg-slate-800" rows={2} placeholder="Notes" value={proof.data.notes} onChange={(event) => proof.setData('notes', event.target.value)} />
+                                    <input type="file" accept="image/*" onChange={(event) => proof.setData('photo', event.target.files?.[0] ?? null)} className="block w-full text-sm" />
+                                    <PrimaryButton disabled={proof.processing}>Save proof</PrimaryButton>
+                                </form>
+                            )}
+                        </div>
+                    )}
+
+                    {(shipment.customer_notices || []).length > 0 && (
+                        <div className="rounded-2xl border border-slate-200 bg-white p-5 text-sm dark:border-slate-800 dark:bg-slate-900">
+                            <h3 className="font-display font-bold">Customer updates</h3>
+                            <ul className="mt-3 space-y-2">
+                                {shipment.customer_notices.map((notice) => (
+                                    <li key={notice.id}>
+                                        <p className="font-medium capitalize">{notice.channel} · {notice.status}</p>
+                                        <p className="text-slate-500">{notice.destination} · {notice.created_at}</p>
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
+                    )}
+
                     {shipment.next_status && permissions.includes('shipments.update') && (
                         <div className="rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900">
                             <h3 className="font-display font-bold">Advance status</h3>
