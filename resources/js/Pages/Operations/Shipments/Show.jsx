@@ -37,6 +37,21 @@ export default function ShipmentShow({ shipment }) {
                 description={`${shipment.customer?.name || 'Customer'} · ${shipment.status_label}`}
                 actions={
                     <div className="flex flex-wrap gap-2">
+                        <button
+                            type="button"
+                            onClick={() => router.post(route('operations.shipments.manifest', shipment.id))}
+                            className="rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold dark:border-slate-700"
+                        >
+                            Queue manifest
+                        </button>
+                        {shipment.manifest_ready && (
+                            <a
+                                href={route('operations.shipments.manifest.download', shipment.id)}
+                                className="rounded-xl bg-gf-green px-4 py-2.5 text-sm font-semibold text-gf-ink"
+                            >
+                                Download manifest
+                            </a>
+                        )}
                         {permissions.includes('shipments.update') && (
                             <Link href={route('operations.shipments.edit', shipment.id)} className="rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold dark:border-slate-700">
                                 Edit details

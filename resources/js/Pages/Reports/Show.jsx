@@ -4,7 +4,7 @@ import AppLayout from '@/Layouts/AppLayout';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 
-export default function ReportShow({ report }) {
+export default function ReportShow({ report, pdf_ready = false }) {
     const permissions = usePage().props.auth.user?.permissions ?? [];
     const [reviewOpen, setReviewOpen] = useState(false);
     const reviewForm = useForm({
@@ -20,6 +20,21 @@ export default function ReportShow({ report }) {
                 description={`${report.title} · ${report.status_label}`}
                 actions={
                     <div className="flex flex-wrap gap-2">
+                        <button
+                            type="button"
+                            onClick={() => router.post(route('reports.pdf', report.id))}
+                            className="rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold dark:border-slate-700"
+                        >
+                            Queue PDF
+                        </button>
+                        {pdf_ready && (
+                            <a
+                                href={route('reports.pdf.download', report.id)}
+                                className="rounded-xl bg-gf-green px-4 py-2.5 text-sm font-semibold text-gf-ink"
+                            >
+                                Download PDF
+                            </a>
+                        )}
                         {report.is_owner && report.is_editable && permissions.includes('reports.weekly.submit') && (
                             <Link
                                 href={route('reports.edit', report.id)}

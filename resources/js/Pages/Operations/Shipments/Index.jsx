@@ -5,7 +5,7 @@ import AppLayout from '@/Layouts/AppLayout';
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 
-export default function ShipmentsIndex({ shipments, filters, statuses }) {
+export default function ShipmentsIndex({ shipments, filters, statuses, export_ready = false }) {
     const permissions = usePage().props.auth.user?.permissions ?? [];
     const [search, setSearch] = useState(filters.search || '');
     const [status, setStatus] = useState(filters.status || '');
@@ -25,9 +25,26 @@ export default function ShipmentsIndex({ shipments, filters, statuses }) {
                 title="Shipments"
                 description="Track cargo from collection through delivery."
                 actions={
-                    permissions.includes('shipments.create') ? (
-                        <HeaderLink href={route('operations.shipments.create')}>New shipment</HeaderLink>
-                    ) : null
+                    <div className="flex flex-wrap gap-2">
+                        <button
+                            type="button"
+                            onClick={() => router.post(route('operations.shipments.export'))}
+                            className="rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold dark:border-slate-700"
+                        >
+                            Queue spreadsheet
+                        </button>
+                        {export_ready && (
+                            <a
+                                href={route('operations.shipments.export.download')}
+                                className="rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold dark:border-slate-700"
+                            >
+                                Download spreadsheet
+                            </a>
+                        )}
+                        {permissions.includes('shipments.create') && (
+                            <HeaderLink href={route('operations.shipments.create')}>New shipment</HeaderLink>
+                        )}
+                    </div>
                 }
             />
 

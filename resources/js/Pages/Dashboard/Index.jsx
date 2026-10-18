@@ -241,6 +241,7 @@ export default function DashboardIndex({
                                 'Procurement + Leave',
                                 'Approvals hub + reminders',
                                 'Customer portal',
+                                'Reporting exports — manifests and staff reports',
                             ].map((item) => (
                                 <li
                                     key={item}

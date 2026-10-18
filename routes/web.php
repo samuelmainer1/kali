@@ -164,8 +164,12 @@ Route::middleware(['auth', 'verified', 'active'])->group(function () {
             Route::post('/shipments', [ShipmentController::class, 'store'])->name('shipments.store');
         });
         Route::middleware('permission:shipments.view')->group(function () {
+            Route::post('/shipments/export', [ShipmentController::class, 'queueExport'])->name('shipments.export');
+            Route::get('/shipments/export', [ShipmentController::class, 'downloadExport'])->name('shipments.export.download');
             Route::get('/shipments', [ShipmentController::class, 'index'])->name('shipments.index');
             Route::get('/shipments/{shipment}', [ShipmentController::class, 'show'])->name('shipments.show');
+            Route::post('/shipments/{shipment}/manifest', [ShipmentController::class, 'queueManifest'])->name('shipments.manifest');
+            Route::get('/shipments/{shipment}/manifest', [ShipmentController::class, 'downloadManifest'])->name('shipments.manifest.download');
         });
         Route::middleware('permission:shipments.update')->group(function () {
             Route::get('/shipments/{shipment}/edit', [ShipmentController::class, 'edit'])->name('shipments.edit');
@@ -187,6 +191,11 @@ Route::middleware(['auth', 'verified', 'active'])->group(function () {
     });
 
     Route::prefix('reports')->name('reports.')->group(function () {
+        Route::middleware('permission:reports.export')->group(function () {
+            Route::post('/export', [EmployeeReportController::class, 'queueExport'])->name('export');
+            Route::get('/export', [EmployeeReportController::class, 'downloadExport'])->name('export.download');
+        });
+
         Route::middleware('permission:reports.weekly.submit')->group(function () {
             Route::get('/create', [EmployeeReportController::class, 'create'])->name('create');
             Route::post('/', [EmployeeReportController::class, 'store'])->name('store');
@@ -195,6 +204,8 @@ Route::middleware(['auth', 'verified', 'active'])->group(function () {
         Route::middleware('permission:reports.weekly.submit|reports.view_all|reports.weekly.review')->group(function () {
             Route::get('/', [EmployeeReportController::class, 'index'])->name('index');
             Route::get('/{report}', [EmployeeReportController::class, 'show'])->name('show');
+            Route::post('/{report}/pdf', [EmployeeReportController::class, 'queuePdf'])->name('pdf');
+            Route::get('/{report}/pdf', [EmployeeReportController::class, 'downloadPdf'])->name('pdf.download');
         });
 
         Route::middleware('permission:reports.weekly.submit')->group(function () {

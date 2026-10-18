@@ -75,7 +75,7 @@ Permissions are module-scoped (`users.view`, `shipments.update`, …). Controlle
 7. Invoices (Finance) + admin protections
 8. **Task & Workflow Management** ← current
 9. Customer portal self-service
-10. Reporting exports (PDF/Excel)
+10. Reporting exports (PDF/Excel) — cargo manifests, shipment spreadsheets, and employee reports
 11. Notification adapters (Email → WhatsApp/SMS)
 
 See `docs/modules/` for per-module designs.

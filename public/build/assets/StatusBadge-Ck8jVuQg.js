@@ -1,1 +1,0 @@
-import{t as e}from"./app-BOlTFcWz.js";var t=e();function n({active:e}){return(0,t.jsx)(`span`,{className:`inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold ${e?`bg-gf-green/15 text-gf-forest dark:text-gf-green`:`bg-slate-200 text-slate-600 dark:bg-slate-700 dark:text-slate-300`}`,children:e?`Active`:`Inactive`})}export{n as t};

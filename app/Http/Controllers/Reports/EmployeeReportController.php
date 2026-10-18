@@ -3,21 +3,23 @@
 namespace App\Http\Controllers\Reports;
 
 use App\Http\Controllers\Controller;
+use App\Jobs\ExportEmployeeReportsSpreadsheet;
+use App\Jobs\GenerateEmployeeReportPdf;
 use App\Models\Department;
 use App\Models\EmployeeReport;
 use App\Models\User;
 use App\Services\EmployeeReportService;
+use App\Support\DocumentStorage;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class EmployeeReportController extends Controller
 {
-    public function __construct(private readonly EmployeeReportService $reports)
-    {
-    }
+    public function __construct(private readonly EmployeeReportService $reports) {}
 
     public function index(Request $request): Response
     {
@@ -56,6 +58,8 @@ class EmployeeReportController extends Controller
                 'pending_review' => EmployeeReport::query()->where('status', 'submitted')->when(! $canViewAll, fn ($q) => $q->where('user_id', $user->id))->count(),
                 'approved' => EmployeeReport::query()->where('status', 'approved')->when(! $canViewAll, fn ($q) => $q->where('user_id', $user->id))->count(),
             ],
+            'export_ready' => $user->can('reports.export')
+                && DocumentStorage::disk()->exists(ExportEmployeeReportsSpreadsheet::PATH),
         ]);
     }
 
@@ -112,6 +116,7 @@ class EmployeeReportController extends Controller
                 'is_reviewable' => $report->isReviewable(),
                 'is_owner' => $report->user_id === $request->user()->id,
             ],
+            'pdf_ready' => DocumentStorage::disk()->exists((new GenerateEmployeeReportPdf($report->id))->path()),
         ]);
     }
 
@@ -181,6 +186,37 @@ class EmployeeReportController extends Controller
         );
 
         return back()->with('success', 'Review saved.');
+    }
+
+    public function queuePdf(Request $request, EmployeeReport $report): RedirectResponse
+    {
+        $this->authorizeView($request->user(), $report);
+        GenerateEmployeeReportPdf::dispatch($report->id);
+
+        return back()->with('success', 'Report PDF queued.');
+    }
+
+    public function downloadPdf(Request $request, EmployeeReport $report): StreamedResponse
+    {
+        $this->authorizeView($request->user(), $report);
+        $path = (new GenerateEmployeeReportPdf($report->id))->path();
+        abort_unless(DocumentStorage::disk()->exists($path), 404);
+
+        return DocumentStorage::disk()->download($path, $report->reference.'.pdf');
+    }
+
+    public function queueExport(): RedirectResponse
+    {
+        ExportEmployeeReportsSpreadsheet::dispatch();
+
+        return back()->with('success', 'Reports spreadsheet queued.');
+    }
+
+    public function downloadExport(): StreamedResponse
+    {
+        abort_unless(DocumentStorage::disk()->exists(ExportEmployeeReportsSpreadsheet::PATH), 404);
+
+        return DocumentStorage::disk()->download(ExportEmployeeReportsSpreadsheet::PATH, 'employee-reports.xlsx');
     }
 
     /**

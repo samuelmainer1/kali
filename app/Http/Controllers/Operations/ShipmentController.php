@@ -3,17 +3,21 @@
 namespace App\Http\Controllers\Operations;
 
 use App\Http\Controllers\Controller;
+use App\Jobs\ExportShipmentsSpreadsheet;
+use App\Jobs\GenerateCargoManifestPdf;
 use App\Models\Branch;
 use App\Models\Customer;
 use App\Models\Shipment;
 use App\Models\ShipmentDocument;
 use App\Services\ActivityLogService;
 use App\Services\ShipmentService;
+use App\Support\DocumentStorage;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ShipmentController extends Controller
 {
@@ -57,6 +61,7 @@ class ShipmentController extends Controller
             'shipments' => $shipments,
             'filters' => $request->only(['search', 'status']),
             'statuses' => Shipment::STATUSES,
+            'export_ready' => DocumentStorage::disk()->exists(ExportShipmentsSpreadsheet::PATH),
         ]);
     }
 
@@ -161,6 +166,7 @@ class ShipmentController extends Controller
                     'original_name' => $document->original_name,
                 ]),
                 'document_types' => ShipmentDocument::TYPES,
+                'manifest_ready' => DocumentStorage::disk()->exists((new GenerateCargoManifestPdf($shipment->id))->path()),
                 'inventory_items' => $shipment->inventoryItems,
                 'cargo_movements' => $shipment->cargoMovements->map(fn ($m) => [
                     'id' => $m->id,
@@ -229,5 +235,34 @@ class ShipmentController extends Controller
         );
 
         return back()->with('success', 'Shipment status advanced.');
+    }
+
+    public function queueManifest(Shipment $shipment): RedirectResponse
+    {
+        GenerateCargoManifestPdf::dispatch($shipment->id);
+
+        return back()->with('success', 'Cargo manifest queued.');
+    }
+
+    public function downloadManifest(Shipment $shipment): StreamedResponse
+    {
+        $path = (new GenerateCargoManifestPdf($shipment->id))->path();
+        abort_unless(DocumentStorage::disk()->exists($path), 404);
+
+        return DocumentStorage::disk()->download($path, $shipment->reference.'-manifest.pdf');
+    }
+
+    public function queueExport(): RedirectResponse
+    {
+        ExportShipmentsSpreadsheet::dispatch();
+
+        return back()->with('success', 'Shipment spreadsheet queued.');
+    }
+
+    public function downloadExport(): StreamedResponse
+    {
+        abort_unless(DocumentStorage::disk()->exists(ExportShipmentsSpreadsheet::PATH), 404);
+
+        return DocumentStorage::disk()->download(ExportShipmentsSpreadsheet::PATH, 'shipments.xlsx');
     }
 }

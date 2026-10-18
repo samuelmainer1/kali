@@ -9,7 +9,7 @@
 - List/filter by period type, status, author, department
 - Dashboard KPIs (pending review, my drafts, submitted this week)
 
-PDF/Excel export stays for a later reporting-exports module (`reports.export` already seeded).
+Anyone who can open a report can queue its PDF. Users with `reports.export` can queue the spreadsheet of every report.
 
 ## Permissions (existing)
 
