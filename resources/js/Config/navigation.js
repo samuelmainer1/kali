@@ -9,6 +9,7 @@ import {
     GitBranch,
     KanbanSquare,
     LayoutDashboard,
+    MessageSquare,
     Megaphone,
     Monitor,
     ScrollText,
@@ -37,6 +38,14 @@ export function navigationForUser(permissions = [], role = null, options = {}) {
             routeName: 'dashboard',
             icon: LayoutDashboard,
             show: true,
+        },
+        {
+            label: 'Chat',
+            href: 'chat.index',
+            routeName: 'chat.*',
+            icon: MessageSquare,
+            show: can('chat.use'),
+            badge: options.chatUnread || 0,
         },
         {
             label: 'Approvals',

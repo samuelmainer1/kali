@@ -57,6 +57,9 @@ class RolePermissionSeeder extends Seeder
             // Announcements
             'announcements.view', 'announcements.manage',
 
+            // Staff chat
+            'chat.use',
+
             // Customer care / portal
             'support.view', 'support.manage',
             'portal.shipments', 'portal.quotes', 'portal.documents', 'portal.invoices',
@@ -90,6 +93,7 @@ class RolePermissionSeeder extends Seeder
                 'it.request',
                 'tasks.view', 'tasks.create',
                 'announcements.view',
+                'chat.use',
                 'pipeline.view', 'pipeline.manage',
                 'procurement.request',
                 'leave.request',
@@ -100,6 +104,7 @@ class RolePermissionSeeder extends Seeder
                 'it.request',
                 'tasks.view', 'tasks.create',
                 'announcements.view',
+                'chat.use',
                 'procurement.request',
                 'leave.request',
             ],
@@ -109,6 +114,7 @@ class RolePermissionSeeder extends Seeder
                 'it.request',
                 'tasks.view', 'tasks.create',
                 'announcements.view',
+                'chat.use',
                 'procurement.request',
                 'leave.request',
             ],
@@ -118,6 +124,7 @@ class RolePermissionSeeder extends Seeder
                 'it.request',
                 'tasks.view', 'tasks.create',
                 'announcements.view',
+                'chat.use',
                 'procurement.request', 'procurement.process', 'procurement.view_all',
                 'leave.request',
             ],
@@ -128,6 +135,7 @@ class RolePermissionSeeder extends Seeder
                 'it.request',
                 'tasks.view', 'tasks.create',
                 'announcements.view',
+                'chat.use',
                 'procurement.request',
                 'leave.request',
             ],
@@ -137,6 +145,7 @@ class RolePermissionSeeder extends Seeder
                 'customers.view', 'customers.create', 'reports.weekly.submit',
                 'tasks.view', 'tasks.create',
                 'announcements.view',
+                'chat.use',
                 'procurement.request',
                 'leave.request',
             ],

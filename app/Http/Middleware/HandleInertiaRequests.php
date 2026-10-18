@@ -5,6 +5,7 @@ namespace App\Http\Middleware;
 use App\Models\CompanySetting;
 use App\Services\AnnouncementService;
 use App\Services\AppNotificationService;
+use App\Services\ChatService;
 use App\Support\RoleLabel;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
@@ -89,6 +90,11 @@ class HandleInertiaRequests extends Middleware
             ],
             'announcementBell' => $announcementBell,
             'systemNotifications' => $systemNotifications,
+            'chat' => [
+                'unread_count' => $user && $user->can('chat.use')
+                    ? app(ChatService::class)->unreadCount($user)
+                    : 0,
+            ],
             'flash' => [
                 'success' => fn () => $request->session()->get('success'),
                 'error' => fn () => $request->session()->get('error'),

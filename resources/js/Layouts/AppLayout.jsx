@@ -10,11 +10,12 @@ import { LogOut, Menu, UserRound, X } from 'lucide-react';
 import { useState } from 'react';
 
 export default function AppLayout({ title, children }) {
-    const { auth, app, announcementBell } = usePage().props;
+    const { auth, app, announcementBell, chat } = usePage().props;
     const user = auth.user;
     const permissions = user?.permissions ?? [];
     const nav = navigationForUser(permissions, user?.role, {
         canViewAnnouncements: Boolean(announcementBell?.enabled),
+        chatUnread: chat?.unread_count || 0,
     });
     const [sidebarOpen, setSidebarOpen] = useState(false);
 
@@ -72,6 +73,11 @@ export default function AppLayout({ title, children }) {
                             >
                                 <Icon className="h-4 w-4 shrink-0" />
                                 <span className="flex-1">{item.label}</span>
+                                {item.badge > 0 && (
+                                    <span className={`rounded-full px-1.5 text-[10px] font-bold ${active ? 'bg-gf-ink text-white' : 'bg-gf-red text-white'}`}>
+                                        {item.badge > 9 ? '9+' : item.badge}
+                                    </span>
+                                )}
                                 {item.soon && (
                                     <span className="rounded bg-slate-100 px-1.5 py-0.5 text-[10px] uppercase tracking-wide text-slate-500 dark:bg-slate-800 dark:text-slate-400">
                                         Soon
