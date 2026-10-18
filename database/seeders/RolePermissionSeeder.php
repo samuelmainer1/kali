@@ -123,7 +123,7 @@ class RolePermissionSeeder extends Seeder
             ],
             'customer_care' => [
                 'dashboard.customer_care', 'support.view', 'support.manage',
-                'customers.view', 'shipments.view', 'shipments.track',
+                'customers.view', 'customers.create', 'shipments.view', 'shipments.track',
                 'quotations.view', 'reports.weekly.submit',
                 'it.request',
                 'tasks.view', 'tasks.create',
@@ -134,7 +134,7 @@ class RolePermissionSeeder extends Seeder
             'marketing' => [
                 'dashboard.marketing', 'marketing.view', 'marketing.manage',
                 'it.request', 'it.manage',
-                'customers.view', 'reports.weekly.submit',
+                'customers.view', 'customers.create', 'reports.weekly.submit',
                 'tasks.view', 'tasks.create',
                 'announcements.view',
                 'procurement.request',
