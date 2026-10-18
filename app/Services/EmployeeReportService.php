@@ -9,13 +9,15 @@ use Illuminate\Validation\ValidationException;
 
 class EmployeeReportService
 {
-    public function __construct(private readonly ActivityLogService $activityLog)
-    {
-    }
+    public function __construct(private readonly ActivityLogService $activityLog) {}
 
     public function nextReference(string $periodType): string
     {
-        $prefix = $periodType === 'monthly' ? 'MR' : 'WR';
+        $prefix = match ($periodType) {
+            'daily' => 'DR',
+            'monthly' => 'MR',
+            default => 'WR',
+        };
         $year = now()->format('Y');
 
         $latest = EmployeeReport::query()
@@ -32,13 +34,17 @@ class EmployeeReportService
     }
 
     /**
-     * @return array{period_start: string, period_end: string, title: string}
+     * @return array{period_type: string, period_start: string, period_end: string, title: string}
      */
     public function defaultPeriod(string $periodType, ?Carbon $anchor = null): array
     {
         $anchor ??= now();
 
-        if ($periodType === 'monthly') {
+        if ($periodType === 'daily') {
+            $start = $anchor->copy()->startOfDay();
+            $end = $start->copy();
+            $title = 'Daily report — '.$start->format('d M Y');
+        } elseif ($periodType === 'monthly') {
             $start = $anchor->copy()->startOfMonth();
             $end = $anchor->copy()->endOfMonth();
             $title = 'Monthly report — '.$start->format('F Y');
@@ -49,6 +55,7 @@ class EmployeeReportService
         }
 
         return [
+            'period_type' => $periodType,
             'period_start' => $start->toDateString(),
             'period_end' => $end->toDateString(),
             'title' => $title,
@@ -57,6 +64,7 @@ class EmployeeReportService
 
     public function create(User $user, array $data): EmployeeReport
     {
+        $data = $this->normalizePeriod($data);
         $this->assertUniquePeriod($user->id, $data['period_type'], $data['period_start']);
 
         $report = EmployeeReport::query()->create([
@@ -81,6 +89,8 @@ class EmployeeReportService
                 'status' => 'Only draft or revision-requested reports can be edited.',
             ]);
         }
+
+        $data = $this->normalizePeriod($data);
 
         if (
             ($data['period_type'] ?? $report->period_type) !== $report->period_type
@@ -126,7 +136,11 @@ class EmployeeReportService
 
         $fresh = $report->fresh(['author:id,name']);
         $authorName = $fresh->author?->name ?? 'An employee';
-        $period = $fresh->period_type === 'monthly' ? 'monthly' : 'weekly';
+        $period = match ($fresh->period_type) {
+            'daily' => 'daily',
+            'monthly' => 'monthly',
+            default => 'weekly',
+        };
         $link = url(route('reports.show', $fresh, false));
 
         app(AppNotificationService::class)->notifyMany(
@@ -179,6 +193,21 @@ class EmployeeReportService
         );
 
         return $report->fresh();
+    }
+
+    /**
+     * A daily report covers one date. Weekly and monthly reports keep the range the author chose.
+     *
+     * @param  array<string, mixed>  $data
+     * @return array<string, mixed>
+     */
+    private function normalizePeriod(array $data): array
+    {
+        if (($data['period_type'] ?? null) === 'daily' && isset($data['period_start'])) {
+            $data['period_end'] = $data['period_start'];
+        }
+
+        return $data;
     }
 
     private function assertUniquePeriod(int $userId, string $periodType, string $periodStart, ?int $ignoreId = null): void

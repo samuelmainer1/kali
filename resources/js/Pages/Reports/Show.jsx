@@ -1,3 +1,4 @@
+import { periodLabel } from '@/Config/reportPeriods';
 import PageHeader from '@/Components/PageHeader';
 import PrimaryButton from '@/Components/PrimaryButton';
 import AppLayout from '@/Layouts/AppLayout';
@@ -92,9 +93,11 @@ export default function ReportShow({ report, pdf_ready = false }) {
                             </div>
                             <div>
                                 <dt className="text-slate-500">Period</dt>
-                                <dd className="capitalize">
-                                    {report.period_type}<br />
-                                    {report.period_start} → {report.period_end}
+                                <dd>
+                                    {periodLabel(report.period_type)}<br />
+                                    {report.period_type === 'daily'
+                                        ? report.period_start
+                                        : `${report.period_start} → ${report.period_end}`}
                                 </dd>
                             </div>
                             <div>
