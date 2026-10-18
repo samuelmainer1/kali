@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Sales;
 use App\Http\Controllers\Controller;
 use App\Models\Customer;
 use App\Models\Quotation;
+use App\Models\ShippingRate;
 use App\Services\QuotationService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -15,9 +16,7 @@ use Inertia\Response;
 
 class QuotationController extends Controller
 {
-    public function __construct(private readonly QuotationService $quotations)
-    {
-    }
+    public function __construct(private readonly QuotationService $quotations) {}
 
     public function index(Request $request): Response
     {
@@ -59,6 +58,7 @@ class QuotationController extends Controller
             'quotation' => null,
             'customers' => $this->customerOptions(),
             'serviceTypes' => Quotation::SERVICE_TYPES,
+            'rates' => $this->rateOptions(),
             'preselectedCustomerId' => $request->integer('customer_id') ?: null,
         ]);
     }
@@ -155,6 +155,7 @@ class QuotationController extends Controller
             ],
             'customers' => $this->customerOptions(),
             'serviceTypes' => Quotation::SERVICE_TYPES,
+            'rates' => $this->rateOptions(),
             'preselectedCustomerId' => null,
         ]);
     }
@@ -267,5 +268,24 @@ class QuotationController extends Controller
                     'is_primary' => $c->is_primary,
                 ]),
             ]);
+    }
+
+    /**
+     * @return list<array<string, mixed>>
+     */
+    private function rateOptions(): array
+    {
+        return ShippingRate::query()
+            ->where('is_active', true)
+            ->orderBy('name')
+            ->get()
+            ->map(fn (ShippingRate $rate) => [
+                'id' => $rate->id,
+                'label' => $rate->name.' · '.$rate->origin.' → '.$rate->destination.' · '.$rate->currency.' '.number_format((float) $rate->price, 2),
+                'price' => (float) $rate->price,
+                'currency' => $rate->currency,
+                'description' => $rate->name.': '.$rate->origin.' to '.$rate->destination,
+            ])
+            ->all();
     }
 }

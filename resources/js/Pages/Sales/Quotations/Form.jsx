@@ -9,7 +9,7 @@ import { useEffect, useMemo } from 'react';
 
 const blankItem = { description: '', quantity: 1, unit: 'shipment', unit_price: 0, weight_kg: '' };
 
-export default function QuotationForm({ quotation, customers, serviceTypes, preselectedCustomerId }) {
+export default function QuotationForm({ quotation, customers, serviceTypes, rates = [], preselectedCustomerId }) {
     const editing = Boolean(quotation?.id);
     const { data, setData, post, put, processing, errors } = useForm({
         customer_id: quotation?.customer_id || preselectedCustomerId || '',
@@ -103,6 +103,26 @@ export default function QuotationForm({ quotation, customers, serviceTypes, pres
                         <TextInput className="mt-1 w-full" value={data.currency} onChange={(e) => setData('currency', e.target.value.toUpperCase())} />
                     </div>
                 </section>
+
+                {rates.length > 0 && (
+                    <section className="rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900">
+                        <InputLabel value="Apply a rate to the first line" />
+                        <select
+                            className="mt-1 w-full rounded-md border-slate-300 dark:border-slate-700 dark:bg-slate-800"
+                            defaultValue=""
+                            onChange={(event) => {
+                                const rate = rates.find((item) => String(item.id) === event.target.value);
+                                if (!rate) return;
+                                const next = [...data.items];
+                                next[0] = { ...next[0], description: rate.description, unit_price: rate.price };
+                                setData({ ...data, currency: rate.currency, items: next });
+                            }}
+                        >
+                            <option value="">Choose a rate</option>
+                            {rates.map((rate) => <option key={rate.id} value={rate.id}>{rate.label}</option>)}
+                        </select>
+                    </section>
+                )}
 
                 <section className="space-y-3 rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900">
                     <div className="flex items-center justify-between">

@@ -35,6 +35,10 @@ class RolePermissionSeeder extends Seeder
 
             // Shipments
             'shipments.view', 'shipments.create', 'shipments.update', 'shipments.track',
+            'vehicles.view', 'vehicles.manage',
+
+            // Rate card
+            'rates.view', 'rates.manage',
 
             // Warehouse
             'warehouse.view', 'warehouse.manage',
@@ -95,12 +99,14 @@ class RolePermissionSeeder extends Seeder
                 'announcements.view',
                 'chat.use',
                 'pipeline.view', 'pipeline.manage',
+                'rates.view', 'rates.manage',
                 'procurement.request',
                 'leave.request',
             ],
             'operations' => [
                 'dashboard.operations', 'shipments.view', 'shipments.create', 'shipments.update',
                 'shipments.track', 'quotations.view', 'warehouse.view', 'reports.weekly.submit',
+                'vehicles.view', 'vehicles.manage',
                 'it.request',
                 'tasks.view', 'tasks.create',
                 'announcements.view',
@@ -111,6 +117,7 @@ class RolePermissionSeeder extends Seeder
             'warehouse' => [
                 'dashboard.warehouse', 'warehouse.view', 'warehouse.manage',
                 'shipments.view', 'shipments.update', 'reports.weekly.submit',
+                'vehicles.view',
                 'it.request',
                 'tasks.view', 'tasks.create',
                 'announcements.view',
@@ -121,6 +128,7 @@ class RolePermissionSeeder extends Seeder
             'finance' => [
                 'dashboard.finance', 'invoices.view', 'invoices.manage', 'finance.reports',
                 'quotations.view', 'customers.view', 'reports.export', 'reports.weekly.submit',
+                'rates.view', 'rates.manage',
                 'it.request',
                 'tasks.view', 'tasks.create',
                 'announcements.view',

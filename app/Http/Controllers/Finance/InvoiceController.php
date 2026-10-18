@@ -8,6 +8,7 @@ use App\Jobs\GenerateInvoicePdf;
 use App\Models\CompanySetting;
 use App\Models\Customer;
 use App\Models\Invoice;
+use App\Models\InvoicePayment;
 use App\Models\Quotation;
 use App\Services\InvoiceService;
 use App\Support\DocumentStorage;
@@ -101,6 +102,7 @@ class InvoiceController extends Controller
             'shipment:id,reference',
             'creator:id,name',
             'items',
+            'payments.recorder:id,name',
         ]);
 
         return Inertia::render('Finance/Invoices/Show', [
@@ -117,6 +119,7 @@ class InvoiceController extends Controller
             'quotation:id,reference',
             'shipment:id,reference',
             'items',
+            'payments.recorder:id,name',
         ]);
 
         return Inertia::render('Finance/Invoices/Print', [
@@ -202,6 +205,21 @@ class InvoiceController extends Controller
         return back()->with('success', 'Invoice status updated.');
     }
 
+    public function recordPayment(Request $request, Invoice $invoice): RedirectResponse
+    {
+        $data = $request->validate([
+            'amount' => ['required', 'numeric', 'min:0.01'],
+            'method' => ['required', Rule::in(InvoicePayment::METHODS)],
+            'reference' => ['nullable', 'string', 'max:120'],
+            'paid_on' => ['required', 'date'],
+            'notes' => ['nullable', 'string', 'max:1000'],
+        ]);
+
+        $this->invoices->recordPayment($invoice, $request->user(), $data);
+
+        return back()->with('success', 'Payment recorded.');
+    }
+
     /**
      * @return array<string, mixed>
      */
@@ -236,6 +254,20 @@ class InvoiceController extends Controller
             'subtotal' => $invoice->subtotal,
             'tax_amount' => $invoice->tax_amount,
             'total' => $invoice->total,
+            'amount_paid' => $invoice->amountPaid(),
+            'balance' => $invoice->balance(),
+            'payments' => $invoice->relationLoaded('payments')
+                ? $invoice->payments->map(fn (InvoicePayment $payment) => [
+                    'id' => $payment->id,
+                    'amount' => $payment->amount,
+                    'method' => $payment->method,
+                    'reference' => $payment->reference,
+                    'paid_on' => $payment->paid_on?->toDateString(),
+                    'notes' => $payment->notes,
+                    'recorded_by' => $payment->recorder?->name,
+                ])->values()
+                : [],
+            'payment_methods' => InvoicePayment::METHODS,
             'issue_date' => $invoice->issue_date?->toDateString(),
             'due_date' => $invoice->due_date?->toDateString(),
             'paid_at' => $invoice->paid_at?->toDateTimeString(),

@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Shipment extends Model
 {
@@ -38,6 +39,8 @@ class Shipment extends Model
         'expected_arrival',
         'delivered_at',
         'created_by',
+        'driver_id',
+        'vehicle_id',
         'notes',
     ];
 
@@ -69,6 +72,26 @@ class Shipment extends Model
     public function creator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function driver(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'driver_id');
+    }
+
+    public function vehicle(): BelongsTo
+    {
+        return $this->belongsTo(Vehicle::class);
+    }
+
+    public function proofOfDelivery(): HasOne
+    {
+        return $this->hasOne(ProofOfDelivery::class);
+    }
+
+    public function customerNotices(): HasMany
+    {
+        return $this->hasMany(ShipmentCustomerNotice::class)->latest();
     }
 
     public function statusHistories(): HasMany

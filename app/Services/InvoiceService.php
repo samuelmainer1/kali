@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Invoice;
+use App\Models\InvoicePayment;
 use App\Models\Quotation;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
@@ -10,9 +11,7 @@ use Illuminate\Validation\ValidationException;
 
 class InvoiceService
 {
-    public function __construct(private readonly ActivityLogService $activityLog)
-    {
-    }
+    public function __construct(private readonly ActivityLogService $activityLog) {}
 
     public function nextReference(): string
     {
@@ -147,6 +146,47 @@ class InvoiceService
 
             return $invoice->fresh('items');
         });
+    }
+
+    public function recordPayment(Invoice $invoice, User $user, array $data): InvoicePayment
+    {
+        if ($invoice->status === 'cancelled') {
+            throw ValidationException::withMessages(['amount' => 'A cancelled invoice cannot take a payment.']);
+        }
+
+        if ($invoice->status === 'draft') {
+            throw ValidationException::withMessages(['amount' => 'Send the invoice before recording a payment.']);
+        }
+
+        $balance = $invoice->balance();
+        if ((float) $data['amount'] > $balance + 0.009) {
+            throw ValidationException::withMessages(['amount' => 'Amount is more than the balance of '.$balance.'.']);
+        }
+
+        $payment = $invoice->payments()->create([
+            'amount' => $data['amount'],
+            'method' => $data['method'],
+            'reference' => $data['reference'] ?? null,
+            'paid_on' => $data['paid_on'],
+            'notes' => $data['notes'] ?? null,
+            'recorded_by' => $user->id,
+        ]);
+
+        $invoice->refresh();
+        if ($invoice->balance() <= 0.009) {
+            $invoice->update([
+                'status' => 'paid',
+                'paid_at' => $invoice->paid_at ?? now(),
+            ]);
+        }
+
+        $this->activityLog->log(
+            'invoices.payment',
+            "Recorded {$payment->method} payment of {$payment->amount} on {$invoice->reference}",
+            $invoice,
+        );
+
+        return $payment;
     }
 
     public function markStatus(Invoice $invoice, string $status): Invoice

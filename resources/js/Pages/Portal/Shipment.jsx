@@ -38,6 +38,17 @@ export default function PortalShipment({ shipment }) {
                             <div><dt className="text-slate-500">Air waybill</dt><dd>{shipment.tracking_number || '—'}</dd></div>
                             <div><dt className="text-slate-500">Route</dt><dd>{shipment.origin_country || '—'} → {shipment.destination_country || '—'}</dd></div>
                             <div><dt className="text-slate-500">Location</dt><dd>{shipment.current_location || '—'}</dd></div>
+                            <div><dt className="text-slate-500">Driver</dt><dd>{shipment.driver || 'Not assigned yet'}</dd></div>
+                            <div><dt className="text-slate-500">Vehicle</dt><dd>{shipment.vehicle || 'Not assigned yet'}</dd></div>
+                            {shipment.proof && (
+                                <div className="sm:col-span-2">
+                                    <dt className="text-slate-500">Proof of delivery</dt>
+                                    <dd>Received by {shipment.proof.received_by} on {shipment.proof.received_at}</dd>
+                                    {shipment.proof.has_photo && (
+                                        <a href={route('operations.shipments.proof.download', shipment.id)} className="text-gf-forest hover:underline">Download photo</a>
+                                    )}
+                                </div>
+                            )}
                         </dl>
                         <ul className="mt-4 space-y-3 text-sm">
                             {(shipment.history || []).map((item) => (
