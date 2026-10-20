@@ -8,16 +8,9 @@ import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Mail, CheckCircle, XCircle, AlertCircle } from "lucide-react"
 
-const API_BASE = (() => {
-  if (typeof window !== 'undefined') {
-    if (window.location.hostname === 'localhost') {
-      return 'http://localhost:5000/admin/api';
-    } else {
-      return 'https://globeflight.co.ke/admin/api';
-    }
-  }
-  return 'http://localhost:5000/admin/api'; // fallback
-})();
+const API_BASE = import.meta.env.DEV
+  ? '/admin/api'
+  : 'https://globeflight.co.ke/admin/api';
 
 const UnsubscribePage = () => {
   const searchParams = useSearchParams()

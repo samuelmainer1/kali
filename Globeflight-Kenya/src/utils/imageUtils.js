@@ -46,14 +46,10 @@ export const handleImageError = (e, fallbackSrc = '/globe1.jpg') => {
  * @returns {string} - API base URL
  */
 export const getApiBase = () => {
-  if (typeof window !== 'undefined') {
-    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-      return 'http://localhost:5000/admin/api';
-    } else {
-      return 'https://globeflight.co.ke/admin/api';
-    }
+  if (import.meta.env.DEV) {
+    return '/admin/api';
   }
-  return 'http://localhost:5000/admin/api';
+  return 'https://globeflight.co.ke/admin/api';
 };
 
 /**

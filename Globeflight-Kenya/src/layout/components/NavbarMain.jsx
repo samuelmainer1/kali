@@ -19,8 +19,8 @@ const NavbarMain = ({ data, pathname, isSticky, toggleMobileMenu, isMobileMenuOp
   const [catDropdownOpen, setCatDropdownOpen] = useState(false);
 
   // API base
-  const API_BASE = (typeof window !== 'undefined' && window.location.hostname === 'localhost')
-    ? 'http://localhost:5000/admin/api'
+  const API_BASE = import.meta.env.DEV
+    ? '/admin/api'
     : 'https://globeflight.co.ke/admin/api';
 
   useEffect(() => {

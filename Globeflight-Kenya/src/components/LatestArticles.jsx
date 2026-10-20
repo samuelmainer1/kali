@@ -7,16 +7,9 @@ import { motion } from 'framer-motion';
 import { getApiImageUrl, handleImageError } from '@/utils/imageUtils';
 
 // API Configuration
-const API_BASE = (() => {
-  if (typeof window !== 'undefined') {
-    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-      return 'http://localhost:5000/admin/api';
-    } else {
-      return 'https://globeflight.co.ke/admin/api';
-    }
-  }
-  return 'http://localhost:5000/admin/api';
-})();
+const API_BASE = import.meta.env.DEV
+  ? '/admin/api'
+  : 'https://globeflight.co.ke/admin/api';
 
 const LatestArticles = ({ limit = 3, showViewAll = true }) => {
   const [articles, setArticles] = useState([]);

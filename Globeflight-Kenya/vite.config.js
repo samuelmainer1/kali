@@ -33,7 +33,19 @@ export default defineConfig({
   server: {
     port: 5173,
     strictPort: false,
-    host: true
+    host: true,
+    proxy: {
+      '/admin/api': {
+        target: 'https://globeflight.co.ke',
+        changeOrigin: true,
+        secure: true,
+      },
+      '/uploads': {
+        target: 'https://globeflight.co.ke',
+        changeOrigin: true,
+        secure: true,
+      },
+    },
   }
 });
 

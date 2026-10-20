@@ -11,16 +11,9 @@ import { Helmet } from "react-helmet-async"
 import { getApiImageUrl, handleImageError } from '@/utils/imageUtils'
 
 // API Configuration
-const API_BASE = (() => {
-  if (typeof window !== 'undefined') {
-    if (window.location.hostname === 'localhost') {
-      return 'http://localhost:5000/admin/api';
-    } else {
-      return 'https://globeflight.co.ke/admin/api';
-    }
-  }
-  return 'http://localhost:5000/admin/api';
-})();
+const API_BASE = import.meta.env.DEV
+  ? '/admin/api'
+  : 'https://globeflight.co.ke/admin/api';
 
 const Link = ({ to, children, className }) => (
   <a href={to} className={className}>{children}</a>
