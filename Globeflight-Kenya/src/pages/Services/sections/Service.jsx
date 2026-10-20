@@ -28,66 +28,58 @@ export default function Service() {
 
   // Fetch services from backend API
   useEffect(() => {
+    const controller = new AbortController();
+    let ignore = false;
+
     async function fetchServices() {
       try {
         setLoading(true);
         setError(null);
-        console.log('Fetching services from API...');
-        console.log('API_BASE:', API_BASE);
 
-        // Add timeout to fetch request
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
-
-        const apiUrl = `${API_BASE}/services/public?limit=100`;
-        console.log('Fetching from:', apiUrl);
-
-        const res = await fetch(apiUrl, {
-          signal: controller.signal
+        const timeoutId = setTimeout(() => controller.abort(), 30000);
+        const res = await fetch(`${API_BASE}/services/public?limit=100`, {
+          signal: controller.signal,
         });
         clearTimeout(timeoutId);
-
-        console.log('API Response status:', res.status);
-        console.log('API Response headers:', res.headers);
+        if (ignore) return;
 
         if (!res.ok) {
           throw new Error(`API returned status ${res.status}`);
         }
 
-        const text = await res.text();
-        console.log('Raw API Response:', text.substring(0, 500)); // Log first 500 chars
+        const data = await res.json();
+        if (ignore) return;
 
-        const data = JSON.parse(text);
-        console.log('Parsed API Response:', data);
-
-        if (data.success && data.data && data.data.services) {
-          console.log('Services found:', data.data.services.length);
-          console.log('First service:', data.data.services[0]);
-          setServices(data.data.services);
-          setFeaturedService(data.data.services.find(s => s.featured) || data.data.services[0]);
+        const list = data?.data?.services;
+        if (data.success && Array.isArray(list)) {
+          setServices(list);
+          setFeaturedService(list.find(s => s.featured) || list[0] || null);
         } else {
-          console.warn('No services in API response');
           setServices([]);
+          setFeaturedService(null);
         }
       } catch (err) {
+        if (ignore || err.name === 'AbortError') return;
         console.error('Error fetching services:', err);
-        if (err.name === 'AbortError') {
-          setError('Request timeout - API took too long to respond');
-        } else {
-          setError(err.message);
-        }
+        setError(err.message || 'Failed to fetch services');
         setServices([]);
+        setFeaturedService(null);
       } finally {
-        console.log('Fetch complete, setting loading to false');
-        setLoading(false);
+        if (!ignore) setLoading(false);
       }
     }
+
     fetchServices();
+    return () => {
+      ignore = true;
+      controller.abort();
+    };
   }, []);
 
   // Filter services by search/category
   const filteredServices = services.filter(service => {
-    const matchesSearch = service.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    const title = service.title || '';
+    const matchesSearch = title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (service.shortDescription || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
       (service.description || '').toLowerCase().includes(searchTerm.toLowerCase());
     return matchesSearch && (selectedCategory === 'all' || (service.category === selectedCategory));
