@@ -11,17 +11,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Search, ArrowRight, Star, TrendingUp, Award, Users, CheckCircle2 } from 'lucide-react';
 import { getApiImageUrl, handleImageError } from '@/utils/imageUtils';
 
-// API Configuration - Use localhost for development, production URL for production
-const API_BASE = (() => {
-  if (typeof window !== 'undefined') {
-    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-      return 'http://localhost:5000/admin/api';
-    } else {
-      return 'https://globeflight.co.ke/admin/api';
-    }
-  }
-  return 'http://localhost:5000/admin/api';
-})();
+const API_BASE = import.meta.env.DEV
+  ? '/admin/api'
+  : 'https://globeflight.co.ke/admin/api';
 
 export default function Service() {
   const [services, setServices] = useState([]);

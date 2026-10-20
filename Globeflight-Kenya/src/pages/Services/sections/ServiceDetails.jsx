@@ -16,17 +16,9 @@ import Hero from "@/pages/Services/sections/Hero"
 import { ChevronLeft, ChevronRight, Calendar, Share2, Facebook, Twitter, Linkedin, MapPin, Clock, Phone, Mail, CheckCircle2, Award } from 'lucide-react'
 import { getApiImageUrl, handleImageError } from '@/utils/imageUtils'
 
-// API Configuration - Use localhost for development, production URL for production
-const API_BASE = (() => {
-  if (typeof window !== 'undefined') {
-    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-      return 'http://localhost:5000/admin/api';
-    } else {
-      return 'https://globeflight.co.ke/admin/api';
-    }
-  }
-  return 'http://localhost:5000/admin/api';
-})();
+const API_BASE = import.meta.env.DEV
+  ? '/admin/api'
+  : 'https://globeflight.co.ke/admin/api';
 
 const API_URL = `${API_BASE}/services/public`;
 
