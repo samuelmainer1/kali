@@ -1,0 +1,21 @@
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://globeflight.co.ke/sitemap.xml
+
+# Disallow admin areas
+Disallow: /admin/
+Disallow: /api/
+Disallow: /_next/
+Disallow: /static/
+
+# Allow important pages
+Allow: /
+Allow: /home
+Allow: /services
+Allow: /about-us
+Allow: /contact-us
+Allow: /track
+Allow: /blog
+Allow: /jobs
