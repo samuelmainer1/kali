@@ -1165,5 +1165,92 @@
   ],
   "contacts": [],
   "subscribers": [],
-  "applications": []
+  "applications": [],
+  "shipments": [
+    {
+      "id": 1,
+      "trackingNumber": "GF20261001",
+      "shipperCompanyName": "Globeflight Kenya",
+      "shipperContactPerson": "Globeflight Desk",
+      "shipperCountry": "Kenya",
+      "shipperCity": "Nairobi",
+      "shipperAddress": "NEXTGEN MALL, Mombasa Road, Nairobi",
+      "shipperMobile": "+254 729 341 277",
+      "shipperEmail": "cs@globeflight.co.ke",
+      "receiverCompanyName": "Sample Consignee",
+      "receiverContactPerson": "Alex Morgan",
+      "receiverCountry": "United Kingdom",
+      "receiverCity": "London",
+      "receiverAddress": "London",
+      "receiverMobile": "",
+      "receiverEmail": "",
+      "senderName": "Globeflight Desk",
+      "receiverName": "Alex Morgan",
+      "shipmentType": "parcel",
+      "parcelName": "Sample documents",
+      "packageDescription": "Sample shipment so tracking can be tried on the local site. Replace it with a real consignment or delete it.",
+      "grossWeight": "4.5",
+      "weight": "4.5",
+      "dimensions": "40 x 30 x 20",
+      "cbm": "0.0240",
+      "volumeWeight": "4.01",
+      "chargeableWeight": "4.50",
+      "declaredValue": "120",
+      "currency": "USD",
+      "thirdPartyTrackingNumber": "",
+      "numberOfPackages": 1,
+      "serviceType": "Express Air",
+      "mode": "air",
+      "origin": "Nairobi, Kenya",
+      "destination": "London, United Kingdom",
+      "note": "Sample shipment created for the local dashboard.",
+      "status": "in-transit",
+      "updates": [
+        {
+          "id": 1,
+          "status": "created",
+          "location": "Nairobi, Kenya",
+          "description": "Shipment created at Globeflight Nairobi.",
+          "latitude": -1.3195,
+          "longitude": 36.897,
+          "updateDateTime": "2026-10-18T08:00:00.000Z",
+          "createdAt": "2026-10-18T08:00:00.000Z"
+        },
+        {
+          "id": 2,
+          "status": "collected",
+          "location": "Nairobi, Kenya",
+          "description": "Package collected from the shipper.",
+          "latitude": -1.3195,
+          "longitude": 36.897,
+          "updateDateTime": "2026-10-18T11:30:00.000Z",
+          "createdAt": "2026-10-18T11:30:00.000Z"
+        },
+        {
+          "id": 3,
+          "status": "departed",
+          "location": "Jomo Kenyatta International Airport",
+          "description": "Departed Nairobi on the outbound flight.",
+          "latitude": -1.3192,
+          "longitude": 36.9278,
+          "updateDateTime": "2026-10-19T06:15:00.000Z",
+          "createdAt": "2026-10-19T06:15:00.000Z"
+        },
+        {
+          "id": 4,
+          "status": "in-transit",
+          "location": "Dubai, United Arab Emirates",
+          "description": "In transit through Dubai on the way to London.",
+          "latitude": 25.2532,
+          "longitude": 55.3657,
+          "updateDateTime": "2026-10-20T14:40:00.000Z",
+          "createdAt": "2026-10-20T14:40:00.000Z"
+        }
+      ],
+      "proofOfDelivery": [],
+      "exceptions": [],
+      "createdAt": "2026-10-18T08:00:00.000Z",
+      "updatedAt": "2026-10-20T14:40:00.000Z"
+    }
+  ]
 }

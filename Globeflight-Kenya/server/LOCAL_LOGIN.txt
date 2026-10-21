@@ -10,7 +10,11 @@ This password was created for the copy of the site in this project.
 It does not sign you in at https://globeflight.co.ke/admin.
 
 Edits are saved in server/data/db.json and show up on the local site
-(blog, services, jobs, categories, and testimonials).
+(tracking, blog, services, jobs, categories, and testimonials).
+
+A sample shipment is included so tracking can be tried immediately:
+  Number: GF20261001
+  Page:   http://127.0.0.1:5173/track?trackingNumber=GF20261001
 
 Start the API before the dashboard:
 

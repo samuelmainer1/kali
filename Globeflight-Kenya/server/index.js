@@ -33,6 +33,7 @@ function loadDb() {
   db.contacts ||= [];
   db.subscribers ||= [];
   db.applications ||= [];
+  db.shipments ||= [];
   return db;
 }
 
@@ -368,6 +369,173 @@ function verifyPassword(password, auth) {
   return actual.length === given.length && crypto.timingSafeEqual(actual, given);
 }
 
+const SHIPMENT_STATUSES = [
+  'created',
+  'collected',
+  'departed',
+  'in-transit',
+  'arrived-at-destination',
+  'out-for-delivery',
+  'delivered',
+];
+
+function shipmentNumber() {
+  const year = new Date().getFullYear();
+  const prefix = `GF${year}`;
+  const highest = db.shipments.reduce((max, shipment) => {
+    const match = String(shipment.trackingNumber || '').match(/(\d{4})$/);
+    return Math.max(max, match ? Number(match[1]) : 0);
+  }, 1000);
+  return `${prefix}${String(highest + 1).padStart(4, '0')}`;
+}
+
+function dimensionMath(dimensions) {
+  const parts = String(dimensions || '')
+    .toLowerCase()
+    .split('x')
+    .map((part) => Number(part.trim()));
+  if (parts.length !== 3 || parts.some((part) => !Number.isFinite(part) || part <= 0)) {
+    return { cbm: '', volumeWeight: '' };
+  }
+  const cbm = (parts[0] * parts[1] * parts[2]) / 1_000_000;
+  return { cbm: cbm.toFixed(4), volumeWeight: (cbm * 167).toFixed(2) };
+}
+
+function normalizeShipment(body, existing = {}) {
+  const origin = String(body.origin ?? existing.origin ?? '').trim();
+  const destination = String(body.destination ?? existing.destination ?? '').trim();
+  const shipperCompanyName = String(body.shipperCompanyName ?? existing.shipperCompanyName ?? '').trim();
+  const receiverCompanyName = String(body.receiverCompanyName ?? existing.receiverCompanyName ?? '').trim();
+  if (!shipperCompanyName || !receiverCompanyName) {
+    throw httpError(400, 'Shipper and receiver are required.');
+  }
+  if (!origin || !destination) throw httpError(400, 'Origin and destination are required.');
+  const note = String(body.note ?? existing.note ?? '').trim();
+  if (!existing.id && note.length < 5) {
+    throw httpError(400, 'Please leave a note with at least 5 characters.');
+  }
+  const now = new Date().toISOString();
+  const dimensions = String(body.dimensions ?? existing.dimensions ?? '');
+  const math = dimensionMath(dimensions);
+  const grossWeight = String(body.grossWeight ?? body.weight ?? existing.grossWeight ?? '');
+  const volumeWeight = math.volumeWeight || existing.volumeWeight || '';
+  const manualChargeable = body.chargeableWeight;
+  const chargeableWeight =
+    manualChargeable === undefined || manualChargeable === ''
+      ? existing.chargeableWeight ||
+        (Math.max(Number(grossWeight) || 0, Number(volumeWeight) || 0) || '')
+      : String(manualChargeable);
+  const shipperContactPerson = String(body.shipperContactPerson ?? existing.shipperContactPerson ?? '');
+  const receiverContactPerson = String(body.receiverContactPerson ?? existing.receiverContactPerson ?? '');
+  return {
+    ...existing,
+    trackingNumber: existing.trackingNumber || shipmentNumber(),
+    shipperCompanyName,
+    shipperContactPerson,
+    shipperCountry: String(body.shipperCountry ?? existing.shipperCountry ?? ''),
+    shipperCity: String(body.shipperCity ?? existing.shipperCity ?? ''),
+    shipperAddress: String(body.shipperAddress ?? existing.shipperAddress ?? ''),
+    shipperMobile: String(body.shipperMobile ?? existing.shipperMobile ?? ''),
+    shipperEmail: String(body.shipperEmail ?? existing.shipperEmail ?? ''),
+    receiverCompanyName,
+    receiverContactPerson,
+    receiverCountry: String(body.receiverCountry ?? existing.receiverCountry ?? ''),
+    receiverCity: String(body.receiverCity ?? existing.receiverCity ?? ''),
+    receiverAddress: String(body.receiverAddress ?? existing.receiverAddress ?? ''),
+    receiverMobile: String(body.receiverMobile ?? existing.receiverMobile ?? ''),
+    receiverEmail: String(body.receiverEmail ?? existing.receiverEmail ?? ''),
+    senderName: shipperContactPerson || shipperCompanyName,
+    receiverName: receiverContactPerson || receiverCompanyName,
+    shipmentType: body.shipmentType || existing.shipmentType || 'parcel',
+    parcelName: String(body.parcelName ?? existing.parcelName ?? ''),
+    packageDescription: String(body.packageDescription ?? existing.packageDescription ?? ''),
+    grossWeight,
+    weight: grossWeight,
+    dimensions,
+    cbm: math.cbm || existing.cbm || '',
+    volumeWeight,
+    chargeableWeight: chargeableWeight === '' ? '' : String(chargeableWeight),
+    declaredValue: String(body.declaredValue ?? existing.declaredValue ?? ''),
+    currency: body.currency || existing.currency || 'USD',
+    thirdPartyTrackingNumber: String(
+      body.thirdPartyTrackingNumber ?? existing.thirdPartyTrackingNumber ?? ''
+    ),
+    numberOfPackages: Number(body.numberOfPackages ?? existing.numberOfPackages ?? 1) || 1,
+    serviceType: String(body.serviceType ?? existing.serviceType ?? ''),
+    mode: body.mode || existing.mode || 'air',
+    origin,
+    destination,
+    note,
+    status: existing.status || 'created',
+    updates: existing.updates || [],
+    proofOfDelivery: existing.proofOfDelivery || [],
+    exceptions: existing.exceptions || [],
+    createdAt: existing.createdAt || now,
+    updatedAt: now,
+  };
+}
+
+function publicShipment(shipment) {
+  return {
+    ...shipment,
+    senderName: shipment.senderName || shipment.shipperContactPerson || shipment.shipperCompanyName,
+    receiverName: shipment.receiverName || shipment.receiverContactPerson || shipment.receiverCompanyName,
+    weight: shipment.weight || shipment.grossWeight,
+    updates: shipment.updates || [],
+    proofOfDelivery: shipment.proofOfDelivery || [],
+    exceptions: shipment.exceptions || [],
+  };
+}
+
+function findShipment(key) {
+  let decoded = key;
+  try {
+    decoded = decodeURIComponent(key);
+  } catch {
+    decoded = key;
+  }
+  const value = String(decoded).trim().toLowerCase();
+  return db.shipments.find(
+    (shipment) =>
+      String(shipment.trackingNumber).toLowerCase() === value || String(shipment.id) === value
+  );
+}
+
+function addShipmentUpdate(shipment, body) {
+  const status = String(body.status || '').trim();
+  const location = String(body.location || '').trim();
+  const description = String(body.description || body.note || '').trim();
+  if (!SHIPMENT_STATUSES.includes(status)) throw httpError(400, 'Choose a valid status.');
+  if (!location) throw httpError(400, 'Please specify where the shipment is located.');
+  if (description.length < 5) throw httpError(400, 'Please provide a note with at least 5 characters.');
+  const now = new Date().toISOString();
+  const update = {
+    id: nextId(shipment.updates || []),
+    status,
+    location,
+    description,
+    latitude: body.latitude === '' || body.latitude == null ? null : Number(body.latitude),
+    longitude: body.longitude === '' || body.longitude == null ? null : Number(body.longitude),
+    updateDateTime: now,
+    createdAt: now,
+  };
+  shipment.updates = [...(shipment.updates || []), update];
+  shipment.status = status;
+  shipment.updatedAt = now;
+  if (status === 'delivered') {
+    shipment.proofOfDelivery = [
+      {
+        id: nextId(shipment.proofOfDelivery || []),
+        recipientName: String(body.recipientName || shipment.receiverName || 'Recipient'),
+        deliveryLocation: location,
+        notes: description,
+        createdAt: now,
+      },
+    ];
+  }
+  return update;
+}
+
 async function handle(req, res) {
   const url = new URL(req.url || '/', `http://127.0.0.1:${PORT}`);
   const pathname = url.pathname.replace(/\/+$/, '') || '/';
@@ -526,6 +694,14 @@ async function handle(req, res) {
     return;
   }
 
+  const publicTracking = pathname.match(/^\/admin\/api\/tracking\/public\/([^/]+)$/);
+  if (method === 'GET' && publicTracking) {
+    const shipment = findShipment(publicTracking[1]);
+    if (!shipment) throw httpError(404, 'No shipment found for this consignment number.');
+    send(res, 200, { success: true, data: publicShipment(shipment) });
+    return;
+  }
+
   if (method === 'POST' && pathname === '/admin/api/contacts/public') {
     const body = await readInput(req);
     const { _files, ...fields } = body;
@@ -550,12 +726,121 @@ async function handle(req, res) {
         categories: db.categories.length,
         jobs: db.jobs.length,
         testimonials: db.testimonials.length,
+        shipments: db.shipments.length,
         contacts: db.contacts.length,
         subscribers: db.subscribers.length,
         applications: db.applications.length,
       },
     });
     return;
+  }
+
+  if (method === 'GET' && pathname === '/admin/api/enhanced-tracking/stats') {
+    const count = (status) => db.shipments.filter((shipment) => shipment.status === status).length;
+    send(res, 200, {
+      success: true,
+      data: {
+        shipments: {
+          total: db.shipments.length,
+          delivered: count('delivered'),
+          inTransit: db.shipments.filter((shipment) => !['delivered', 'created'].includes(shipment.status)).length,
+          created: count('created'),
+        },
+      },
+    });
+    return;
+  }
+
+  if (method === 'GET' && pathname === '/admin/api/enhanced-tracking/shipments') {
+    const search = (url.searchParams.get('search') || '').trim().toLowerCase();
+    const status = url.searchParams.get('status');
+    const page = Math.max(1, Number(url.searchParams.get('page') || 1));
+    const limit = Math.max(1, Math.min(100, Number(url.searchParams.get('limit') || 20)));
+    let items = [...db.shipments];
+    if (status) items = items.filter((shipment) => shipment.status === status);
+    if (search) {
+      items = items.filter((shipment) =>
+        [
+          shipment.trackingNumber,
+          shipment.senderName,
+          shipment.receiverName,
+          shipment.shipperCompanyName,
+          shipment.receiverCompanyName,
+          shipment.origin,
+          shipment.destination,
+        ]
+          .join(' ')
+          .toLowerCase()
+          .includes(search)
+      );
+    }
+    items.sort((a, b) => new Date(b.updatedAt || 0) - new Date(a.updatedAt || 0));
+    const total = items.length;
+    const pages = Math.max(1, Math.ceil(total / limit) || 1);
+    send(res, 200, {
+      success: true,
+      data: {
+        shipments: items.slice((page - 1) * limit, page * limit).map(publicShipment),
+        pagination: { total, page, pages, limit },
+      },
+    });
+    return;
+  }
+
+  if (method === 'POST' && pathname === '/admin/api/enhanced-tracking/shipments') {
+    const body = await readInput(req);
+    const shipment = normalizeShipment(body);
+    shipment.id = nextId(db.shipments);
+    const now = shipment.createdAt;
+    shipment.updates = [
+      {
+        id: 1,
+        status: 'created',
+        location: String(body.location || shipment.origin),
+        description: shipment.note || 'Shipment created',
+        latitude: body.latitude == null || body.latitude === '' ? null : Number(body.latitude),
+        longitude: body.longitude == null || body.longitude === '' ? null : Number(body.longitude),
+        updateDateTime: now,
+        createdAt: now,
+      },
+    ];
+    db.shipments.unshift(shipment);
+    saveDb();
+    send(res, 201, { success: true, data: publicShipment(shipment) });
+    return;
+  }
+
+  const shipmentUpdate = pathname.match(/^\/admin\/api\/tracking\/(\d+)\/updates$/);
+  if (method === 'POST' && shipmentUpdate) {
+    const shipment = findById(db.shipments, shipmentUpdate[1]);
+    if (!shipment) throw httpError(404, 'Shipment not found.');
+    const update = addShipmentUpdate(shipment, await readInput(req));
+    saveDb();
+    send(res, 201, { success: true, data: { update, shipment: publicShipment(shipment) } });
+    return;
+  }
+
+  const shipmentId = pathname.match(/^\/admin\/api\/enhanced-tracking\/shipments\/(\d+)$/);
+  if (shipmentId) {
+    const shipment = findById(db.shipments, shipmentId[1]);
+    if (!shipment) throw httpError(404, 'Shipment not found.');
+    if (method === 'GET') {
+      send(res, 200, { success: true, data: publicShipment(shipment) });
+      return;
+    }
+    if (method === 'PUT') {
+      const updated = normalizeShipment(await readInput(req), shipment);
+      Object.assign(shipment, updated, { updates: shipment.updates, status: shipment.status });
+      saveDb();
+      send(res, 200, { success: true, data: publicShipment(shipment) });
+      return;
+    }
+    if (method === 'DELETE') {
+      db.shipments = db.shipments.filter((item) => item !== shipment);
+      saveDb();
+      send(res, 200, { success: true });
+      return;
+    }
   }
 
   if (method === 'GET' && pathname === '/admin/api/blogs') {

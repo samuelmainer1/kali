@@ -17,10 +17,10 @@ import PublicTrackingTimeline from '@/components/PublicTrackingTimeline'
 import { useSearchParams } from 'react-router-dom'
 import io from 'socket.io-client'
 
-// Use localhost for development, production URL for production
-const isDevelopment = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-const API_BASE = isDevelopment ? "http://localhost:5000/admin/api" : "https://globeflight.co.ke/admin/api"
-const SOCKET_URL = isDevelopment ? "http://localhost:5000" : "https://globeflight.co.ke"
+const API_BASE = import.meta.env.DEV
+  ? '/admin/api'
+  : 'https://globeflight.co.ke/admin/api'
+const SOCKET_URL = import.meta.env.DEV ? 'http://127.0.0.1:5000' : 'https://globeflight.co.ke'
 
 export default function TrackShipment() {
   const [searchParams] = useSearchParams();

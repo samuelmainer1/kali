@@ -10,14 +10,17 @@ import {
   MessageSquareQuote,
   Package,
   Plus,
+  Truck,
 } from 'lucide-react';
 import { api, getToken, setToken } from './adminApi';
+import TrackingAdmin from './TrackingAdmin';
 
 const inputClass =
   'w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 outline-none focus:border-[#88C300] focus:ring-2 focus:ring-[#88C300]/30';
 
 const nav = [
   { to: '/admin', label: 'Dashboard', icon: LayoutDashboard, end: true },
+  { to: '/admin/tracking', label: 'Tracking', icon: Truck },
   { to: '/admin/blogs', label: 'Blogs', icon: FileText },
   { to: '/admin/services', label: 'Services', icon: Package },
   { to: '/admin/categories', label: 'Categories', icon: FolderTree },
@@ -188,6 +191,7 @@ function Dashboard() {
   }, []);
 
   const cards = [
+    ['Shipments', stats?.shipments, '/admin/tracking'],
     ['Blog posts', stats?.blogs, '/admin/blogs'],
     ['Services', stats?.services, '/admin/services'],
     ['Categories', stats?.categories, '/admin/categories'],
@@ -200,7 +204,7 @@ function Dashboard() {
     <div>
       <PageHeader
         title="Dashboard"
-        text="This is your editable copy of the public site content: blogs, services, categories, jobs, and testimonials. Shipment tracking and staff accounts stay on the live site."
+        text="Create shipments and move them through each stage. The public track page reads these records. Blogs, services, and the other sections are editable here too. Staff accounts stay on the live site."
       />
       <Notice error={error} />
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
@@ -958,6 +962,7 @@ export default function AdminApp() {
     <Shell user={user} onLogout={logout}>
       <Routes>
         <Route path="/" element={<Dashboard />} />
+        <Route path="tracking" element={<TrackingAdmin />} />
         <Route path="blogs" element={<BlogAdmin />} />
         <Route path="services" element={<ServiceAdmin />} />
         <Route path="categories" element={<CategoryAdmin />} />
