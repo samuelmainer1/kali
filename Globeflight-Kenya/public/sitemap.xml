@@ -19,31 +19,49 @@
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://globeflight.co.ke/services/air-freight</loc>
+    <loc>https://globeflight.co.ke/services/warehousing-and-distribution-services</loc>
     <lastmod>2025-12-22</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://globeflight.co.ke/services/sea-freight</loc>
+    <loc>https://globeflight.co.ke/services/sea-freight-services</loc>
     <lastmod>2025-12-22</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://globeflight.co.ke/services/road-transport</loc>
+    <loc>https://globeflight.co.ke/services/customs-clearance-and-brokerage</loc>
     <lastmod>2025-12-22</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://globeflight.co.ke/services/warehousing</loc>
+    <loc>https://globeflight.co.ke/services/international-import-and-export-express</loc>
     <lastmod>2025-12-22</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://globeflight.co.ke/services/customs-clearance</loc>
+    <loc>https://globeflight.co.ke/services/consolidation-services</loc>
+    <lastmod>2025-12-22</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://globeflight.co.ke/services/big-drop-kenya-e-commerce-marketplace-and-fulfillment</loc>
+    <lastmod>2025-12-22</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://globeflight.co.ke/services/air-freight-services</loc>
+    <lastmod>2025-12-22</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://globeflight.co.ke/services/importer-and-exporter-of-records</loc>
     <lastmod>2025-12-22</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>

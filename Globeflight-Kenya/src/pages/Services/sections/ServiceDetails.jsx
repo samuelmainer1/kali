@@ -15,48 +15,16 @@ import ScrollOnSideSection from "@/components/ScrollOnSideSection"
 import Hero from "@/pages/Services/sections/Hero"
 import { ChevronLeft, ChevronRight, Calendar, Share2, Facebook, Twitter, Linkedin, MapPin, Clock, Phone, Mail, CheckCircle2, Award } from 'lucide-react'
 import { getApiImageUrl, handleImageError } from '@/utils/imageUtils'
-
-const API_BASE = import.meta.env.DEV
-  ? '/admin/api'
-  : 'https://globeflight.co.ke/admin/api';
-
-const API_URL = `${API_BASE}/services/public`;
+import { services, getServiceBySlug } from '@/data/services'
 
 export default function ServiceDetail() {
   const { slug } = useParams();
-  const [service, setService] = useState(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState("")
+  const service = getServiceBySlug(slug)
+  const allServices = services
   const [activeSection, setActiveSection] = useState('')
   const [readingProgress, setReadingProgress] = useState(0)
   const [isBookingModalOpen, setIsBookingModalOpen] = useState(false)
   const [isSharingModalOpen, setIsSharingModalOpen] = useState(false)
-  const [allServices, setAllServices] = useState([])
-
-  useEffect(() => {
-    async function fetchService() {
-      setLoading(true)
-      setError("")
-      try {
-        console.log('Fetching service from:', `${API_BASE}/services/public/${slug}`);
-        let res = await fetch(`${API_BASE}/services/public/${slug}`);
-        let data = await res.json();
-        if (data.success && data.data) {
-          setService(data.data);
-          const allRes = await fetch(`${API_BASE}/services/public?limit=100`);
-          const allData = await allRes.json();
-          setAllServices(allData.success ? allData.data.services : []);
-        } else {
-          setError("Service not found");
-        }
-      } catch (err) {
-        console.error('Error fetching service:', err);
-        setError("Failed to fetch service");
-      }
-      setLoading(false);
-    }
-    fetchService();
-  }, [slug])
 
   useEffect(() => {
     const handleScroll = () => {
@@ -80,29 +48,20 @@ export default function ServiceDetail() {
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
-  if (loading) return (
+  if (!service) return (
     <div className="min-h-screen flex items-center justify-center">
       <div className="text-center">
-        <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-        <p className="text-gray-600">Loading service details...</p>
+        <p className="text-xl text-gray-800">Service not found.</p>
+        <Link to="/services" className="mt-4 inline-block text-blue-600">Back to services</Link>
       </div>
     </div>
   )
-  if (error) return (
-    <div className="min-h-screen flex items-center justify-center">
-      <div className="text-center">
-        <div className="text-6xl mb-4">⚠️</div>
-        <p className="text-xl text-red-600">{error}</p>
-      </div>
-    </div>
-  )
-  if (!service) return null
 
-  const currentIndex = allServices.findIndex(s => String(s.id) === String(slug))
+  const currentIndex = allServices.findIndex(s => s.slug === service.slug)
   const previousService = currentIndex > 0 ? allServices[currentIndex - 1] : null
   const nextService = currentIndex < allServices.length - 1 ? allServices[currentIndex + 1] : null
   const relatedServices = allServices
-    .filter(s => String(s.id) !== String(slug) && s.id !== previousService?.id && s.id !== nextService?.id)
+    .filter(s => s.slug !== service.slug && s.id !== previousService?.id && s.id !== nextService?.id)
     .slice(0, 3)
 
   const galleryImages = Array.isArray(service.galleryUrls) && service.galleryUrls.length > 0

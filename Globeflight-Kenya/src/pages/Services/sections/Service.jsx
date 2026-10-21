@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -10,71 +10,14 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogD
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Search, ArrowRight, Star, TrendingUp, Award, Users, CheckCircle2 } from 'lucide-react';
 import { getApiImageUrl, handleImageError } from '@/utils/imageUtils';
-
-const API_BASE = import.meta.env.DEV
-  ? '/admin/api'
-  : 'https://globeflight.co.ke/admin/api';
+import { services } from '@/data/services';
 
 export default function Service() {
-  const [services, setServices] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
-  const [featuredService, setFeaturedService] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedService, setSelectedService] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const navigate = useNavigate();
-
-  // Fetch services from backend API
-  useEffect(() => {
-    const controller = new AbortController();
-    let ignore = false;
-
-    async function fetchServices() {
-      try {
-        setLoading(true);
-        setError(null);
-
-        const timeoutId = setTimeout(() => controller.abort(), 30000);
-        const res = await fetch(`${API_BASE}/services/public?limit=100`, {
-          signal: controller.signal,
-        });
-        clearTimeout(timeoutId);
-        if (ignore) return;
-
-        if (!res.ok) {
-          throw new Error(`API returned status ${res.status}`);
-        }
-
-        const data = await res.json();
-        if (ignore) return;
-
-        const list = data?.data?.services;
-        if (data.success && Array.isArray(list)) {
-          setServices(list);
-          setFeaturedService(list.find(s => s.featured) || list[0] || null);
-        } else {
-          setServices([]);
-          setFeaturedService(null);
-        }
-      } catch (err) {
-        if (ignore || err.name === 'AbortError') return;
-        console.error('Error fetching services:', err);
-        setError(err.message || 'Failed to fetch services');
-        setServices([]);
-        setFeaturedService(null);
-      } finally {
-        if (!ignore) setLoading(false);
-      }
-    }
-
-    fetchServices();
-    return () => {
-      ignore = true;
-      controller.abort();
-    };
-  }, []);
+  const featuredService = services.find((service) => service.featured) || services[0] || null;
 
   // Filter services by search/category
   const filteredServices = services.filter(service => {
@@ -82,7 +25,8 @@ export default function Service() {
     const matchesSearch = title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (service.shortDescription || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
       (service.description || '').toLowerCase().includes(searchTerm.toLowerCase());
-    return matchesSearch && (selectedCategory === 'all' || (service.category === selectedCategory));
+    const categoryName = service.category || 'Uncategorized';
+    return matchesSearch && (selectedCategory === 'all' || categoryName === selectedCategory);
   });
 
   const categories = ['all', ...Array.from(new Set(services.map(s => s.category || 'Uncategorized')))];
@@ -210,44 +154,8 @@ export default function Service() {
             ))}
           </div>*/}
 
-          {/* Loading State */}
-          {loading && (
-            <div className="text-center py-20">
-              <div className="inline-block animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600 mb-4"></div>
-              <p className="text-gray-600 text-lg">Loading services...</p>
-              <p className="text-gray-500 text-sm mt-4">Check browser console (F12) for details</p>
-              <p className="text-gray-400 text-xs mt-2">If this takes more than 10 seconds, there may be a server issue</p>
-            </div>
-          )}
-
-          {/* Error State */}
-          {error && !loading && (
-            <div className="max-w-2xl mx-auto bg-red-50 border-2 border-red-200 rounded-xl p-8 text-center mb-12">
-              <div className="text-red-600 text-6xl mb-4">⚠️</div>
-              <h3 className="text-2xl font-bold text-red-800 mb-2">Unable to Load Services</h3>
-              <p className="text-red-600 mb-4">{error}</p>
-              <p className="text-gray-600 text-sm mb-4">Please check the browser console for more details.</p>
-              <button
-                onClick={() => window.location.reload()}
-                className="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
-              >
-                Retry
-              </button>
-            </div>
-          )}
-
-          {/* No Services State */}
-          {!loading && !error && services.length === 0 && (
-            <div className="max-w-2xl mx-auto bg-yellow-50 border-2 border-yellow-200 rounded-xl p-8 text-center mb-12">
-              <div className="text-yellow-600 text-6xl mb-4">📦</div>
-              <h3 className="text-2xl font-bold text-yellow-800 mb-2">No Services Available</h3>
-              <p className="text-gray-600 mb-2">No published services found in the database.</p>
-              <p className="text-sm text-gray-500">Please make sure services are published in the admin dashboard.</p>
-            </div>
-          )}
-
           {/* Featured Service */}
-          {!loading && !error && featuredService && (
+          {featuredService && (
             <section className="mb-20" aria-label="Featured Service" itemScope itemType="https://schema.org/Service">
               <div className="rounded-3xl overflow-hidden shadow-2xl" style={{ backgroundImage: 'linear-gradient(to right, #3B82F6, #88C300)' }}>
                 <div className="md:flex">
@@ -298,7 +206,7 @@ export default function Service() {
           )}
 
           {/* Search and Filter */}
-          {!loading && !error && services.length > 0 && (
+          {services.length > 0 && (
             <section className="mb-12" aria-label="Service search and filters">
               <div className="max-w-3xl mx-auto">
                 <div className="flex flex-col md:flex-row gap-4">
@@ -335,7 +243,7 @@ export default function Service() {
           )}
 
           {/* Services Grid */}
-          {!loading && !error && services.length > 0 && (
+          {services.length > 0 && (
             <section aria-label="All logistics services">
             <h2 className="sr-only">Our Logistics Services</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">

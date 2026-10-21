@@ -8,7 +8,6 @@ import {
   LogOut,
   Mail,
   MessageSquareQuote,
-  Package,
   Plus,
   Truck,
 } from 'lucide-react';
@@ -22,7 +21,6 @@ const nav = [
   { to: '/admin', label: 'Dashboard', icon: LayoutDashboard, end: true },
   { to: '/admin/tracking', label: 'Tracking', icon: Truck },
   { to: '/admin/blogs', label: 'Blogs', icon: FileText },
-  { to: '/admin/services', label: 'Services', icon: Package },
   { to: '/admin/categories', label: 'Categories', icon: FolderTree },
   { to: '/admin/jobs', label: 'Jobs', icon: Briefcase },
   { to: '/admin/testimonials', label: 'Testimonials', icon: MessageSquareQuote },
@@ -193,7 +191,6 @@ function Dashboard() {
   const cards = [
     ['Shipments', stats?.shipments, '/admin/tracking'],
     ['Blog posts', stats?.blogs, '/admin/blogs'],
-    ['Services', stats?.services, '/admin/services'],
     ['Categories', stats?.categories, '/admin/categories'],
     ['Jobs', stats?.jobs, '/admin/jobs'],
     ['Testimonials', stats?.testimonials, '/admin/testimonials'],
@@ -204,7 +201,7 @@ function Dashboard() {
     <div>
       <PageHeader
         title="Dashboard"
-        text="Create shipments and move them through each stage. The public track page reads these records. Blogs, services, and the other sections are editable here too. Staff accounts stay on the live site."
+        text="Create shipments and move them through each stage. The public track page reads these records. Blogs and the other sections are editable here too. Services are part of the website."
       />
       <Notice error={error} />
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
@@ -450,133 +447,6 @@ function BlogForm({ initial, categories, onCancel, onSaved }) {
         <Check label="Published" checked={form.isPublished} onChange={set('isPublished')} />
         <Check label="Featured" checked={form.isFeatured} onChange={set('isFeatured')} />
       </div>
-    </FormShell>
-  );
-}
-
-function ServiceAdmin() {
-  const { items, loading, error, refresh, setError } = useItems('/services');
-  const [editing, setEditing] = useState(null);
-
-  async function remove(item) {
-    if (!window.confirm(`Delete “${item.title}”?`)) return;
-    try {
-      await api(`/services/${item.id}`, { method: 'DELETE' });
-      refresh();
-    } catch (err) {
-      setError(err.message);
-    }
-  }
-
-  return (
-    <div>
-      <PageHeader
-        title="Services"
-        text="These eight services are what the public services page loads. Edits appear at /services."
-        action={<PrimaryButton type="button" onClick={() => setEditing({})}><Plus className="h-4 w-4" /> New service</PrimaryButton>}
-      />
-      {editing ? (
-        <ServiceForm
-          initial={editing.id ? editing : null}
-          onCancel={() => setEditing(null)}
-          onSaved={() => {
-            setEditing(null);
-            refresh();
-          }}
-        />
-      ) : (
-        <>
-          <Notice error={error} />
-          {loading ? <p className="text-sm text-gray-500">Loading services...</p> : (
-            <ListTable
-              rows={items}
-              onEdit={setEditing}
-              onDelete={remove}
-              columns={[
-                { key: 'title', label: 'Title' },
-                { key: 'slug', label: 'Slug' },
-              ]}
-            />
-          )}
-        </>
-      )}
-    </div>
-  );
-}
-
-function ServiceForm({ initial, onCancel, onSaved }) {
-  const [form, setForm] = useState({
-    title: initial?.title || '',
-    slug: initial?.slug || '',
-    shortDescription: initial?.shortDescription || '',
-    description: initial?.description || '',
-    imageUrl: initial?.imageUrl || '',
-    galleryUrls: (initial?.galleryUrls || []).join('\n'),
-    keyBenefits: (initial?.keyBenefits || []).join('\n'),
-    faq: initial?.faq?.length ? initial.faq : [{ question: '', answer: '' }],
-    metaTitle: initial?.metaTitle || '',
-    metaDescription: initial?.metaDescription || '',
-  });
-  const [error, setError] = useState('');
-  const set = (key) => (value) => setForm((current) => ({ ...current, [key]: value }));
-
-  function updateFaq(index, key, value) {
-    setForm((current) => ({
-      ...current,
-      faq: current.faq.map((item, itemIndex) => (itemIndex === index ? { ...item, [key]: value } : item)),
-    }));
-  }
-
-  async function submit(event) {
-    event.preventDefault();
-    setError('');
-    try {
-      const path = initial?.id ? `/services/${initial.id}` : '/services';
-      await api(path, {
-        method: initial?.id ? 'PUT' : 'POST',
-        body: {
-          ...form,
-          galleryUrls: form.galleryUrls,
-          keyBenefits: form.keyBenefits,
-        },
-      });
-      onSaved();
-    } catch (err) {
-      setError(err.message);
-    }
-  }
-
-  return (
-    <FormShell title={initial?.id ? 'Edit service' : 'New service'} error={error} onSubmit={submit} onCancel={onCancel}>
-      <TextInput label="Title" value={form.title} onChange={set('title')} required />
-      <TextInput label="Slug" value={form.slug} onChange={set('slug')} />
-      <Area label="Short description" value={form.shortDescription} onChange={set('shortDescription')} />
-      <Area label="Description" value={form.description} onChange={set('description')} rows={8} />
-      <TextInput label="Image URL" value={form.imageUrl} onChange={set('imageUrl')} />
-      <Area label="Gallery URLs, one per line" value={form.galleryUrls} onChange={set('galleryUrls')} />
-      <Area label="Key benefits, one per line" value={form.keyBenefits} onChange={set('keyBenefits')} />
-      <div>
-        <div className="mb-2 flex items-center justify-between">
-          <span className="text-sm font-medium text-gray-700">FAQ</span>
-          <button
-            type="button"
-            className="text-sm font-medium text-[#4f7300]"
-            onClick={() => set('faq')([...form.faq, { question: '', answer: '' }])}
-          >
-            Add question
-          </button>
-        </div>
-        <div className="space-y-3">
-          {form.faq.map((item, index) => (
-            <div key={index} className="rounded-lg border p-3">
-              <input className={`${inputClass} mb-2`} placeholder="Question" value={item.question} onChange={(e) => updateFaq(index, 'question', e.target.value)} />
-              <textarea className={inputClass} rows={2} placeholder="Answer" value={item.answer} onChange={(e) => updateFaq(index, 'answer', e.target.value)} />
-            </div>
-          ))}
-        </div>
-      </div>
-      <TextInput label="Meta title" value={form.metaTitle} onChange={set('metaTitle')} />
-      <Area label="Meta description" value={form.metaDescription} onChange={set('metaDescription')} rows={2} />
     </FormShell>
   );
 }
@@ -964,7 +834,6 @@ export default function AdminApp() {
         <Route path="/" element={<Dashboard />} />
         <Route path="tracking" element={<TrackingAdmin />} />
         <Route path="blogs" element={<BlogAdmin />} />
-        <Route path="services" element={<ServiceAdmin />} />
         <Route path="categories" element={<CategoryAdmin />} />
         <Route path="jobs" element={<JobAdmin />} />
         <Route path="testimonials" element={<TestimonialAdmin />} />
