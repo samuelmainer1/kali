@@ -16,20 +16,11 @@ import BlogHome from "@/pages/Blog/BlogHome"; // <-- Import BlogHome
 import BlogCategoryPage from "@/pages/Blog/sections/BlogCategoryPage"; // <-- Import BlogCategoryPage
 const JobPage = React.lazy(() => import('@/pages/JobPage')); // <-- Add this line
 const JobDetail = React.lazy(() => import('@/pages/JobDetail')); // <-- Add this line
-const AdminApp = React.lazy(() => import('@/admin/AdminApp'));
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route
-          path="/admin/*"
-          element={
-            <Suspense fallback={<div className="py-20 text-center">Loading admin...</div>}>
-              <AdminApp />
-            </Suspense>
-          }
-        />
         <Route path="/" element={<MainLayout />}>
           {/* New IOR-focused landing page as the default route */}
           <Route index element={<Landing />} />

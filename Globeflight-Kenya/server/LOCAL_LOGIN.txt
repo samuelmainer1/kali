@@ -2,6 +2,7 @@ Local dashboard only
 ====================
 
 Open: http://127.0.0.1:5173/admin
+This is the Globeflight admin dashboard, including Tracking.
 
 Email: admin@globeflight.co.ke
 Password: LocalAdmin2026

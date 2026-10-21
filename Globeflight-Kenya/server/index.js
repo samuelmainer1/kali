@@ -570,8 +570,9 @@ async function handle(req, res) {
     return;
   }
 
-  if (method === 'GET' && pathname === '/admin/api/auth/me') {
-    send(res, 200, { success: true, data: requireUser(req) });
+  if (method === 'GET' && (pathname === '/admin/api/auth/me' || pathname === '/admin/api/auth/profile')) {
+    const user = requireUser(req);
+    send(res, 200, { success: true, user, data: user });
     return;
   }
 
@@ -743,7 +744,8 @@ async function handle(req, res) {
         shipments: {
           total: db.shipments.length,
           delivered: count('delivered'),
-          inTransit: db.shipments.filter((shipment) => !['delivered', 'created'].includes(shipment.status)).length,
+          cancelled: count('cancelled'),
+          inTransit: db.shipments.filter((shipment) => !['delivered', 'created', 'cancelled'].includes(shipment.status)).length,
           created: count('created'),
         },
       },
