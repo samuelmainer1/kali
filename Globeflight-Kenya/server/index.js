@@ -1,0 +1,1048 @@
+/**
+ * Local Globeflight admin API.
+ * Login details are in server/LOCAL_LOGIN.txt. This password is for this
+ * project only and is not the live site password.
+ */
+import http from 'node:http';
+import fs from 'node:fs';
+import path from 'node:path';
+import crypto from 'node:crypto';
+import { fileURLToPath } from 'node:url';
+
+const PORT = Number(process.env.PORT || 5000);
+const ROOT = path.dirname(fileURLToPath(import.meta.url));
+const DB_PATH = path.join(ROOT, 'data', 'db.json');
+const AUTH_PATH = path.join(ROOT, 'data', 'auth.json');
+const SESSION_MS = 7 * 24 * 60 * 60 * 1000;
+
+const sessions = new Map();
+
+function httpError(status, message) {
+  const error = new Error(message);
+  error.status = status;
+  return error;
+}
+
+function loadDb() {
+  const db = JSON.parse(fs.readFileSync(DB_PATH, 'utf8'));
+  db.blogs ||= [];
+  db.services ||= [];
+  db.categories ||= [];
+  db.jobs ||= [];
+  db.testimonials ||= [];
+  db.contacts ||= [];
+  db.subscribers ||= [];
+  db.applications ||= [];
+  db.shipments ||= [];
+  return db;
+}
+
+let db = loadDb();
+
+function saveDb() {
+  const tmp = `${DB_PATH}.tmp`;
+  fs.writeFileSync(tmp, JSON.stringify(db, null, 2));
+  fs.renameSync(tmp, DB_PATH);
+}
+
+function slugify(value) {
+  const slug = String(value || '')
+    .toLowerCase()
+    .trim()
+    .replace(/['"]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 140);
+  return slug || 'item';
+}
+
+function uniqueSlug(list, slug, ignoreId) {
+  let candidate = slug;
+  let n = 2;
+  while (list.some((item) => item.slug === candidate && item.id !== ignoreId)) {
+    candidate = `${slug}-${n}`;
+    n += 1;
+  }
+  return candidate;
+}
+
+function nextId(list) {
+  return list.reduce((max, item) => Math.max(max, Number(item.id) || 0), 0) + 1;
+}
+
+function asBool(value, fallback) {
+  if (value === undefined || value === null || value === '') return fallback;
+  if (typeof value === 'boolean') return value;
+  if (value === 'false' || value === '0' || value === 0) return false;
+  return true;
+}
+
+function asLines(value) {
+  if (Array.isArray(value)) return value.map((item) => String(item).trim()).filter(Boolean);
+  return String(value || '')
+    .split('\n')
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
+function asTags(value) {
+  if (Array.isArray(value)) return value.map((item) => String(item).trim()).filter(Boolean);
+  return String(value || '')
+    .split(',')
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
+function findById(list, id) {
+  return list.find((item) => String(item.id) === String(id));
+}
+
+function categoryEmbed(categoryId) {
+  const category = findById(db.categories, categoryId);
+  if (!category) return null;
+  return { name: category.name, slug: category.slug };
+}
+
+function refreshBlogCategories() {
+  for (const blog of db.blogs) {
+    const embedded = categoryEmbed(blog.categoryId);
+    if (embedded) blog.category = embedded;
+  }
+}
+
+function blogListItem(blog) {
+  const { content, ...rest } = blog;
+  return rest;
+}
+
+function requireUser(req) {
+  const header = req.headers.authorization || '';
+  const token = header.startsWith('Bearer ') ? header.slice(7) : '';
+  const session = token ? sessions.get(token) : null;
+  if (!session || session.exp < Date.now()) {
+    if (token) sessions.delete(token);
+    throw httpError(401, 'Please sign in again.');
+  }
+  return session.user;
+}
+
+function readBody(req) {
+  return new Promise((resolve, reject) => {
+    const chunks = [];
+    let size = 0;
+    req.on('data', (chunk) => {
+      size += chunk.length;
+      if (size > 8 * 1024 * 1024) {
+        reject(httpError(413, 'Upload is too large.'));
+        req.destroy();
+        return;
+      }
+      chunks.push(chunk);
+    });
+    req.on('end', () => resolve(Buffer.concat(chunks)));
+    req.on('error', reject);
+  });
+}
+
+function parseMultipart(buffer, contentType) {
+  const match = /boundary=(?:"([^"]+)"|([^;]+))/i.exec(contentType || '');
+  if (!match) return {};
+  const boundary = match[1] || match[2];
+  const parts = buffer.toString('latin1').split(`--${boundary}`);
+  const fields = {};
+  const files = [];
+  for (const part of parts) {
+    const splitAt = part.indexOf('\r\n\r\n');
+    if (splitAt === -1) continue;
+    const headers = part.slice(0, splitAt);
+    let body = part.slice(splitAt + 4);
+    if (body.endsWith('\r\n')) body = body.slice(0, -2);
+    const name = /name="([^"]+)"/.exec(headers);
+    if (!name) continue;
+    const filename = /filename="([^"]*)"/.exec(headers);
+    if (filename && filename[1]) {
+      files.push({
+        field: name[1],
+        filename: filename[1],
+        size: Buffer.byteLength(body, 'latin1'),
+      });
+    } else if (fields[name[1]] === undefined) {
+      fields[name[1]] = Buffer.from(body, 'latin1').toString('utf8');
+    }
+  }
+  fields._files = files;
+  return fields;
+}
+
+async function readInput(req) {
+  const raw = await readBody(req);
+  const type = req.headers['content-type'] || '';
+  if (!raw.length) return {};
+  if (type.includes('multipart/form-data')) return parseMultipart(raw, type);
+  const text = raw.toString('utf8');
+  try {
+    return JSON.parse(text);
+  } catch {
+    throw httpError(400, 'Request body must be JSON.');
+  }
+}
+
+function send(res, status, payload) {
+  const body = JSON.stringify(payload);
+  res.writeHead(status, {
+    'Content-Type': 'application/json; charset=utf-8',
+    'Content-Length': Buffer.byteLength(body),
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization, Accept',
+    'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+    'Cache-Control': 'no-store',
+  });
+  res.end(body);
+}
+
+function publicBlogs(url) {
+  const page = Math.max(1, Number(url.searchParams.get('page') || 1));
+  const limit = Math.max(1, Math.min(100, Number(url.searchParams.get('limit') || 10)));
+  const search = (url.searchParams.get('search') || '').trim().toLowerCase();
+  const category = url.searchParams.get('category');
+  let items = db.blogs.filter((blog) => blog.isPublished !== false);
+  if (search) {
+    items = items.filter((blog) =>
+      [blog.title, blog.shortDescription, blog.content, ...(blog.tags || [])]
+        .join(' ')
+        .toLowerCase()
+        .includes(search)
+    );
+  }
+  if (category) {
+    items = items.filter(
+      (blog) =>
+        String(blog.categoryId) === String(category) ||
+        blog.category?.slug === category
+    );
+  }
+  items.sort(
+    (a, b) =>
+      new Date(b.publishedAt || b.createdAt || 0) - new Date(a.publishedAt || a.createdAt || 0)
+  );
+  const total = items.length;
+  const pages = Math.max(1, Math.ceil(total / limit) || 1);
+  const blogs = items.slice((page - 1) * limit, page * limit).map(blogListItem);
+  return { success: true, data: { blogs, pagination: { total, page, pages, limit } } };
+}
+
+function normalizeBlog(body, existing = {}) {
+  const title = String(body.title ?? existing.title ?? '').trim();
+  if (!title) throw httpError(400, 'Title is required.');
+  const now = new Date().toISOString();
+  const categoryId =
+    body.categoryId === '' || body.categoryId === undefined || body.categoryId === null
+      ? existing.categoryId ?? null
+      : Number(body.categoryId);
+  const blog = {
+    ...existing,
+    title,
+    slug: uniqueSlug(db.blogs, slugify(body.slug || existing.slug || title), existing.id),
+    shortDescription: String(body.shortDescription ?? existing.shortDescription ?? ''),
+    content: String(body.content ?? existing.content ?? ''),
+    featuredImage: String(body.featuredImage ?? existing.featuredImage ?? ''),
+    authorId: existing.authorId ?? 1,
+    categoryId: Number.isFinite(categoryId) ? categoryId : null,
+    readTime: Number(body.readTime ?? existing.readTime ?? 5) || 5,
+    likesCount: existing.likesCount ?? 0,
+    viewsCount: existing.viewsCount ?? 0,
+    isPublished: asBool(body.isPublished, existing.isPublished ?? true),
+    isFeatured: asBool(body.isFeatured, existing.isFeatured ?? false),
+    metaTitle: String(body.metaTitle ?? existing.metaTitle ?? title),
+    metaDescription: String(
+      body.metaDescription ?? existing.metaDescription ?? body.shortDescription ?? ''
+    ),
+    tags: body.tags === undefined && existing.tags ? existing.tags : asTags(body.tags),
+    publishedAt: existing.publishedAt || now,
+    createdAt: existing.createdAt || now,
+    updatedAt: now,
+    author: existing.author || { fullName: 'Globeflight Kenya', avatarUrl: null },
+  };
+  blog.category = categoryEmbed(blog.categoryId);
+  return blog;
+}
+
+function normalizeService(body, existing = {}) {
+  const title = String(body.title ?? existing.title ?? '').trim();
+  if (!title) throw httpError(400, 'Title is required.');
+  const now = new Date().toISOString();
+  const faq = Array.isArray(body.faq)
+    ? body.faq
+        .map((item) => ({
+          question: String(item?.question || '').trim(),
+          answer: String(item?.answer || '').trim(),
+        }))
+        .filter((item) => item.question || item.answer)
+    : existing.faq || [];
+  return {
+    ...existing,
+    title,
+    slug: uniqueSlug(db.services, slugify(body.slug || existing.slug || title), existing.id),
+    shortDescription: String(body.shortDescription ?? existing.shortDescription ?? ''),
+    description: String(body.description ?? existing.description ?? ''),
+    imageUrl: String(body.imageUrl ?? existing.imageUrl ?? ''),
+    galleryUrls:
+      body.galleryUrls === undefined && existing.galleryUrls
+        ? existing.galleryUrls
+        : asLines(body.galleryUrls),
+    keyBenefits:
+      body.keyBenefits === undefined && existing.keyBenefits
+        ? existing.keyBenefits
+        : asLines(body.keyBenefits),
+    faq,
+    metaTitle: String(body.metaTitle ?? existing.metaTitle ?? title),
+    metaDescription: String(body.metaDescription ?? existing.metaDescription ?? ''),
+    createdAt: existing.createdAt || now,
+    updatedAt: now,
+  };
+}
+
+function normalizeCategory(body, existing = {}) {
+  const name = String(body.name ?? existing.name ?? '').trim();
+  if (!name) throw httpError(400, 'Name is required.');
+  const now = new Date().toISOString();
+  return {
+    ...existing,
+    name,
+    slug: uniqueSlug(db.categories, slugify(body.slug || existing.slug || name), existing.id),
+    description: body.description === undefined ? existing.description ?? null : body.description || null,
+    isActive: asBool(body.isActive, existing.isActive ?? true),
+    createdAt: existing.createdAt || now,
+    updatedAt: now,
+  };
+}
+
+function normalizeJob(body, existing = {}) {
+  const title = String(body.title ?? existing.title ?? '').trim();
+  if (!title) throw httpError(400, 'Title is required.');
+  const now = new Date().toISOString();
+  const deadline = body.applicationDeadline === undefined
+    ? existing.applicationDeadline ?? null
+    : body.applicationDeadline || null;
+  return {
+    ...existing,
+    title,
+    slug: uniqueSlug(db.jobs, slugify(body.slug || existing.slug || title), existing.id),
+    department: String(body.department ?? existing.department ?? ''),
+    location: String(body.location ?? existing.location ?? ''),
+    jobType: String(body.jobType ?? existing.jobType ?? 'full-time'),
+    description: String(body.description ?? existing.description ?? ''),
+    requirements: String(body.requirements ?? existing.requirements ?? ''),
+    responsibilities: String(body.responsibilities ?? existing.responsibilities ?? ''),
+    applicationDeadline: deadline,
+    isClosed: asBool(body.isClosed, existing.isClosed ?? false),
+    createdAt: existing.createdAt || now,
+    updatedAt: now,
+  };
+}
+
+function normalizeTestimonial(body, existing = {}) {
+  const name = String(body.name ?? existing.name ?? '').trim();
+  const content = String(body.content ?? existing.content ?? '').trim();
+  if (!name || !content) throw httpError(400, 'Name and review are required.');
+  const now = new Date().toISOString();
+  const rating = Math.min(5, Math.max(1, Number(body.rating ?? existing.rating ?? 5) || 5));
+  return {
+    ...existing,
+    name,
+    position: String(body.position ?? existing.position ?? 'Client'),
+    company: String(body.company ?? existing.company ?? ''),
+    content,
+    avatarUrl: existing.avatarUrl ?? null,
+    rating,
+    isPublished: asBool(body.isPublished, existing.isPublished ?? true),
+    improvement: existing.improvement ?? null,
+    consent: existing.consent ?? false,
+    createdAt: existing.createdAt || now,
+    updatedAt: now,
+  };
+}
+
+function verifyPassword(password, auth) {
+  const actual = Buffer.from(auth.hash, 'hex');
+  const given = crypto.scryptSync(String(password || ''), auth.salt, actual.length);
+  return actual.length === given.length && crypto.timingSafeEqual(actual, given);
+}
+
+const SHIPMENT_STATUSES = [
+  'created',
+  'collected',
+  'departed',
+  'in-transit',
+  'arrived-at-destination',
+  'out-for-delivery',
+  'delivered',
+];
+
+function shipmentNumber() {
+  const year = new Date().getFullYear();
+  const prefix = `GF${year}`;
+  const highest = db.shipments.reduce((max, shipment) => {
+    const match = String(shipment.trackingNumber || '').match(/(\d{4})$/);
+    return Math.max(max, match ? Number(match[1]) : 0);
+  }, 1000);
+  return `${prefix}${String(highest + 1).padStart(4, '0')}`;
+}
+
+function dimensionMath(dimensions) {
+  const parts = String(dimensions || '')
+    .toLowerCase()
+    .split('x')
+    .map((part) => Number(part.trim()));
+  if (parts.length !== 3 || parts.some((part) => !Number.isFinite(part) || part <= 0)) {
+    return { cbm: '', volumeWeight: '' };
+  }
+  const cbm = (parts[0] * parts[1] * parts[2]) / 1_000_000;
+  return { cbm: cbm.toFixed(4), volumeWeight: (cbm * 167).toFixed(2) };
+}
+
+function normalizeShipment(body, existing = {}) {
+  const origin = String(body.origin ?? existing.origin ?? '').trim();
+  const destination = String(body.destination ?? existing.destination ?? '').trim();
+  const shipperCompanyName = String(body.shipperCompanyName ?? existing.shipperCompanyName ?? '').trim();
+  const receiverCompanyName = String(body.receiverCompanyName ?? existing.receiverCompanyName ?? '').trim();
+  if (!shipperCompanyName || !receiverCompanyName) {
+    throw httpError(400, 'Shipper and receiver are required.');
+  }
+  if (!origin || !destination) throw httpError(400, 'Origin and destination are required.');
+  const note = String(body.note ?? existing.note ?? '').trim();
+  if (!existing.id && note.length < 5) {
+    throw httpError(400, 'Please leave a note with at least 5 characters.');
+  }
+  const now = new Date().toISOString();
+  const dimensions = String(body.dimensions ?? existing.dimensions ?? '');
+  const math = dimensionMath(dimensions);
+  const grossWeight = String(body.grossWeight ?? body.weight ?? existing.grossWeight ?? '');
+  const volumeWeight = math.volumeWeight || existing.volumeWeight || '';
+  const manualChargeable = body.chargeableWeight;
+  const chargeableWeight =
+    manualChargeable === undefined || manualChargeable === ''
+      ? existing.chargeableWeight ||
+        (Math.max(Number(grossWeight) || 0, Number(volumeWeight) || 0) || '')
+      : String(manualChargeable);
+  const shipperContactPerson = String(body.shipperContactPerson ?? existing.shipperContactPerson ?? '');
+  const receiverContactPerson = String(body.receiverContactPerson ?? existing.receiverContactPerson ?? '');
+  return {
+    ...existing,
+    trackingNumber: existing.trackingNumber || shipmentNumber(),
+    shipperCompanyName,
+    shipperContactPerson,
+    shipperCountry: String(body.shipperCountry ?? existing.shipperCountry ?? ''),
+    shipperCity: String(body.shipperCity ?? existing.shipperCity ?? ''),
+    shipperAddress: String(body.shipperAddress ?? existing.shipperAddress ?? ''),
+    shipperMobile: String(body.shipperMobile ?? existing.shipperMobile ?? ''),
+    shipperEmail: String(body.shipperEmail ?? existing.shipperEmail ?? ''),
+    receiverCompanyName,
+    receiverContactPerson,
+    receiverCountry: String(body.receiverCountry ?? existing.receiverCountry ?? ''),
+    receiverCity: String(body.receiverCity ?? existing.receiverCity ?? ''),
+    receiverAddress: String(body.receiverAddress ?? existing.receiverAddress ?? ''),
+    receiverMobile: String(body.receiverMobile ?? existing.receiverMobile ?? ''),
+    receiverEmail: String(body.receiverEmail ?? existing.receiverEmail ?? ''),
+    senderName: shipperContactPerson || shipperCompanyName,
+    receiverName: receiverContactPerson || receiverCompanyName,
+    shipmentType: body.shipmentType || existing.shipmentType || 'parcel',
+    parcelName: String(body.parcelName ?? existing.parcelName ?? ''),
+    packageDescription: String(body.packageDescription ?? existing.packageDescription ?? ''),
+    grossWeight,
+    weight: grossWeight,
+    dimensions,
+    cbm: math.cbm || existing.cbm || '',
+    volumeWeight,
+    chargeableWeight: chargeableWeight === '' ? '' : String(chargeableWeight),
+    declaredValue: String(body.declaredValue ?? existing.declaredValue ?? ''),
+    currency: body.currency || existing.currency || 'USD',
+    thirdPartyTrackingNumber: String(
+      body.thirdPartyTrackingNumber ?? existing.thirdPartyTrackingNumber ?? ''
+    ),
+    numberOfPackages: Number(body.numberOfPackages ?? existing.numberOfPackages ?? 1) || 1,
+    serviceType: String(body.serviceType ?? existing.serviceType ?? ''),
+    mode: body.mode || existing.mode || 'air',
+    origin,
+    destination,
+    note,
+    status: existing.status || 'created',
+    updates: existing.updates || [],
+    proofOfDelivery: existing.proofOfDelivery || [],
+    exceptions: existing.exceptions || [],
+    createdAt: existing.createdAt || now,
+    updatedAt: now,
+  };
+}
+
+function publicShipment(shipment) {
+  return {
+    ...shipment,
+    senderName: shipment.senderName || shipment.shipperContactPerson || shipment.shipperCompanyName,
+    receiverName: shipment.receiverName || shipment.receiverContactPerson || shipment.receiverCompanyName,
+    weight: shipment.weight || shipment.grossWeight,
+    updates: shipment.updates || [],
+    proofOfDelivery: shipment.proofOfDelivery || [],
+    exceptions: shipment.exceptions || [],
+  };
+}
+
+function findShipment(key) {
+  let decoded = key;
+  try {
+    decoded = decodeURIComponent(key);
+  } catch {
+    decoded = key;
+  }
+  const value = String(decoded).trim().toLowerCase();
+  return db.shipments.find(
+    (shipment) =>
+      String(shipment.trackingNumber).toLowerCase() === value || String(shipment.id) === value
+  );
+}
+
+function addShipmentUpdate(shipment, body) {
+  const status = String(body.status || '').trim();
+  const location = String(body.location || '').trim();
+  const description = String(body.description || body.note || '').trim();
+  if (!SHIPMENT_STATUSES.includes(status)) throw httpError(400, 'Choose a valid status.');
+  if (!location) throw httpError(400, 'Please specify where the shipment is located.');
+  if (description.length < 5) throw httpError(400, 'Please provide a note with at least 5 characters.');
+  const now = new Date().toISOString();
+  const update = {
+    id: nextId(shipment.updates || []),
+    status,
+    location,
+    description,
+    latitude: body.latitude === '' || body.latitude == null ? null : Number(body.latitude),
+    longitude: body.longitude === '' || body.longitude == null ? null : Number(body.longitude),
+    updateDateTime: now,
+    createdAt: now,
+  };
+  shipment.updates = [...(shipment.updates || []), update];
+  shipment.status = status;
+  shipment.updatedAt = now;
+  if (status === 'delivered') {
+    shipment.proofOfDelivery = [
+      {
+        id: nextId(shipment.proofOfDelivery || []),
+        recipientName: String(body.recipientName || shipment.receiverName || 'Recipient'),
+        deliveryLocation: location,
+        notes: description,
+        createdAt: now,
+      },
+    ];
+  }
+  return update;
+}
+
+async function handle(req, res) {
+  const url = new URL(req.url || '/', `http://127.0.0.1:${PORT}`);
+  const pathname = url.pathname.replace(/\/+$/, '') || '/';
+  const method = req.method || 'GET';
+
+  if (method === 'OPTIONS') {
+    res.writeHead(204, {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization, Accept',
+      'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+    });
+    res.end();
+    return;
+  }
+
+  if (method === 'GET' && pathname === '/admin/api/health') {
+    send(res, 200, { success: true, data: { ok: true } });
+    return;
+  }
+
+  if (method === 'POST' && pathname === '/admin/api/auth/login') {
+    const body = await readInput(req);
+    const auth = JSON.parse(fs.readFileSync(AUTH_PATH, 'utf8'));
+    const email = String(body.email || '').trim().toLowerCase();
+    if (email !== String(auth.email).toLowerCase() || !verifyPassword(body.password, auth)) {
+      throw httpError(401, 'Invalid email or password.');
+    }
+    const token = crypto.randomBytes(32).toString('hex');
+    const user = { id: 1, email: auth.email, fullName: auth.fullName, role: auth.role };
+    sessions.set(token, { user, exp: Date.now() + SESSION_MS });
+    send(res, 200, { token, user, success: true });
+    return;
+  }
+
+  if (method === 'GET' && (pathname === '/admin/api/auth/me' || pathname === '/admin/api/auth/profile')) {
+    const user = requireUser(req);
+    send(res, 200, { success: true, user, data: user });
+    return;
+  }
+
+  if (method === 'GET' && pathname === '/admin/api/blogs/public') {
+    send(res, 200, publicBlogs(url));
+    return;
+  }
+
+  const publicBlog = pathname.match(/^\/admin\/api\/blogs\/public\/([^/]+)$/);
+  if (method === 'GET' && publicBlog) {
+    const slug = decodeURIComponent(publicBlog[1]);
+    const blog = db.blogs.find((item) => item.slug === slug && item.isPublished !== false);
+    if (!blog) throw httpError(404, 'Post not found.');
+    const relatedPosts = db.blogs
+      .filter(
+        (item) =>
+          item.id !== blog.id &&
+          item.isPublished !== false &&
+          item.categoryId === blog.categoryId
+      )
+      .slice(0, 3)
+      .map(blogListItem);
+    send(res, 200, { success: true, data: { ...blog, relatedPosts, comments: [] } });
+    return;
+  }
+
+  if (method === 'POST' && pathname === '/admin/api/blogs/newsletter/subscribe') {
+    const body = await readInput(req);
+    const email = String(body.email || '').trim().toLowerCase();
+    if (!email.includes('@')) throw httpError(400, 'Please enter a valid email address.');
+    if (!db.subscribers.some((item) => item.email === email)) {
+      db.subscribers.unshift({ id: nextId(db.subscribers), email, createdAt: new Date().toISOString() });
+      saveDb();
+    }
+    send(res, 200, { success: true, message: 'Subscribed.' });
+    return;
+  }
+
+  if (method === 'POST' && pathname === '/admin/api/blogs/newsletter/unsubscribe') {
+    const body = await readInput(req);
+    const email = String(body.email || '').trim().toLowerCase();
+    db.subscribers = db.subscribers.filter((item) => item.email !== email);
+    saveDb();
+    send(res, 200, { success: true, message: 'Unsubscribed.' });
+    return;
+  }
+
+  if (method === 'GET' && pathname === '/admin/api/services/public') {
+    const limit = Math.max(1, Math.min(100, Number(url.searchParams.get('limit') || 100)));
+    send(res, 200, { success: true, data: { services: db.services.slice(0, limit) } });
+    return;
+  }
+
+  const publicService = pathname.match(/^\/admin\/api\/services\/public\/([^/]+)$/);
+  if (method === 'GET' && publicService) {
+    const key = decodeURIComponent(publicService[1]);
+    const service =
+      db.services.find((item) => item.slug === key) || findById(db.services, key);
+    if (!service) throw httpError(404, 'Service not found.');
+    send(res, 200, { success: true, data: service });
+    return;
+  }
+
+  if (method === 'GET' && pathname === '/admin/api/categories') {
+    send(res, 200, { success: true, data: db.categories });
+    return;
+  }
+
+  if (method === 'GET' && pathname === '/admin/api/jobs/public') {
+    const page = Math.max(1, Number(url.searchParams.get('page') || 1));
+    const limit = Math.max(1, Math.min(100, Number(url.searchParams.get('limit') || 10)));
+    const total = db.jobs.length;
+    const pages = total === 0 ? 0 : Math.ceil(total / limit);
+    const jobs = db.jobs.slice((page - 1) * limit, page * limit);
+    send(res, 200, { success: true, data: { jobs, pagination: { total, page, pages, limit } } });
+    return;
+  }
+
+  const publicJob = pathname.match(/^\/admin\/api\/jobs\/public\/([^/]+)$/);
+  if (method === 'GET' && publicJob) {
+    const key = decodeURIComponent(publicJob[1]);
+    const job = db.jobs.find((item) => item.slug === key) || findById(db.jobs, key);
+    if (!job) throw httpError(404, 'Job not found.');
+    send(res, 200, { success: true, data: job });
+    return;
+  }
+
+  const apply = pathname.match(/^\/admin\/api\/jobs\/public\/(\d+)\/apply$/);
+  if (method === 'POST' && apply) {
+    const job = findById(db.jobs, apply[1]);
+    if (!job) throw httpError(404, 'Job not found.');
+    const deadline = job.applicationDeadline ? new Date(job.applicationDeadline) : null;
+    if (job.isClosed || (deadline && deadline < new Date())) {
+      throw httpError(400, 'This position is closed.');
+    }
+    const body = await readInput(req);
+    if (!String(body.name || '').trim() || !String(body.email || '').includes('@')) {
+      throw httpError(400, 'Name and email are required.');
+    }
+    db.applications.unshift({
+      id: nextId(db.applications),
+      jobId: job.id,
+      jobTitle: job.title,
+      name: String(body.name).trim(),
+      email: String(body.email).trim(),
+      phone: String(body.phone || ''),
+      coverLetter: String(body.coverLetter || ''),
+      portfolioUrl: String(body.portfolioUrl || ''),
+      files: body._files || [],
+      createdAt: new Date().toISOString(),
+    });
+    saveDb();
+    send(res, 200, { success: true, message: 'Application received.' });
+    return;
+  }
+
+  if (method === 'GET' && pathname === '/admin/api/testimonials/public') {
+    const testimonials = db.testimonials.filter((item) => item.isPublished !== false);
+    send(res, 200, { success: true, data: testimonials });
+    return;
+  }
+
+  const publicTracking = pathname.match(/^\/admin\/api\/tracking\/public\/([^/]+)$/);
+  if (method === 'GET' && publicTracking) {
+    const shipment = findShipment(publicTracking[1]);
+    if (!shipment) throw httpError(404, 'No shipment found for this consignment number.');
+    send(res, 200, { success: true, data: publicShipment(shipment) });
+    return;
+  }
+
+  if (method === 'POST' && pathname === '/admin/api/contacts/public') {
+    const body = await readInput(req);
+    const { _files, ...fields } = body;
+    db.contacts.unshift({
+      id: nextId(db.contacts),
+      ...fields,
+      createdAt: new Date().toISOString(),
+    });
+    saveDb();
+    send(res, 200, { success: true, message: 'Message sent.' });
+    return;
+  }
+
+  requireUser(req);
+
+  if (method === 'GET' && pathname === '/admin/api/stats') {
+    send(res, 200, {
+      success: true,
+      data: {
+        blogs: db.blogs.length,
+        services: db.services.length,
+        categories: db.categories.length,
+        jobs: db.jobs.length,
+        testimonials: db.testimonials.length,
+        shipments: db.shipments.length,
+        contacts: db.contacts.length,
+        subscribers: db.subscribers.length,
+        applications: db.applications.length,
+      },
+    });
+    return;
+  }
+
+  if (method === 'GET' && pathname === '/admin/api/enhanced-tracking/stats') {
+    const count = (status) => db.shipments.filter((shipment) => shipment.status === status).length;
+    send(res, 200, {
+      success: true,
+      data: {
+        shipments: {
+          total: db.shipments.length,
+          delivered: count('delivered'),
+          cancelled: count('cancelled'),
+          inTransit: db.shipments.filter((shipment) => !['delivered', 'created', 'cancelled'].includes(shipment.status)).length,
+          created: count('created'),
+        },
+      },
+    });
+    return;
+  }
+
+  if (method === 'GET' && pathname === '/admin/api/enhanced-tracking/shipments') {
+    const search = (url.searchParams.get('search') || '').trim().toLowerCase();
+    const status = url.searchParams.get('status');
+    const page = Math.max(1, Number(url.searchParams.get('page') || 1));
+    const limit = Math.max(1, Math.min(100, Number(url.searchParams.get('limit') || 20)));
+    let items = [...db.shipments];
+    if (status) items = items.filter((shipment) => shipment.status === status);
+    if (search) {
+      items = items.filter((shipment) =>
+        [
+          shipment.trackingNumber,
+          shipment.senderName,
+          shipment.receiverName,
+          shipment.shipperCompanyName,
+          shipment.receiverCompanyName,
+          shipment.origin,
+          shipment.destination,
+        ]
+          .join(' ')
+          .toLowerCase()
+          .includes(search)
+      );
+    }
+    items.sort((a, b) => new Date(b.updatedAt || 0) - new Date(a.updatedAt || 0));
+    const total = items.length;
+    const pages = Math.max(1, Math.ceil(total / limit) || 1);
+    send(res, 200, {
+      success: true,
+      data: {
+        shipments: items.slice((page - 1) * limit, page * limit).map(publicShipment),
+        pagination: { total, page, pages, limit },
+      },
+    });
+    return;
+  }
+
+  if (method === 'POST' && pathname === '/admin/api/enhanced-tracking/shipments') {
+    const body = await readInput(req);
+    const shipment = normalizeShipment(body);
+    shipment.id = nextId(db.shipments);
+    const now = shipment.createdAt;
+    shipment.updates = [
+      {
+        id: 1,
+        status: 'created',
+        location: String(body.location || shipment.origin),
+        description: shipment.note || 'Shipment created',
+        latitude: body.latitude == null || body.latitude === '' ? null : Number(body.latitude),
+        longitude: body.longitude == null || body.longitude === '' ? null : Number(body.longitude),
+        updateDateTime: now,
+        createdAt: now,
+      },
+    ];
+    db.shipments.unshift(shipment);
+    saveDb();
+    send(res, 201, { success: true, data: publicShipment(shipment) });
+    return;
+  }
+
+  const shipmentUpdate = pathname.match(/^\/admin\/api\/tracking\/(\d+)\/updates$/);
+  if (method === 'POST' && shipmentUpdate) {
+    const shipment = findById(db.shipments, shipmentUpdate[1]);
+    if (!shipment) throw httpError(404, 'Shipment not found.');
+    const update = addShipmentUpdate(shipment, await readInput(req));
+    saveDb();
+    send(res, 201, { success: true, data: { update, shipment: publicShipment(shipment) } });
+    return;
+  }
+
+  const shipmentId = pathname.match(/^\/admin\/api\/enhanced-tracking\/shipments\/(\d+)$/);
+  if (shipmentId) {
+    const shipment = findById(db.shipments, shipmentId[1]);
+    if (!shipment) throw httpError(404, 'Shipment not found.');
+    if (method === 'GET') {
+      send(res, 200, { success: true, data: publicShipment(shipment) });
+      return;
+    }
+    if (method === 'PUT') {
+      const updated = normalizeShipment(await readInput(req), shipment);
+      Object.assign(shipment, updated, { updates: shipment.updates, status: shipment.status });
+      saveDb();
+      send(res, 200, { success: true, data: publicShipment(shipment) });
+      return;
+    }
+    if (method === 'DELETE') {
+      db.shipments = db.shipments.filter((item) => item !== shipment);
+      saveDb();
+      send(res, 200, { success: true });
+      return;
+    }
+  }
+
+  if (method === 'GET' && pathname === '/admin/api/blogs') {
+    const blogs = [...db.blogs].sort((a, b) => Number(b.id) - Number(a.id));
+    send(res, 200, { success: true, data: blogs });
+    return;
+  }
+  if (method === 'POST' && pathname === '/admin/api/blogs') {
+    const blog = normalizeBlog(await readInput(req));
+    blog.id = nextId(db.blogs);
+    db.blogs.unshift(blog);
+    saveDb();
+    send(res, 201, { success: true, data: blog });
+    return;
+  }
+  const blogId = pathname.match(/^\/admin\/api\/blogs\/(\d+)$/);
+  if (blogId) {
+    const blog = findById(db.blogs, blogId[1]);
+    if (!blog) throw httpError(404, 'Post not found.');
+    if (method === 'GET') {
+      send(res, 200, { success: true, data: blog });
+      return;
+    }
+    if (method === 'PUT') {
+      const updated = normalizeBlog(await readInput(req), blog);
+      Object.assign(blog, updated);
+      saveDb();
+      send(res, 200, { success: true, data: blog });
+      return;
+    }
+    if (method === 'DELETE') {
+      db.blogs = db.blogs.filter((item) => item !== blog);
+      saveDb();
+      send(res, 200, { success: true });
+      return;
+    }
+  }
+
+  if (method === 'GET' && pathname === '/admin/api/services') {
+    send(res, 200, { success: true, data: db.services });
+    return;
+  }
+  if (method === 'POST' && pathname === '/admin/api/services') {
+    const service = normalizeService(await readInput(req));
+    service.id = nextId(db.services);
+    db.services.unshift(service);
+    saveDb();
+    send(res, 201, { success: true, data: service });
+    return;
+  }
+  const serviceId = pathname.match(/^\/admin\/api\/services\/(\d+)$/);
+  if (serviceId) {
+    const service = findById(db.services, serviceId[1]);
+    if (!service) throw httpError(404, 'Service not found.');
+    if (method === 'GET') {
+      send(res, 200, { success: true, data: service });
+      return;
+    }
+    if (method === 'PUT') {
+      Object.assign(service, normalizeService(await readInput(req), service));
+      saveDb();
+      send(res, 200, { success: true, data: service });
+      return;
+    }
+    if (method === 'DELETE') {
+      db.services = db.services.filter((item) => item !== service);
+      saveDb();
+      send(res, 200, { success: true });
+      return;
+    }
+  }
+
+  if (method === 'POST' && pathname === '/admin/api/categories') {
+    const category = normalizeCategory(await readInput(req));
+    category.id = nextId(db.categories);
+    db.categories.push(category);
+    saveDb();
+    send(res, 201, { success: true, data: category });
+    return;
+  }
+  const categoryId = pathname.match(/^\/admin\/api\/categories\/(\d+)$/);
+  if (categoryId && method !== 'GET') {
+    const category = findById(db.categories, categoryId[1]);
+    if (!category) throw httpError(404, 'Category not found.');
+    if (method === 'PUT') {
+      Object.assign(category, normalizeCategory(await readInput(req), category));
+      refreshBlogCategories();
+      saveDb();
+      send(res, 200, { success: true, data: category });
+      return;
+    }
+    if (method === 'DELETE') {
+      if (db.blogs.some((blog) => String(blog.categoryId) === String(category.id))) {
+        throw httpError(400, 'Move the posts in this category before deleting it.');
+      }
+      db.categories = db.categories.filter((item) => item !== category);
+      saveDb();
+      send(res, 200, { success: true });
+      return;
+    }
+  }
+
+  if (method === 'GET' && pathname === '/admin/api/jobs') {
+    send(res, 200, { success: true, data: db.jobs });
+    return;
+  }
+  if (method === 'POST' && pathname === '/admin/api/jobs') {
+    const job = normalizeJob(await readInput(req));
+    job.id = nextId(db.jobs);
+    db.jobs.unshift(job);
+    saveDb();
+    send(res, 201, { success: true, data: job });
+    return;
+  }
+  const jobId = pathname.match(/^\/admin\/api\/jobs\/(\d+)$/);
+  if (jobId) {
+    const job = findById(db.jobs, jobId[1]);
+    if (!job) throw httpError(404, 'Job not found.');
+    if (method === 'GET') {
+      send(res, 200, { success: true, data: job });
+      return;
+    }
+    if (method === 'PUT') {
+      Object.assign(job, normalizeJob(await readInput(req), job));
+      saveDb();
+      send(res, 200, { success: true, data: job });
+      return;
+    }
+    if (method === 'DELETE') {
+      db.jobs = db.jobs.filter((item) => item !== job);
+      saveDb();
+      send(res, 200, { success: true });
+      return;
+    }
+  }
+
+  if (method === 'GET' && pathname === '/admin/api/testimonials') {
+    send(res, 200, { success: true, data: db.testimonials });
+    return;
+  }
+  if (method === 'POST' && pathname === '/admin/api/testimonials') {
+    const item = normalizeTestimonial(await readInput(req));
+    item.id = nextId(db.testimonials);
+    db.testimonials.unshift(item);
+    saveDb();
+    send(res, 201, { success: true, data: item });
+    return;
+  }
+  const testimonialId = pathname.match(/^\/admin\/api\/testimonials\/(\d+)$/);
+  if (testimonialId) {
+    const item = findById(db.testimonials, testimonialId[1]);
+    if (!item) throw httpError(404, 'Testimonial not found.');
+    if (method === 'PUT') {
+      Object.assign(item, normalizeTestimonial(await readInput(req), item));
+      saveDb();
+      send(res, 200, { success: true, data: item });
+      return;
+    }
+    if (method === 'DELETE') {
+      db.testimonials = db.testimonials.filter((row) => row !== item);
+      saveDb();
+      send(res, 200, { success: true });
+      return;
+    }
+  }
+
+  if (method === 'GET' && pathname === '/admin/api/contacts') {
+    send(res, 200, { success: true, data: db.contacts });
+    return;
+  }
+  const contactId = pathname.match(/^\/admin\/api\/contacts\/(\d+)$/);
+  if (method === 'DELETE' && contactId) {
+    db.contacts = db.contacts.filter((item) => String(item.id) !== contactId[1]);
+    saveDb();
+    send(res, 200, { success: true });
+    return;
+  }
+
+  if (method === 'GET' && pathname === '/admin/api/subscribers') {
+    send(res, 200, { success: true, data: db.subscribers });
+    return;
+  }
+  if (method === 'GET' && pathname === '/admin/api/applications') {
+    send(res, 200, { success: true, data: db.applications });
+    return;
+  }
+
+  throw httpError(404, 'Not found.');
+}
+
+const server = http.createServer((req, res) => {
+  handle(req, res).catch((error) => {
+    const status = error.status || 500;
+    if (status >= 500) console.error(error);
+    if (!res.headersSent) {
+      send(res, status, { success: false, message: error.message || 'Server error.' });
+    }
+  });
+});
+
+server.listen(PORT, '127.0.0.1', () => {
+  console.log(`Local admin API listening on http://127.0.0.1:${PORT}`);
+});
