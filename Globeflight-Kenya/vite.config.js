@@ -2,46 +2,8 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import * as path from 'path';
 
-const LIVE_ORIGIN = 'https://globeflight.co.ke';
-const LIVE_API = `${LIVE_ORIGIN}/admin/api`;
-
-function localAdminProxy() {
-  return {
-    name: 'local-admin-proxy',
-    configureServer(server) {
-      server.middlewares.use(async (req, res, next) => {
-        const url = req.url || '';
-        if (!url.startsWith('/admin') || url.startsWith('/admin/api')) {
-          return next();
-        }
-
-        try {
-          const upstream = await fetch(`${LIVE_ORIGIN}${url}`, {
-            headers: {
-              accept: req.headers.accept || '*/*',
-              'user-agent': req.headers['user-agent'] || 'Mozilla/5.0',
-            },
-          });
-          const contentType = upstream.headers.get('content-type') || 'application/octet-stream';
-          let body = Buffer.from(await upstream.arrayBuffer());
-
-          if (/javascript|html|json|text/.test(contentType)) {
-            body = Buffer.from(body.toString('utf8').replaceAll(LIVE_API, '/admin/api'));
-          }
-
-          res.statusCode = upstream.status;
-          res.setHeader('content-type', contentType);
-          res.end(body);
-        } catch (error) {
-          next(error);
-        }
-      });
-    },
-  };
-}
-
 export default defineConfig({
-  plugins: [localAdminProxy(), react()],
+  plugins: [react()],
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),  // Correct alias path for '@'
@@ -74,9 +36,9 @@ export default defineConfig({
     host: true,
     proxy: {
       '/admin/api': {
-        target: LIVE_ORIGIN,
+        target: 'http://127.0.0.1:5000',
         changeOrigin: true,
-        secure: true,
+        secure: false,
       },
       '/uploads': {
         target: 'https://globeflight.co.ke',

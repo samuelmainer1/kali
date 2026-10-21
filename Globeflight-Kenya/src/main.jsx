@@ -7,9 +7,15 @@ import LoaderOnPageMount from "./components/LoaderOnPgeMount.jsx";
 import "@/lib/leafletIconFix"
 
 const AppContainer = () => {
-  const [contentRendered, setContentRendered] = useState(false);
+  const skipSplash = window.location.pathname.startsWith('/admin');
+  const [contentRendered, setContentRendered] = useState(skipSplash);
 
   useEffect(() => {
+    if (skipSplash) {
+      removeLoader();
+      return;
+    }
+
     const asyncCall = () => {
       return new Promise((resolve) => setTimeout(resolve, 2500));
     };
@@ -18,7 +24,7 @@ const AppContainer = () => {
       setContentRendered(true);
       removeLoader();  // Call to remove loader
     });
-  }, []);
+  }, [skipSplash]);
 
   // Define removeLoader to hide/remove the loader element
   const removeLoader = () => {

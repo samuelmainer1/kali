@@ -115,16 +115,9 @@ const TestimonialCard = ({ testimonial, isActive }) => {
   )
 }
 
-const API_BASE = (() => {
-  if (typeof window !== 'undefined') {
-    if (window.location.hostname === 'localhost') {
-      return 'http://localhost:5000/admin/api';
-    } else {
-      return 'https://globeflight.co.ke/admin/api';
-    }
-  }
-  return 'http://localhost:5000/admin/api';
-})();
+const API_BASE = import.meta.env.DEV
+  ? '/admin/api'
+  : 'https://globeflight.co.ke/admin/api';
 
 const Testimonials = () => {
   const [activeIndex, setActiveIndex] = useState(0)

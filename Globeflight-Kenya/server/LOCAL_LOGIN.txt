@@ -1,0 +1,19 @@
+Local dashboard only
+====================
+
+Open: http://127.0.0.1:5173/admin
+
+Email: admin@globeflight.co.ke
+Password: LocalAdmin2026
+
+This password was created for the copy of the site in this project.
+It does not sign you in at https://globeflight.co.ke/admin.
+
+Edits are saved in server/data/db.json and show up on the local site
+(blog, services, jobs, categories, and testimonials).
+
+Start the API before the dashboard:
+
+  cd Globeflight-Kenya
+  npm run server
+  npm run dev -- --host 127.0.0.1 --port 5173

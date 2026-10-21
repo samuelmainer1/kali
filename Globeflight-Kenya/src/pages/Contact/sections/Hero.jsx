@@ -31,9 +31,8 @@ const Hero = () => {
       console.log('Quick contact:', { email, message })
 
       // Detect environment and use appropriate API URL
-      const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-      const apiEndpoint = isLocalhost
-        ? 'http://localhost:5000/admin/api/contacts/public'
+      const apiEndpoint = import.meta.env.DEV
+        ? '/admin/api/contacts/public'
         : 'https://globeflight.co.ke/admin/api/contacts/public'
 
       console.log('Using API endpoint:', apiEndpoint)
