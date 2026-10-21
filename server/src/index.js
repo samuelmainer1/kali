@@ -238,6 +238,25 @@ app.get('/robots.txt', (req, res) => {
   res.type('text/plain').send(buildRobotsTxt(req));
 });
 
+app.get('/ads.txt', (_req, res) => {
+  const files = [
+    path.join(__dirname, '../../client/dist/ads.txt'),
+    path.join(__dirname, '../../client/public/ads.txt'),
+  ];
+  let body = 'google.com, pub-5935226106762588, DIRECT, f08c47fec0942fa0\n';
+  for (const file of files) {
+    try {
+      if (fs.existsSync(file) && fs.statSync(file).isFile()) {
+        body = fs.readFileSync(file, 'utf8');
+        break;
+      }
+    } catch {
+      // try the next copy
+    }
+  }
+  res.type('text/plain; charset=utf-8').send(body.replace(/\s+$/, '') + '\n');
+});
+
 // ---------------------------------------------------------------------------
 // 301 consolidations. Two groups:
 //  1. Legacy/alias paths (old WordPress URLs + client-side <Navigate> routes) so
