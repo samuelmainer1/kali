@@ -58,6 +58,7 @@ function loadDb() {
   db.testimonials ||= [];
   db.contacts ||= [];
   db.subscribers ||= [];
+  db.notifications ||= [];
   db.applications ||= [];
   db.shipments ||= [];
   return db;
@@ -69,6 +70,53 @@ function saveDb() {
   const tmp = `${DB_PATH}.tmp`;
   fs.writeFileSync(tmp, JSON.stringify(db, null, 2));
   fs.renameSync(tmp, DB_PATH);
+}
+
+function clip(value, limit = 140) {
+  const text = String(value || '').replace(/\s+/g, ' ').trim();
+  if (text.length <= limit) return text;
+  return `${text.slice(0, limit - 1)}…`;
+}
+
+function addNotification(entry) {
+  db.notifications ||= [];
+  db.notifications.unshift({
+    id: nextId(db.notifications),
+    type: entry.type,
+    title: clip(entry.title, 80),
+    detail: clip(entry.detail, 160),
+    link: entry.link,
+    refId: entry.refId ?? null,
+    isRead: false,
+    createdAt: entry.createdAt || new Date().toISOString(),
+  });
+  if (db.notifications.length > 80) db.notifications.length = 80;
+}
+
+function messageNotification(contact) {
+  const name = clip(contact.name, 60) || 'a visitor';
+  const about = clip(contact.subject || contact.inquiryType, 80);
+  const message = clip(contact.message, 120);
+  return {
+    type: 'message',
+    title: `New message from ${name}`,
+    detail: about && message ? `${about} — ${message}` : about || message || 'Open Messages to read it.',
+    link: '/contacts',
+    refId: contact.id,
+    createdAt: contact.createdAt,
+  };
+}
+
+function syncNotification(type, refId, isRead) {
+  for (const note of db.notifications || []) {
+    if (note.type === type && note.refId === refId) note.isRead = isRead;
+  }
+}
+
+function removeNotifications(type, refId) {
+  db.notifications = (db.notifications || []).filter(
+    (note) => !(note.type === type && note.refId === refId)
+  );
 }
 
 function refreshPublicFeeds() {
@@ -1190,7 +1238,16 @@ async function handle(req, res) {
     const email = String(body.email || '').trim().toLowerCase();
     if (!email.includes('@')) throw httpError(400, 'Please enter a valid email address.');
     if (!db.subscribers.some((item) => item.email === email)) {
-      db.subscribers.unshift({ id: nextId(db.subscribers), email, createdAt: new Date().toISOString() });
+      const subscriber = { id: nextId(db.subscribers), email, createdAt: new Date().toISOString() };
+      db.subscribers.unshift(subscriber);
+      addNotification({
+        type: 'subscriber',
+        title: 'New newsletter subscriber',
+        detail: subscriber.email,
+        link: '/newsletter-subscribers',
+        refId: subscriber.id,
+        createdAt: subscriber.createdAt,
+      });
       saveDb();
     }
     send(res, 200, { success: true, message: 'Subscribed.' });
@@ -1301,6 +1358,7 @@ async function handle(req, res) {
       createdAt: new Date().toISOString(),
     };
     db.contacts.unshift(contact);
+    addNotification(messageNotification(contact));
     saveDb();
     const notice = await sendMail({
       to: notifyAddress(),
@@ -1803,6 +1861,7 @@ async function handle(req, res) {
     const item = findById(db.contacts, contactRead[1]);
     if (!item) throw httpError(404, 'Message not found.');
     item.isRead = item.isRead !== true;
+    syncNotification('message', item.id, item.isRead === true);
     saveDb();
     send(res, 200, { success: true, data: presentContact(item) });
     return;
@@ -1818,6 +1877,7 @@ async function handle(req, res) {
     item.repliedAt = new Date().toISOString();
     item.isReplied = true;
     item.isRead = true;
+    syncNotification('message', item.id, true);
     saveDb();
     const presented = presentContact(item);
     const result = await sendMail({
@@ -1843,8 +1903,36 @@ async function handle(req, res) {
     const item = findById(db.contacts, contactId[1]);
     if (!item) throw httpError(404, 'Message not found.');
     db.contacts = db.contacts.filter((row) => row !== item);
+    removeNotifications('message', item.id);
     saveDb();
     send(res, 200, { success: true });
+    return;
+  }
+
+  if (method === 'GET' && pathname === '/admin/api/notifications') {
+    const notes = db.notifications || [];
+    send(res, 200, {
+      success: true,
+      data: notes.slice(0, 30),
+      unread: notes.filter((note) => !note.isRead).length,
+    });
+    return;
+  }
+  if (method === 'POST' && pathname === '/admin/api/notifications/read') {
+    const body = await readInput(req);
+    const notes = db.notifications || [];
+    if (body.all) {
+      for (const note of notes) note.isRead = true;
+    } else {
+      const item = findById(notes, body.id);
+      if (!item) throw httpError(404, 'Notification not found.');
+      item.isRead = true;
+    }
+    saveDb();
+    send(res, 200, {
+      success: true,
+      unread: notes.filter((note) => !note.isRead).length,
+    });
     return;
   }
 
