@@ -1,9 +1,45 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import fs from 'fs';
 import * as path from 'path';
 
+const adminRoot = path.resolve(__dirname, 'public/admin');
+
+function adminDashboard() {
+  return {
+    name: 'admin-dashboard',
+    configureServer(server) {
+      server.middlewares.use((req, res, next) => {
+        const raw = (req.url || '').split('?')[0];
+        if (!raw.startsWith('/admin') || raw.startsWith('/admin/api')) return next();
+
+        let relative = raw.replace(/^\/admin\/?/, '');
+        try {
+          relative = decodeURIComponent(relative);
+        } catch {
+          return next();
+        }
+        const filePath = path.resolve(adminRoot, relative);
+        const rootPrefix = adminRoot.endsWith(path.sep) ? adminRoot : `${adminRoot}${path.sep}`;
+        if (
+          relative &&
+          filePath.startsWith(rootPrefix) &&
+          fs.existsSync(filePath) &&
+          fs.statSync(filePath).isFile()
+        ) {
+          return next();
+        }
+
+        res.statusCode = 200;
+        res.setHeader('Content-Type', 'text/html; charset=utf-8');
+        res.end(fs.readFileSync(path.join(adminRoot, 'index.html')));
+      });
+    },
+  };
+}
+
 export default defineConfig({
-  plugins: [react()],
+  plugins: [adminDashboard(), react()],
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),  // Correct alias path for '@'
@@ -41,9 +77,9 @@ export default defineConfig({
         secure: false,
       },
       '/uploads': {
-        target: 'http://127.0.0.1:5000',
+        target: 'https://globeflight.co.ke',
         changeOrigin: true,
-        secure: false,
+        secure: true,
       },
     },
   }

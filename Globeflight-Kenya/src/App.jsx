@@ -8,7 +8,6 @@ import Services from '@/pages/Services';
 import About from '@/pages/About';
 import Contact from '@/pages/Contact';
 import Track from '@/pages/Track';
-import AdminApp from '@/admin/AdminApp';
 
 const BlogPage = React.lazy(() => import('@/pages/Blog/sections/BlogPage'));
 const BlogDetail = React.lazy(() => import('@/pages/Blog/sections/BlogDetail'));
@@ -22,7 +21,6 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/admin/*" element={<AdminApp />} />
         <Route path="/" element={<MainLayout />}>
           {/* New IOR-focused landing page as the default route */}
           <Route index element={<Landing />} />
