@@ -37,3 +37,4 @@ body{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;font-f
 .gf-messages .MuiListItemText-root{padding-right:76px}
 .gf-messages .MuiListItemSecondaryAction-root{top:28px;transform:none}
 .gf-messages .MuiChip-label{text-transform:capitalize}
+.gf-jobs .MuiCard-root{border:1px solid rgba(136,195,0,.16);border-radius:16px;box-shadow:none}

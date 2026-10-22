@@ -477,9 +477,55 @@ function normalizeJob(body, existing = {}) {
     requirements: String(body.requirements ?? existing.requirements ?? ''),
     responsibilities: String(body.responsibilities ?? existing.responsibilities ?? ''),
     applicationDeadline: deadline,
+    isPublished: asBool(body.isPublished, existing.isPublished ?? true),
     isClosed: asBool(body.isClosed, existing.isClosed ?? false),
     createdAt: existing.createdAt || now,
     updatedAt: now,
+  };
+}
+
+function recentApplicants(jobId) {
+  return db.applications
+    .filter((item) => String(item.jobId) === String(jobId))
+    .slice(0, 4)
+    .map((item) => ({ id: item.id, name: item.name || 'Applicant' }));
+}
+
+function adminJobList(url) {
+  const page = Math.max(1, Number(url.searchParams.get('page') || 1));
+  const limit = Math.max(1, Math.min(100, Number(url.searchParams.get('limit') || 9)));
+  const search = (url.searchParams.get('search') || '').trim().toLowerCase();
+  const published = url.searchParams.get('published');
+  const closed = url.searchParams.get('closed');
+  let items = db.jobs.map((job) => ({ ...job, recentApplications: recentApplicants(job.id) }));
+  if (published === 'true') items = items.filter((job) => job.isPublished !== false);
+  if (published === 'false') items = items.filter((job) => job.isPublished === false);
+  if (closed === 'true') items = items.filter((job) => job.isClosed === true);
+  if (closed === 'false') items = items.filter((job) => job.isClosed !== true);
+  if (search) {
+    items = items.filter((job) =>
+      [job.title, job.department, job.location, job.description].join(' ').toLowerCase().includes(search)
+    );
+  }
+  items.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+  const total = items.length;
+  const pages = Math.max(1, Math.ceil(total / limit) || 1);
+  return {
+    jobs: items.slice((page - 1) * limit, page * limit),
+    pagination: { total, page, pages, limit },
+  };
+}
+
+function jobStats() {
+  const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+  const newThisWeek = db.applications.filter((item) => new Date(item.createdAt || 0).getTime() >= weekAgo).length;
+  return {
+    jobs: {
+      published: db.jobs.filter((job) => job.isPublished !== false && job.isClosed !== true).length,
+      total: db.jobs.length,
+    },
+    applications: { total: db.applications.length },
+    applicationTrend: [{ count: 0 }, { count: 0 }, { count: 0 }, { count: 0 }, { count: 0 }, { count: 0 }, { count: newThisWeek }],
   };
 }
 
@@ -819,9 +865,10 @@ async function handle(req, res) {
   if (method === 'GET' && pathname === '/admin/api/jobs/public') {
     const page = Math.max(1, Number(url.searchParams.get('page') || 1));
     const limit = Math.max(1, Math.min(100, Number(url.searchParams.get('limit') || 10)));
-    const total = db.jobs.length;
+    const openJobs = db.jobs.filter((job) => job.isPublished !== false);
+    const total = openJobs.length;
     const pages = total === 0 ? 0 : Math.ceil(total / limit);
-    const jobs = db.jobs.slice((page - 1) * limit, page * limit);
+    const jobs = openJobs.slice((page - 1) * limit, page * limit);
     send(res, 200, { success: true, data: { jobs, pagination: { total, page, pages, limit } } });
     return;
   }
@@ -830,7 +877,7 @@ async function handle(req, res) {
   if (method === 'GET' && publicJob) {
     const key = decodeURIComponent(publicJob[1]);
     const job = db.jobs.find((item) => item.slug === key) || findById(db.jobs, key);
-    if (!job) throw httpError(404, 'Job not found.');
+    if (!job || job.isPublished === false) throw httpError(404, 'Job not found.');
     send(res, 200, { success: true, data: job });
     return;
   }
@@ -1138,8 +1185,18 @@ async function handle(req, res) {
     }
   }
 
+  if (method === 'GET' && pathname === '/admin/api/jobs/stats') {
+    send(res, 200, { success: true, data: jobStats() });
+    return;
+  }
+  if (method === 'GET' && pathname === '/admin/api/jobs/applications') {
+    const jobId = url.searchParams.get('jobId');
+    const applications = db.applications.filter((item) => !jobId || String(item.jobId) === String(jobId));
+    send(res, 200, { success: true, data: { applications } });
+    return;
+  }
   if (method === 'GET' && pathname === '/admin/api/jobs') {
-    send(res, 200, { success: true, data: db.jobs });
+    send(res, 200, { success: true, data: adminJobList(url) });
     return;
   }
   if (method === 'POST' && pathname === '/admin/api/jobs') {
@@ -1148,6 +1205,16 @@ async function handle(req, res) {
     db.jobs.unshift(job);
     saveDb();
     send(res, 201, { success: true, data: job });
+    return;
+  }
+  const jobClose = pathname.match(/^\/admin\/api\/jobs\/(\d+)\/close$/);
+  if (method === 'PATCH' && jobClose) {
+    const job = findById(db.jobs, jobClose[1]);
+    if (!job) throw httpError(404, 'Job not found.');
+    job.isClosed = true;
+    job.updatedAt = new Date().toISOString();
+    saveDb();
+    send(res, 200, { success: true, data: job });
     return;
   }
   const jobId = pathname.match(/^\/admin\/api\/jobs\/(\d+)$/);

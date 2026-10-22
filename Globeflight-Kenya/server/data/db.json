@@ -1155,7 +1155,24 @@
       "updatedAt": "2025-11-26T10:22:02.026Z"
     }
   ],
-  "jobs": [],
+  "jobs": [
+    {
+      "title": "Intern Customs Declarant",
+      "slug": "intern-customs-declarant",
+      "department": "Customs",
+      "location": "Nextgen Mall, Nairobi",
+      "jobType": "internship",
+      "description": "Learn customs work on live import files with Globeflight Kenya. You will sit with the clearing team at Nextgen Mall and help prepare entries for air and sea cargo into Kenya.",
+      "requirements": "A course in clearing and forwarding, customs, or logistics, finished or still in progress.\nCareful reading of invoices, packing lists, and bills of lading.\nWillingness to learn KRA processes, including the Simba system and the Advance Cargo Declaration.",
+      "responsibilities": "Check that each file has the invoice, packing list, and transport document before an entry is prepared.\nDraft the document checklist for a licensed agent to review.\nFollow a shipment from arrival to release and note where a file is waiting.\nLearn how HS codes, duty, and VAT are explained to the client.",
+      "applicationDeadline": "2027-02-28",
+      "isPublished": true,
+      "isClosed": false,
+      "createdAt": "2026-10-22T09:31:13.817Z",
+      "updatedAt": "2026-10-22T09:31:13.817Z",
+      "id": 1
+    }
+  ],
   "testimonials": [
     {
       "id": 4,
