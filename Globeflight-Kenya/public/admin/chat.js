@@ -124,12 +124,15 @@
       item.type = 'button';
       item.style.cssText = 'display:block;width:100%;text-align:left;border:0;border-bottom:1px solid #eef2e8;padding:12px;cursor:pointer;background:' + (String(state.active) === String(chat.id) ? '#f3f8e6' : '#fff');
       var name = document.createElement('div');
-      name.textContent = chat.visitorName || 'Visitor';
+      name.textContent = chat.visitorName || chat.visitorEmail || 'Visitor';
       name.style.cssText = 'font-weight:800;font-size:14px;color:#1a202c';
+      var contact = document.createElement('div');
+      contact.textContent = [chat.visitorPhone, chat.visitorEmail].filter(Boolean).join(' · ');
+      contact.style.cssText = 'margin-top:2px;font-size:12px;color:#2d3748';
       var preview = document.createElement('div');
       preview.textContent = chat.preview || 'New chat';
       preview.style.cssText = 'margin-top:3px;font-size:12px;color:#4a5568;white-space:nowrap;overflow:hidden;text-overflow:ellipsis';
-      item.append(name, preview);
+      item.append(name, contact, preview);
       if (chat.staffUnread) {
         var dot = document.createElement('div');
         dot.textContent = chat.staffUnread + ' new';
@@ -146,7 +149,23 @@
     if (!stream) return;
     var nearBottom = stream.scrollHeight - stream.scrollTop - stream.clientHeight < 80;
     stream.textContent = '';
-    var messages = state.thread && String(state.thread.id) === String(state.active) ? state.thread.messages : [];
+    var thread = state.thread && String(state.thread.id) === String(state.active) ? state.thread : null;
+    var messages = thread ? thread.messages : [];
+    if (thread && (thread.visitorEmail || thread.visitorPhone)) {
+      var card = document.createElement('div');
+      card.style.cssText = 'margin-bottom:12px;padding:10px 12px;border-radius:12px;background:#fff;border:1px solid #e6eed4';
+      var who = document.createElement('div');
+      who.textContent = thread.visitorName || 'Visitor';
+      who.style.cssText = 'font-weight:800;color:#1a202c';
+      var mail = document.createElement('div');
+      mail.textContent = thread.visitorEmail || '';
+      mail.style.cssText = 'margin-top:2px;font-size:13px;color:#2d3748';
+      var tel = document.createElement('div');
+      tel.textContent = thread.visitorPhone || '';
+      tel.style.cssText = 'font-size:13px;color:#2d3748';
+      card.append(who, mail, tel);
+      stream.appendChild(card);
+    }
     if (!state.active) {
       var hint = document.createElement('div');
       hint.textContent = 'Choose a chat to reply.';

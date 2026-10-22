@@ -15,6 +15,9 @@ function when(iso) {
 export default function LiveChat() {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [ready, setReady] = useState(false);
   const [draft, setDraft] = useState("");
   const [messages, setMessages] = useState([]);
   const [staffOnline, setStaffOnline] = useState(false);
@@ -52,6 +55,7 @@ export default function LiveChat() {
       const body = await response.json();
       const next = (body.data && body.data.messages) || [];
       setMessages(next);
+      setReady(Boolean(body.data && body.data.hasContact));
       setStaffOnline(Boolean(body.data && body.data.staffOnline));
       const lastId = next.length ? next[next.length - 1].id : 0;
       if (!openRef.current && lastId > seenRef.current && next[next.length - 1].from !== "visitor") {
@@ -85,6 +89,37 @@ export default function LiveChat() {
       }
       return next;
     });
+  }
+
+  async function startChat(event) {
+    event.preventDefault();
+    if (sending) return;
+    setSending(true);
+    setError("");
+    try {
+      const token = localStorage.getItem(TOKEN_KEY) || "";
+      const response = await fetch("/admin/api/chat/start", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { "X-Chat-Token": token } : {}),
+        },
+        body: JSON.stringify({ email: email.trim(), phone: phone.trim(), name: name.trim() }),
+      });
+      const body = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        setError(body.message || "Enter your email and phone number.");
+        return;
+      }
+      if (body.data && body.data.token) localStorage.setItem(TOKEN_KEY, body.data.token);
+      setReady(Boolean(body.data && body.data.hasContact));
+      setMessages((body.data && body.data.messages) || []);
+      setStaffOnline(Boolean(body.data && body.data.staffOnline));
+    } catch {
+      setError("Those details could not be saved.");
+    } finally {
+      setSending(false);
+    }
   }
 
   async function send(event) {
@@ -151,9 +186,11 @@ export default function LiveChat() {
           </header>
           <div ref={scroller} className="flex-1 space-y-3 overflow-y-auto bg-[#f7f8f4] px-3 py-3">
             <p className="rounded-xl bg-white px-3 py-2 text-sm leading-5 text-gray-600">
-              Ask about shipping, tracking, or customs. A person replies when customer support is signed in. Otherwise the assistant replies.
+              {ready
+                ? "Ask about shipping, tracking, or customs. A person replies when customer support is signed in. Otherwise the assistant replies."
+                : "Enter your email and phone number so customer support can reach you. Then you can start the chat."}
             </p>
-            {messages.map((message) => {
+            {ready && messages.map((message) => {
               const mine = message.from === "visitor";
               return (
                 <div key={message.id} className={mine ? "flex justify-end" : "flex justify-start"}>
@@ -177,21 +214,42 @@ export default function LiveChat() {
                 </div>
               );
             })}
-            {sending && !staffOnline && (
+            {sending && ready && !staffOnline && (
               <p className="text-xs text-gray-500">The assistant is replying…</p>
             )}
           </div>
-          <form onSubmit={send} className="border-t border-gray-100 bg-white p-3">
-            {messages.length === 0 && (
-              <input
-                value={name}
-                onChange={(event) => setName(event.target.value)}
-                placeholder="Your name (optional)"
-                maxLength={60}
-                className="mb-2 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-[#88C300]"
-              />
+          <form onSubmit={ready ? send : startChat} className="border-t border-gray-100 bg-white p-3">
+            {!ready && (
+              <div className="mb-2 space-y-2">
+                <input
+                  value={name}
+                  onChange={(event) => setName(event.target.value)}
+                  placeholder="Your name (optional)"
+                  maxLength={60}
+                  className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-[#88C300]"
+                />
+                <input
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(event) => setEmail(event.target.value)}
+                  placeholder="Email"
+                  maxLength={120}
+                  className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-[#88C300]"
+                />
+                <input
+                  type="tel"
+                  required
+                  value={phone}
+                  onChange={(event) => setPhone(event.target.value)}
+                  placeholder="Phone number"
+                  maxLength={20}
+                  className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-[#88C300]"
+                />
+              </div>
             )}
-            <div className="flex items-end gap-2">
+            {ready && (
+              <div className="flex items-end gap-2">
               <textarea
                 value={draft}
                 onChange={(event) => setDraft(event.target.value)}
@@ -213,7 +271,17 @@ export default function LiveChat() {
               >
                 Send
               </button>
-            </div>
+              </div>
+            )}
+            {!ready && (
+              <button
+                type="submit"
+                disabled={sending || !email.trim() || !phone.trim()}
+                className="w-full rounded-lg bg-[#88C300] px-3 py-2 text-sm font-bold text-white disabled:opacity-50"
+              >
+                {sending ? "Saving…" : "Start chat"}
+              </button>
+            )}
             {error && <p className="mt-2 text-xs text-red-600">{error}</p>}
           </form>
         </section>

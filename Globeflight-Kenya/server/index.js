@@ -14,6 +14,7 @@ import {
   isStaffOnline,
   markStaffPresent,
   postVisitorMessage,
+  startVisitorChat,
   readVisitorChat,
   staffInbox,
   staffReply,
@@ -1476,6 +1477,56 @@ async function handle(req, res) {
     return;
   }
 
+  if (method === 'POST' && pathname === '/admin/api/chat/start') {
+    const body = await readInput(req);
+    const token = String(req.headers['x-chat-token'] || '');
+    const started = startVisitorChat(db, {
+      token,
+      email: body.email,
+      phone: body.phone,
+      name: body.name,
+    });
+    if (started.captured) {
+      const chat = started.chat;
+      const contactLine = `${chat.visitorPhone} · ${chat.visitorEmail}`;
+      const existing = (db.notifications || []).find((note) => note.type === 'chat' && note.refId === chat.id);
+      if (existing) {
+        existing.isRead = false;
+        existing.title = clip(`Live chat from ${chat.visitorName || chat.visitorEmail}`, 80);
+        existing.detail = clip(contactLine, 160);
+        existing.createdAt = new Date().toISOString();
+        db.notifications = [existing, ...(db.notifications || []).filter((note) => note !== existing)];
+      } else {
+        addNotification({
+          type: 'chat',
+          title: `Live chat from ${chat.visitorName || chat.visitorEmail}`,
+          detail: contactLine,
+          link: '/chat',
+          refId: chat.id,
+        });
+      }
+      saveDb();
+      const notice = await sendMail({
+        to: notifyAddress(),
+        subject: `Live chat from ${chat.visitorEmail}`,
+        text: [
+          'A visitor started a live chat.',
+          '',
+          `Name: ${chat.visitorName || 'Not given'}`,
+          `Email: ${chat.visitorEmail}`,
+          `Phone: ${chat.visitorPhone}`,
+          '',
+          'Reply from the dashboard live chat while you are signed in.',
+        ].join('\n'),
+      });
+      if (!notice.sent && notice.reason !== 'not-configured') {
+        console.error('Live chat email failed:', notice.reason);
+      }
+    }
+    send(res, 200, { success: true, data: started.thread });
+    return;
+  }
+
   if (method === 'POST' && pathname === '/admin/api/chat/messages') {
     const body = await readInput(req);
     const token = String(req.headers['x-chat-token'] || '');
@@ -1484,12 +1535,14 @@ async function handle(req, res) {
       throw httpError(429, 'Please wait a moment before sending another message.');
     }
     const data = await postVisitorMessage(db, { token, text: body.text, name: body.name }, (chat, text) => {
-      const name = chat.visitorName || 'a visitor';
+      const name = chat.visitorName || chat.visitorEmail || 'a visitor';
+      const contact = [chat.visitorPhone, chat.visitorEmail].filter(Boolean).join(' · ');
+      const detail = contact ? `${contact} — ${text}` : text;
       const existing = (db.notifications || []).find((note) => note.type === 'chat' && note.refId === chat.id);
       if (existing) {
         existing.isRead = false;
         existing.title = clip(`Live chat from ${name}`, 80);
-        existing.detail = clip(text, 160);
+        existing.detail = clip(detail, 160);
         existing.createdAt = new Date().toISOString();
         db.notifications = [existing, ...(db.notifications || []).filter((note) => note !== existing)];
         return;
@@ -1497,7 +1550,7 @@ async function handle(req, res) {
       addNotification({
         type: 'chat',
         title: `Live chat from ${name}`,
-        detail: text,
+        detail,
         link: '/chat',
         refId: chat.id,
       });

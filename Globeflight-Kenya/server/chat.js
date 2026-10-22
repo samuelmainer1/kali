@@ -61,11 +61,28 @@ function publicMessage(message) {
   };
 }
 
+function validEmail(value) {
+  const email = String(value || '').trim().toLowerCase();
+  if (email.length > 120) return '';
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return '';
+  return email;
+}
+
+function validPhone(value) {
+  const phone = String(value || '').replace(/[^\d+]/g, '').replace(/(?!^)\+/g, '');
+  const digits = phone.replace(/\D/g, '');
+  if (digits.length < 9 || digits.length > 15) return '';
+  return phone;
+}
+
 function publicThread(db, chat, token) {
   const messages = messagesFor(db, chat.id).slice(-80).map(publicMessage);
   const payload = {
     id: chat.id,
     visitorName: chat.visitorName || '',
+    visitorEmail: chat.visitorEmail || '',
+    visitorPhone: chat.visitorPhone || '',
+    hasContact: Boolean(chat.visitorEmail && chat.visitorPhone),
     handler: isStaffOnline() ? 'staff' : 'ai',
     staffOnline: isStaffOnline(),
     messages,
@@ -132,30 +149,56 @@ async function groqReply(history) {
   }
 }
 
-export async function postVisitorMessage(db, { token, text, name }, notify) {
-  const clean = String(text || '').replace(/\s+/g, ' ').trim();
-  if (!clean) httpError(400, 'Write a message first.');
-  if (clean.length > 1000) httpError(400, 'That message is too long.');
+export function startVisitorChat(db, { token, email, phone, name }) {
+  const visitorEmail = validEmail(email);
+  const visitorPhone = validPhone(phone);
+  if (!visitorEmail) httpError(400, 'Enter a valid email address.');
+  if (!visitorPhone) httpError(400, 'Enter a phone number.');
   db.chats ||= [];
   db.chatMessages ||= [];
   let chat = findByToken(db, token);
   let createdToken = null;
   const visitorName = clip(name, 60);
+  const now = new Date().toISOString();
+  let captured = false;
   if (!chat) {
     createdToken = crypto.randomBytes(32).toString('hex');
     chat = {
       id: nextId(db.chats),
       token: createdToken,
       visitorName,
+      visitorEmail,
+      visitorPhone,
       handler: 'ai',
-      staffUnread: 0,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+      staffUnread: 1,
+      createdAt: now,
+      updatedAt: now,
     };
     db.chats.push(chat);
-  } else if (visitorName && !chat.visitorName) {
-    chat.visitorName = visitorName;
+    captured = true;
+  } else if (!chat.visitorEmail || !chat.visitorPhone) {
+    chat.visitorEmail = visitorEmail;
+    chat.visitorPhone = visitorPhone;
+    if (visitorName && !chat.visitorName) chat.visitorName = visitorName;
+    chat.staffUnread = Math.max(Number(chat.staffUnread || 0), 1);
+    chat.updatedAt = now;
+    captured = true;
   }
+  return { thread: publicThread(db, chat, createdToken), captured, chat };
+}
+
+export async function postVisitorMessage(db, { token, text, name }, notify) {
+  const clean = String(text || '').replace(/\s+/g, ' ').trim();
+  if (!clean) httpError(400, 'Write a message first.');
+  if (clean.length > 1000) httpError(400, 'That message is too long.');
+  db.chats ||= [];
+  db.chatMessages ||= [];
+  const chat = findByToken(db, token);
+  if (!chat || !chat.visitorEmail || !chat.visitorPhone) {
+    httpError(400, 'Enter your email and phone number before chatting.');
+  }
+  const visitorName = clip(name, 60);
+  if (visitorName && !chat.visitorName) chat.visitorName = visitorName;
   const now = new Date().toISOString();
   db.chatMessages.push({
     id: nextId(db.chatMessages),
@@ -188,7 +231,7 @@ export async function postVisitorMessage(db, { token, text, name }, notify) {
     chat.updatedAt = new Date().toISOString();
   }
   notify(chat, clean);
-  return publicThread(db, chat, createdToken);
+  return publicThread(db, chat);
 }
 
 export function staffInbox(db) {
@@ -201,6 +244,8 @@ export function staffInbox(db) {
       return {
         id: chat.id,
         visitorName: chat.visitorName || 'Visitor',
+        visitorEmail: chat.visitorEmail || '',
+        visitorPhone: chat.visitorPhone || '',
         staffUnread: Number(chat.staffUnread || 0),
         updatedAt: chat.updatedAt,
         preview: last ? clip(last.text, 90) : '',
@@ -217,6 +262,8 @@ export function staffThread(db, chatId) {
   return {
     id: chat.id,
     visitorName: chat.visitorName || 'Visitor',
+    visitorEmail: chat.visitorEmail || '',
+    visitorPhone: chat.visitorPhone || '',
     staffOnline: isStaffOnline(),
     messages: messagesFor(db, chat.id).slice(-80).map(publicMessage),
   };
