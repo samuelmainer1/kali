@@ -255,6 +255,232 @@ function contactStats() {
   };
 }
 
+function presentService(item) {
+  return { ...item, isPublished: item.isPublished !== false };
+}
+
+function serviceList(url) {
+  const page = Math.max(1, Number(url.searchParams.get('page') || 1));
+  const limit = Math.max(1, Math.min(100, Number(url.searchParams.get('limit') || 10)));
+  const search = (url.searchParams.get('search') || '').trim().toLowerCase();
+  let items = db.services.map(presentService);
+  if (search) {
+    items = items.filter((item) =>
+      [item.title, item.shortDescription, item.slug, item.description].join(' ').toLowerCase().includes(search)
+    );
+  }
+  const total = items.length;
+  const pages = Math.max(1, Math.ceil(total / limit) || 1);
+  return {
+    services: items.slice((page - 1) * limit, page * limit),
+    pagination: { total, page, pages, limit },
+  };
+}
+
+function createdThisMonth(list) {
+  const now = new Date();
+  return list.filter((item) => {
+    const date = new Date(item.createdAt || item.publishedAt || 0);
+    return date.getUTCFullYear() === now.getUTCFullYear() && date.getUTCMonth() === now.getUTCMonth();
+  }).length;
+}
+
+function dashboardStats() {
+  const services = db.services.map(presentService);
+  const contacts = db.contacts.map(presentContact);
+  const activeShipments = db.shipments.filter((item) => !['delivered', 'cancelled'].includes(item.status)).length;
+  const activeJobs = db.jobs.filter((item) => item.isPublished !== false && item.isClosed !== true).length;
+  const monthCounts = {
+    services: createdThisMonth(services),
+    blogs: createdThisMonth(db.blogs),
+    shipments: createdThisMonth(db.shipments),
+    contacts: createdThisMonth(contacts),
+    applications: createdThisMonth(db.applications),
+  };
+  const recentActivity = {};
+  for (const [key, count] of Object.entries(monthCounts)) {
+    if (count > 0) recentActivity[key] = count;
+  }
+  return {
+    overview: {
+      services: { total: services.length, published: services.filter((item) => item.isPublished).length },
+      blogs: { total: db.blogs.length, published: db.blogs.filter((item) => item.isPublished !== false).length },
+      shipments: { total: db.shipments.length, active: activeShipments },
+      contacts: { total: contacts.length, unread: contacts.filter((item) => !item.isRead).length },
+      users: { total: authStore.users.length },
+      jobs: { total: db.jobs.length, active: activeJobs },
+      applications: { total: db.applications.length },
+      testimonials: { published: db.testimonials.filter((item) => item.isPublished !== false).length },
+    },
+    recentActivity,
+    topContent: {
+      blogs: [...db.blogs]
+        .sort(
+          (a, b) =>
+            (Number(b.viewsCount) || 0) - (Number(a.viewsCount) || 0) ||
+            new Date(b.createdAt || 0) - new Date(a.createdAt || 0)
+        )
+        .slice(0, 5)
+        .map((blog) => ({
+          id: blog.id,
+          title: blog.title,
+          viewsCount: Number(blog.viewsCount) || 0,
+          likesCount: Number(blog.likesCount) || 0,
+        })),
+    },
+  };
+}
+
+function recentActivity(limit) {
+  const items = [];
+  for (const blog of db.blogs) {
+    items.push({
+      type: 'blog',
+      id: blog.id,
+      title: blog.title,
+      description: blog.shortDescription || 'Blog post',
+      createdAt: blog.createdAt || blog.publishedAt || blog.updatedAt,
+    });
+  }
+  for (const shipment of db.shipments) {
+    const route = [shipment.origin, shipment.destination].filter(Boolean).join(' to ');
+    items.push({
+      type: 'shipment',
+      id: shipment.id,
+      title: shipment.trackingNumber || 'Shipment',
+      description: route || shipment.note || 'Shipment',
+      createdAt: shipment.createdAt,
+      metadata: { status: shipment.status || '' },
+    });
+  }
+  for (const contact of db.contacts) {
+    const presented = presentContact(contact);
+    items.push({
+      type: 'contact',
+      id: contact.id,
+      title: presented.subject || presented.name,
+      description: presented.message || presented.email,
+      createdAt: contact.createdAt,
+      metadata: { isRead: presented.isRead },
+    });
+  }
+  for (const application of db.applications) {
+    items.push({
+      type: 'application',
+      id: application.id,
+      title: application.fullName || application.name || 'Application',
+      description: application.email || 'Job application',
+      createdAt: application.createdAt,
+    });
+  }
+  items.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+  return items.slice(0, limit);
+}
+
+function periodStart(period) {
+  const days = period === '7d' ? 7 : period === '90d' ? 90 : period === '1y' ? 365 : 30;
+  const start = new Date();
+  start.setUTCHours(0, 0, 0, 0);
+  start.setUTCDate(start.getUTCDate() - (days - 1));
+  return start;
+}
+
+function dateKey(date, period) {
+  const year = date.getUTCFullYear();
+  const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+  const day = String(date.getUTCDate()).padStart(2, '0');
+  return period === '1y' ? `${year}-${month}-01` : `${year}-${month}-${day}`;
+}
+
+function periodKeys(period) {
+  const start = periodStart(period);
+  const end = new Date();
+  end.setUTCHours(0, 0, 0, 0);
+  const cursor = new Date(start);
+  if (period === '1y') cursor.setUTCDate(1);
+  const keys = [];
+  while (cursor <= end) {
+    keys.push(dateKey(cursor, period));
+    if (period === '1y') cursor.setUTCMonth(cursor.getUTCMonth() + 1);
+    else cursor.setUTCDate(cursor.getUTCDate() + 1);
+  }
+  return keys;
+}
+
+function dashboardAnalytics(period) {
+  const keys = periodKeys(period);
+  const start = periodStart(period);
+  const shipments = Object.fromEntries(keys.map((key) => [key, { date: key, shipments: 0, totalValue: 0, weightSum: 0 }]));
+  const contacts = Object.fromEntries(keys.map((key) => [key, { date: key, contacts: 0, read: 0, unread: 0 }]));
+  const blogs = Object.fromEntries(keys.map((key) => [key, { date: key, blogs: 0, totalViews: 0, totalLikes: 0 }]));
+  const bucket = (map, value) => {
+    const date = new Date(value || 0);
+    if (Number.isNaN(date.getTime()) || date < start) return null;
+    return map[dateKey(date, period)] || null;
+  };
+  for (const shipment of db.shipments) {
+    const row = bucket(shipments, shipment.createdAt);
+    if (!row) continue;
+    row.shipments += 1;
+    row.totalValue += Number(shipment.declaredValue) || 0;
+    row.weightSum += Number(shipment.grossWeight || shipment.weight) || 0;
+  }
+  for (const contact of db.contacts.map(presentContact)) {
+    const row = bucket(contacts, contact.createdAt);
+    if (!row) continue;
+    row.contacts += 1;
+    if (contact.isRead) row.read += 1;
+    else row.unread += 1;
+  }
+  for (const blog of db.blogs) {
+    const row = bucket(blogs, blog.createdAt || blog.publishedAt);
+    if (!row) continue;
+    row.blogs += 1;
+    row.totalViews += Number(blog.viewsCount) || 0;
+    row.totalLikes += Number(blog.likesCount) || 0;
+  }
+  const destinations = new Map();
+  for (const shipment of db.shipments) {
+    const destination = String(shipment.destination || shipment.receiverCountry || '').trim();
+    if (!destination) continue;
+    destinations.set(destination, (destinations.get(destination) || 0) + 1);
+  }
+  return {
+    analytics: {
+      shipments: keys.map((key) => {
+        const row = shipments[key];
+        return {
+          date: row.date,
+          shipments: row.shipments,
+          totalValue: row.totalValue,
+          avgWeight: row.shipments ? Number((row.weightSum / row.shipments).toFixed(2)) : 0,
+        };
+      }),
+      contacts: keys.map((key) => contacts[key]),
+      blogs: keys.map((key) => blogs[key]),
+    },
+    performance: {
+      categories: db.categories
+        .map((category) => {
+          const posts = db.blogs.filter((blog) => String(blog.categoryId) === String(category.id));
+          return {
+            name: category.name,
+            blogCount: posts.length,
+            totalViews: posts.reduce((sum, blog) => sum + (Number(blog.viewsCount) || 0), 0),
+          };
+        })
+        .filter((item) => item.blogCount > 0)
+        .sort((a, b) => b.blogCount - a.blogCount),
+    },
+    geographic: {
+      topDestinations: [...destinations.entries()]
+        .map(([destination, count]) => ({ destination, count }))
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 8),
+    },
+  };
+}
+
 function requireUser(req) {
   const header = req.headers.authorization || '';
   const token = header.startsWith('Bearer ') ? header.slice(7) : '';
@@ -439,6 +665,7 @@ function normalizeService(body, existing = {}) {
     faq,
     metaTitle: String(body.metaTitle ?? existing.metaTitle ?? title),
     metaDescription: String(body.metaDescription ?? existing.metaDescription ?? ''),
+    isPublished: asBool(body.isPublished, existing.isPublished !== false),
     createdAt: existing.createdAt || now,
     updatedAt: now,
   };
@@ -1145,6 +1372,24 @@ async function handle(req, res) {
     return;
   }
 
+  if (method === 'GET' && pathname === '/admin/api/dashboard/stats') {
+    send(res, 200, { success: true, data: dashboardStats() });
+    return;
+  }
+  if (method === 'GET' && pathname === '/admin/api/dashboard/recent-activity') {
+    const limit = Math.max(1, Math.min(50, Number(url.searchParams.get('limit') || 10)));
+    send(res, 200, { success: true, data: recentActivity(limit) });
+    return;
+  }
+  if (method === 'GET' && pathname === '/admin/api/dashboard/analytics') {
+    send(res, 200, { success: true, data: dashboardAnalytics(url.searchParams.get('period') || '30d') });
+    return;
+  }
+  if (method === 'GET' && pathname === '/admin/api/dashboard/notifications') {
+    send(res, 200, { success: true, data: [] });
+    return;
+  }
+
   if (method === 'GET' && pathname === '/admin/api/stats') {
     send(res, 200, {
       success: true,
@@ -1316,7 +1561,7 @@ async function handle(req, res) {
   }
 
   if (method === 'GET' && pathname === '/admin/api/services') {
-    send(res, 200, { success: true, data: db.services });
+    send(res, 200, { success: true, data: serviceList(url) });
     return;
   }
   if (method === 'POST' && pathname === '/admin/api/services') {
