@@ -189,6 +189,72 @@ function blogListItem(blog) {
   return rest;
 }
 
+function presentContact(item) {
+  const inquiry = String(item.inquiryType || '').toLowerCase();
+  const known = ['inquiry', 'business', 'complaint', 'feedback'];
+  const type = known.includes(item.type)
+    ? item.type
+    : inquiry === 'feedback'
+      ? 'feedback'
+      : inquiry === 'quote'
+        ? 'business'
+        : 'inquiry';
+  const subjects = {
+    quote: 'Request a Quote',
+    feedback: 'General Feedback',
+    support: 'Customer Support',
+    business: 'Business inquiry',
+    inquiry: 'Website inquiry',
+    complaint: 'Complaint',
+  };
+  return {
+    ...item,
+    name: item.name || 'Website visitor',
+    email: item.email || '',
+    phone: item.phone || item.mobileNumber || '',
+    subject: item.subject || subjects[inquiry] || subjects[type] || 'Website message',
+    message: item.message || '',
+    type,
+    isRead: item.isRead === true,
+    isStarred: item.isStarred === true,
+    isReplied: Boolean(item.replyMessage || item.isReplied),
+    createdAt: item.createdAt,
+  };
+}
+
+function contactList(url) {
+  const page = Math.max(1, Number(url.searchParams.get('page') || 1));
+  const limit = Math.max(1, Math.min(100, Number(url.searchParams.get('limit') || 20)));
+  const search = (url.searchParams.get('search') || '').trim().toLowerCase();
+  const isRead = url.searchParams.get('isRead');
+  let items = db.contacts.map(presentContact);
+  if (isRead === 'false') items = items.filter((item) => !item.isRead);
+  if (isRead === 'true') items = items.filter((item) => item.isRead);
+  if (search) {
+    items = items.filter((item) =>
+      [item.name, item.email, item.phone, item.subject, item.message].join(' ').toLowerCase().includes(search)
+    );
+  }
+  items.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+  const total = items.length;
+  const pages = Math.max(1, Math.ceil(total / limit) || 1);
+  return {
+    contacts: items.slice((page - 1) * limit, page * limit),
+    pagination: { total, page, pages, limit },
+  };
+}
+
+function contactStats() {
+  const items = db.contacts.map(presentContact);
+  return {
+    totals: {
+      total: items.length,
+      unread: items.filter((item) => !item.isRead).length,
+      replied: items.filter((item) => item.isReplied).length,
+    },
+  };
+}
+
 function requireUser(req) {
   const header = req.headers.authorization || '';
   const token = header.startsWith('Bearer ') ? header.slice(7) : '';
@@ -818,6 +884,8 @@ async function handle(req, res) {
     db.contacts.unshift({
       id: nextId(db.contacts),
       ...fields,
+      isRead: false,
+      isStarred: false,
       createdAt: new Date().toISOString(),
     });
     saveDb();
@@ -1134,13 +1202,43 @@ async function handle(req, res) {
     }
   }
 
+  if (method === 'GET' && pathname === '/admin/api/contacts/stats') {
+    send(res, 200, { success: true, data: contactStats() });
+    return;
+  }
   if (method === 'GET' && pathname === '/admin/api/contacts') {
-    send(res, 200, { success: true, data: db.contacts });
+    send(res, 200, { success: true, data: contactList(url) });
+    return;
+  }
+  const contactRead = pathname.match(/^\/admin\/api\/contacts\/(\d+)\/toggle-read$/);
+  if (method === 'PATCH' && contactRead) {
+    const item = findById(db.contacts, contactRead[1]);
+    if (!item) throw httpError(404, 'Message not found.');
+    item.isRead = item.isRead !== true;
+    saveDb();
+    send(res, 200, { success: true, data: presentContact(item) });
+    return;
+  }
+  const contactReply = pathname.match(/^\/admin\/api\/contacts\/(\d+)\/reply$/);
+  if (method === 'POST' && contactReply) {
+    const item = findById(db.contacts, contactReply[1]);
+    if (!item) throw httpError(404, 'Message not found.');
+    const body = await readInput(req);
+    const replyMessage = String(body.replyMessage || '').trim();
+    if (!replyMessage) throw httpError(400, 'Write a reply first.');
+    item.replyMessage = replyMessage;
+    item.repliedAt = new Date().toISOString();
+    item.isReplied = true;
+    item.isRead = true;
+    saveDb();
+    send(res, 200, { success: true, data: presentContact(item) });
     return;
   }
   const contactId = pathname.match(/^\/admin\/api\/contacts\/(\d+)$/);
   if (method === 'DELETE' && contactId) {
-    db.contacts = db.contacts.filter((item) => String(item.id) !== contactId[1]);
+    const item = findById(db.contacts, contactId[1]);
+    if (!item) throw httpError(404, 'Message not found.');
+    db.contacts = db.contacts.filter((row) => row !== item);
     saveDb();
     send(res, 200, { success: true });
     return;

@@ -31,3 +31,9 @@ body{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;font-f
 
 .MuiDialog-paper:has(.ProseMirror){width:min(1120px,calc(100vw - 32px))!important;max-width:min(1120px,calc(100vw - 32px))!important}
 .MuiDialog-paper:has(.ProseMirror) .ProseMirror{min-height:46vh}
+
+.gf-messages{display:flex;flex-direction:column;gap:0}
+.gf-messages .MuiListItem-root{align-items:flex-start;border-radius:12px}
+.gf-messages .MuiListItemText-root{padding-right:76px}
+.gf-messages .MuiListItemSecondaryAction-root{top:28px;transform:none}
+.gf-messages .MuiChip-label{text-transform:capitalize}
