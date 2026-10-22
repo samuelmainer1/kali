@@ -125,7 +125,7 @@ const BlogCategoryPage = () => {
     )
   }
 
-  const pageTitle = `${category.name} Updates | Blog | Globeflight Kenya`;
+  const pageTitle = `${category.name} | Blog | Globeflight Kenya`;
   const pageDesc = category.description || `Read the latest updates about ${category.name} from Globeflight Kenya.`;
   const canonicalUrl = `https://globeflight.co.ke/blog/category/${category.slug}`;
 

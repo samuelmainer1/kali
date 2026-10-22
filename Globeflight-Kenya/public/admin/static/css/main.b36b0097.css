@@ -28,3 +28,6 @@ body{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;font-f
 #gf-blog-preview th{background:#f3f8e6;font-weight:700}
 #gf-blog-preview u{text-decoration:underline}
 #gf-blog-preview strong{font-weight:700}
+
+.MuiDialog-paper:has(.ProseMirror){width:min(1120px,calc(100vw - 32px))!important;max-width:min(1120px,calc(100vw - 32px))!important}
+.MuiDialog-paper:has(.ProseMirror) .ProseMirror{min-height:46vh}
