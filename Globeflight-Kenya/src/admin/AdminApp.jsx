@@ -231,7 +231,8 @@ function useItems(path) {
     setError('');
     try {
       const res = await api(path);
-      setItems(res.data || []);
+      const data = res.data;
+      setItems(Array.isArray(data) ? data : data?.blogs || []);
     } catch (err) {
       setError(err.message);
     } finally {

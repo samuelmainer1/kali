@@ -101,7 +101,80 @@ function findById(list, id) {
 function categoryEmbed(categoryId) {
   const category = findById(db.categories, categoryId);
   if (!category) return null;
-  return { name: category.name, slug: category.slug };
+  return { id: category.id, name: category.name, slug: category.slug };
+}
+
+function presentBlog(blog) {
+  return { ...blog, category: categoryEmbed(blog.categoryId) || blog.category || null };
+}
+
+const IMAGE_EXTENSIONS = {
+  'image/jpeg': 'jpg',
+  'image/png': 'png',
+  'image/webp': 'webp',
+  'image/gif': 'gif',
+};
+
+function saveUploadedImage(file) {
+  const ext = IMAGE_EXTENSIONS[String(file.type || '').split(';')[0].trim()];
+  if (!ext) throw httpError(400, 'Upload a JPG, PNG, WEBP, or GIF image.');
+  const filename = `${Date.now()}-${crypto.randomBytes(4).toString('hex')}.${ext}`;
+  fs.mkdirSync(UPLOAD_DIR, { recursive: true });
+  fs.writeFileSync(path.join(UPLOAD_DIR, filename), file.data);
+  return `/uploads/${filename}`;
+}
+
+function blogFromRequest(body, existing = {}) {
+  const files = body._files || [];
+  const fields = { ...body };
+  delete fields._files;
+  const image = files.find(
+    (item) =>
+      (item.field === 'featuredImage' || item.field === 'image') && item.data && item.data.length
+  );
+  if (image) fields.featuredImage = saveUploadedImage(image);
+  return normalizeBlog(fields, existing);
+}
+
+function adminBlogList(url) {
+  const page = Math.max(1, Number(url.searchParams.get('page') || 1));
+  const limit = Math.max(1, Math.min(100, Number(url.searchParams.get('limit') || 10)));
+  const search = (url.searchParams.get('search') || '').trim().toLowerCase();
+  const published = url.searchParams.get('published');
+  const featured = url.searchParams.get('featured');
+  let items = db.blogs.map(presentBlog);
+  if (search) {
+    items = items.filter((blog) =>
+      [blog.title, blog.shortDescription, blog.content, ...(blog.tags || [])]
+        .join(' ')
+        .toLowerCase()
+        .includes(search)
+    );
+  }
+  if (published === 'true') items = items.filter((blog) => blog.isPublished !== false);
+  if (published === 'false') items = items.filter((blog) => blog.isPublished === false);
+  if (featured === 'true') items = items.filter((blog) => blog.isFeatured);
+  items.sort((a, b) => Number(b.id) - Number(a.id));
+  const total = items.length;
+  const pages = Math.max(1, Math.ceil(total / limit) || 1);
+  const safePage = Math.min(page, pages);
+  const blogs = items.slice((safePage - 1) * limit, safePage * limit);
+  return { blogs, pagination: { total, page: safePage, pages, limit } };
+}
+
+function blogStats() {
+  const totalViews = db.blogs.reduce((sum, blog) => sum + (Number(blog.viewsCount) || 0), 0);
+  const totalLikes = db.blogs.reduce((sum, blog) => sum + (Number(blog.likesCount) || 0), 0);
+  const published = db.blogs.filter((blog) => blog.isPublished !== false).length;
+  return {
+    blogs: { total: db.blogs.length, published, drafts: db.blogs.length - published },
+    engagement: {
+      totalViews,
+      totalLikes,
+      avgViews: db.blogs.length ? Math.round(totalViews / db.blogs.length) : 0,
+    },
+    comments: { total: 0, pending: 0 },
+  };
 }
 
 function refreshBlogCategories() {
@@ -197,7 +270,7 @@ function send(res, status, payload) {
     'Content-Length': Buffer.byteLength(body),
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Headers': 'Content-Type, Authorization, Accept',
-    'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+    'Access-Control-Allow-Methods': 'GET, POST, PUT, PATCH, DELETE, OPTIONS',
     'Cache-Control': 'no-store',
   });
   res.end(body);
@@ -545,11 +618,9 @@ async function handle(req, res) {
   const method = req.method || 'GET';
 
   if (method === 'GET' && pathname.startsWith('/uploads/')) {
-    const name = path.basename(pathname);
+    const name = path.basename(decodeURIComponent(pathname));
+    if (!name || name === '.' || name === '..') throw httpError(404, 'File not found.');
     const filePath = path.join(UPLOAD_DIR, name);
-    if (name !== path.basename(name) || !fs.existsSync(filePath) || !fs.statSync(filePath).isFile()) {
-      throw httpError(404, 'File not found.');
-    }
     const types = {
       '.jpg': 'image/jpeg',
       '.jpeg': 'image/jpeg',
@@ -557,11 +628,23 @@ async function handle(req, res) {
       '.webp': 'image/webp',
       '.gif': 'image/gif',
     };
-    const data = fs.readFileSync(filePath);
+    if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
+      const data = fs.readFileSync(filePath);
+      res.writeHead(200, {
+        'Content-Type': types[path.extname(name).toLowerCase()] || 'application/octet-stream',
+        'Content-Length': data.length,
+        'Cache-Control': 'public, max-age=86400',
+      });
+      res.end(data);
+      return;
+    }
+    const upstream = await fetch(`https://globeflight.co.ke/uploads/${encodeURIComponent(name)}`);
+    if (!upstream.ok) throw httpError(404, 'File not found.');
+    const data = Buffer.from(await upstream.arrayBuffer());
     res.writeHead(200, {
-      'Content-Type': types[path.extname(name).toLowerCase()] || 'application/octet-stream',
+      'Content-Type': upstream.headers.get('content-type') || 'application/octet-stream',
       'Content-Length': data.length,
-      'Cache-Control': 'public, max-age=86400',
+      'Cache-Control': 'public, max-age=3600',
     });
     res.end(data);
     return;
@@ -571,7 +654,7 @@ async function handle(req, res) {
     res.writeHead(204, {
       'Access-Control-Allow-Origin': '*',
       'Access-Control-Allow-Headers': 'Content-Type, Authorization, Accept',
-      'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+      'Access-Control-Allow-Methods': 'GET, POST, PUT, PATCH, DELETE, OPTIONS',
     });
     res.end();
     return;
@@ -748,18 +831,8 @@ async function handle(req, res) {
     const body = await readInput(req);
     const file = (body._files || []).find((item) => item.data && item.data.length);
     if (!file) throw httpError(400, 'Choose an image to upload.');
-    const extensions = {
-      'image/jpeg': 'jpg',
-      'image/png': 'png',
-      'image/webp': 'webp',
-      'image/gif': 'gif',
-    };
-    const ext = extensions[file.type];
-    if (!ext) throw httpError(400, 'Upload a JPG, PNG, WEBP, or GIF image.');
-    const filename = `${Date.now()}-${crypto.randomBytes(4).toString('hex')}.${ext}`;
-    fs.mkdirSync(UPLOAD_DIR, { recursive: true });
-    fs.writeFileSync(path.join(UPLOAD_DIR, filename), file.data);
-    send(res, 201, { success: true, data: { url: `/uploads/${filename}` } });
+    const urlPath = saveUploadedImage(file);
+    send(res, 201, { success: true, data: { url: urlPath } });
     return;
   }
 
@@ -890,17 +963,24 @@ async function handle(req, res) {
     }
   }
 
+  if (method === 'GET' && pathname === '/admin/api/blogs/stats') {
+    send(res, 200, { success: true, data: blogStats() });
+    return;
+  }
+  if (method === 'GET' && pathname === '/admin/api/blogs/comments') {
+    send(res, 200, { success: true, data: { comments: [] } });
+    return;
+  }
   if (method === 'GET' && pathname === '/admin/api/blogs') {
-    const blogs = [...db.blogs].sort((a, b) => Number(b.id) - Number(a.id));
-    send(res, 200, { success: true, data: blogs });
+    send(res, 200, { success: true, data: adminBlogList(url) });
     return;
   }
   if (method === 'POST' && pathname === '/admin/api/blogs') {
-    const blog = normalizeBlog(await readInput(req));
+    const blog = blogFromRequest(await readInput(req));
     blog.id = nextId(db.blogs);
     db.blogs.unshift(blog);
     saveDb();
-    send(res, 201, { success: true, data: blog });
+    send(res, 201, { success: true, data: presentBlog(blog) });
     return;
   }
   const blogId = pathname.match(/^\/admin\/api\/blogs\/(\d+)$/);
@@ -908,14 +988,14 @@ async function handle(req, res) {
     const blog = findById(db.blogs, blogId[1]);
     if (!blog) throw httpError(404, 'Post not found.');
     if (method === 'GET') {
-      send(res, 200, { success: true, data: blog });
+      send(res, 200, { success: true, data: presentBlog(blog) });
       return;
     }
     if (method === 'PUT') {
-      const updated = normalizeBlog(await readInput(req), blog);
+      const updated = blogFromRequest(await readInput(req), blog);
       Object.assign(blog, updated);
       saveDb();
-      send(res, 200, { success: true, data: blog });
+      send(res, 200, { success: true, data: presentBlog(blog) });
       return;
     }
     if (method === 'DELETE') {

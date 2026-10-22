@@ -77,9 +77,9 @@ export default defineConfig({
         secure: false,
       },
       '/uploads': {
-        target: 'https://globeflight.co.ke',
+        target: 'http://127.0.0.1:5000',
         changeOrigin: true,
-        secure: true,
+        secure: false,
       },
     },
   }

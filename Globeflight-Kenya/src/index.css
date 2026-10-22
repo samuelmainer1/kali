@@ -259,3 +259,59 @@
 .blog-preview {
   min-height: 280px;
 }
+
+.prose h1,
+.prose h2,
+.prose h3 {
+  margin: 1.25rem 0 0.5rem;
+  font-weight: 700;
+  line-height: 1.25;
+  color: #111827;
+}
+
+.prose h1 { font-size: 2rem; }
+.prose h2 { font-size: 1.5rem; }
+.prose h3 { font-size: 1.25rem; }
+
+.prose p {
+  margin: 0.75rem 0;
+  line-height: 1.75;
+  color: #374151;
+}
+
+.prose ul,
+.prose ol {
+  margin: 0.75rem 0;
+  padding-left: 1.5rem;
+}
+
+.prose ul { list-style: disc; }
+.prose ol { list-style: decimal; }
+
+.prose a {
+  color: #4f7300;
+  text-decoration: underline;
+}
+
+.prose blockquote {
+  margin: 1rem 0;
+  padding-left: 1rem;
+  border-left: 4px solid #88C300;
+  color: #374151;
+}
+
+.prose img {
+  max-width: 100%;
+  margin: 1rem 0;
+  border-radius: 0.75rem;
+}
+
+.prose strong { font-weight: 700; }
+
+.prose li { margin: 0.25rem 0; }
+
+.prose hr {
+  margin: 1.25rem 0;
+  border: 0;
+  border-top: 1px solid #e5e7eb;
+}
