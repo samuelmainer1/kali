@@ -1,6 +1,40 @@
 {
   "blogs": [
     {
+      "title": "Door-to-Door Shipping to Kenya: What Importers Should Know",
+      "slug": "door-to-door-shipping-to-kenya-what-importers-should-know",
+      "shortDescription": "Door-to-door shipping to Kenya covers collection at the supplier, air or sea freight, KRA clearance, and delivery to your warehouse.",
+      "content": "<h1>Door-to-Door Shipping to Kenya</h1>\n<p><strong>Door-to-door shipping to Kenya</strong> means one forwarder collects the cargo at the supplier, carries it by air or sea, clears it with KRA, and delivers it to your warehouse in Nairobi, Mombasa, or another town. <em>You work with one team instead of a chain of separate agents.</em> The part importers most often underestimate is the <u>last mile after customs release</u>.</p>\n<h2>What door-to-door shipping to Kenya includes</h2>\n<p>A complete move has three parts: origin handling, the flight or voyage, and delivery inside Kenya.</p>\n<h3>The three legs of the move</h3>\n<ul>\n<li>Collection from the supplier and export handling at origin</li>\n<li>Air freight into JKIA or sea freight into Mombasa</li>\n<li>Customs clearance, then delivery to your door</li>\n</ul>\n<h4>Transit time to plan for</h4>\n<p>Air freight often arrives within a few days. Sea freight usually takes several weeks, and clearance plus delivery add more time. Put that into the stock plan before the cargo leaves the supplier.</p>\n<blockquote><p>Ask for the full landed picture before you book: freight, duty, VAT, and delivery. A low ocean rate is not a cheap shipment if the truck to your warehouse was never included.</p></blockquote>\n<h2>How to brief your forwarder</h2>\n<p>Send one clear note. The block below shows the shape of a booking brief. It is an example, not a live shipment.</p>\n<pre><code>Consignee: Your Company Ltd, Nairobi\nCargo: 12 cartons, 186 kg\nMode: Air freight to JKIA\nDelivery: Warehouse, along Mombasa Road\nReference: GF20261001</code></pre>\n<p>Once the cargo is moving, <a href=\"/track\" target=\"_blank\" rel=\"noopener noreferrer\">track your Globeflight shipment</a> with the consignment number you were given.</p>\n<p><img src=\"https://res.cloudinary.com/dpjop4z2b/image/upload/v1791282045/blogs/oanajnbquvuzuirnicjc.png\" alt=\"Cargo prepared for door-to-door shipping to Kenya\"></p>\n<h2>Why importers keep the job with one partner</h2>\n<p>Splitting the work between an origin agent, a carrier, a clearing agent, and a separate trucker leaves gaps. Door-to-door shipping to Kenya keeps collection, clearance, and delivery on one file, so a delay at the airport is handled by the same people who will bring the goods to your door.</p>",
+      "featuredImage": "https://res.cloudinary.com/dpjop4z2b/image/upload/v1791282045/blogs/oanajnbquvuzuirnicjc.png",
+      "authorId": 1,
+      "categoryId": 3,
+      "readTime": 5,
+      "likesCount": 0,
+      "viewsCount": 0,
+      "isPublished": true,
+      "isFeatured": false,
+      "metaTitle": "Door-to-Door Shipping to Kenya: What Importers Should Know",
+      "metaDescription": "See what door-to-door shipping to Kenya includes, from supplier collection and freight to KRA clearance and delivery at your warehouse.",
+      "tags": [
+        "door-to-door shipping",
+        "Kenya imports",
+        "freight forwarding"
+      ],
+      "publishedAt": "2026-10-22T07:06:35.315Z",
+      "createdAt": "2026-10-22T07:06:35.315Z",
+      "updatedAt": "2026-10-22T07:06:35.315Z",
+      "author": {
+        "fullName": "Globeflight Kenya",
+        "avatarUrl": null
+      },
+      "category": {
+        "id": 3,
+        "name": "Logistics Advisory",
+        "slug": "logistics-advisory"
+      },
+      "id": 26
+    },
+    {
       "id": 25,
       "title": "Customs Clearance in Kenya: A Complete Guide for Importers | Globeflight",
       "slug": "customs-clearance-in-kenya-a-complete-guide-for-importers-or-globeflight",

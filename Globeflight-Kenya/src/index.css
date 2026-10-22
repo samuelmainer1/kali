@@ -262,7 +262,8 @@
 
 .prose h1,
 .prose h2,
-.prose h3 {
+.prose h3,
+.prose h4 {
   margin: 1.25rem 0 0.5rem;
   font-weight: 700;
   line-height: 1.25;
@@ -272,6 +273,7 @@
 .prose h1 { font-size: 2rem; }
 .prose h2 { font-size: 1.5rem; }
 .prose h3 { font-size: 1.25rem; }
+.prose h4 { font-size: 1.1rem; }
 
 .prose p {
   margin: 0.75rem 0;
@@ -298,6 +300,25 @@
   padding-left: 1rem;
   border-left: 4px solid #88C300;
   color: #374151;
+  font-style: italic;
+}
+
+.prose pre {
+  margin: 1rem 0;
+  padding: 1rem 1.1rem;
+  background: #111827;
+  color: #f9fafb;
+  border-radius: 0.75rem;
+  overflow: auto;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.92rem;
+  line-height: 1.6;
+}
+
+.prose pre code {
+  background: transparent;
+  color: inherit;
+  font-family: inherit;
 }
 
 .prose img {
@@ -307,6 +328,8 @@
 }
 
 .prose strong { font-weight: 700; }
+.prose em { font-style: italic; }
+.prose u { text-decoration: underline; }
 
 .prose li { margin: 0.25rem 0; }
 
