@@ -900,8 +900,30 @@ function normalizeShipment(body, existing = {}) {
   }
   if (!origin || !destination) throw httpError(400, 'Origin and destination are required.');
   const note = String(body.note ?? existing.note ?? '').trim();
-  if (!existing.id && note.length < 5) {
-    throw httpError(400, 'Please leave a note with at least 5 characters.');
+  const packageDescription = String(body.packageDescription ?? existing.packageDescription ?? '').trim();
+  if (!existing.id) {
+    const text = (value) => String(value || '').trim();
+    const parcelMissing =
+      (body.shipmentType || existing.shipmentType || 'parcel') === 'parcel' &&
+      !text(body.parcelName ?? existing.parcelName);
+    const missing = [
+      shipperCompanyName,
+      body.shipperContactPerson,
+      body.shipperCountry,
+      body.shipperCity,
+      body.shipperAddress,
+      receiverCompanyName,
+      body.receiverContactPerson,
+      body.receiverCountry,
+      body.receiverCity,
+      body.receiverAddress,
+      origin,
+      destination,
+      packageDescription,
+    ].some((value) => !text(value));
+    if (missing || parcelMissing || note.length < 5) {
+      throw httpError(400, 'Please fill in all the required fields marked with *.');
+    }
   }
   const now = new Date().toISOString();
   const dimensions = String(body.dimensions ?? existing.dimensions ?? '');
@@ -944,7 +966,7 @@ function normalizeShipment(body, existing = {}) {
     receiverName: receiverContactPerson || receiverCompanyName,
     shipmentType: body.shipmentType || existing.shipmentType || 'parcel',
     parcelName: String(body.parcelName ?? existing.parcelName ?? ''),
-    packageDescription: String(body.packageDescription ?? existing.packageDescription ?? ''),
+    packageDescription,
     grossWeight,
     weight: grossWeight,
     dimensions,
