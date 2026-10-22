@@ -296,11 +296,29 @@
 }
 
 .prose blockquote {
-  margin: 1rem 0;
-  padding-left: 1rem;
-  border-left: 4px solid #88C300;
-  color: #374151;
+  margin: 1.5rem 0;
+  padding: 1rem 1.25rem 1rem 1.35rem;
+  border-left: 6px solid #88C300;
+  border-radius: 0 12px 12px 0;
+  background: #f3f8e6;
+  color: #1f2937;
   font-style: italic;
+  font-size: 1.125rem;
+}
+
+.prose blockquote::before {
+  content: "“";
+  display: block;
+  margin-bottom: 0.25rem;
+  color: #88C300;
+  font-size: 2.75rem;
+  font-style: normal;
+  font-weight: 700;
+  line-height: 0.8;
+}
+
+.prose blockquote p {
+  margin: 0;
 }
 
 .prose pre {
