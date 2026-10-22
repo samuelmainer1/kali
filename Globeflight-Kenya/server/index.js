@@ -1506,6 +1506,21 @@ async function handle(req, res) {
     return;
   }
 
+  const trackingItem = pathname.match(/^\/admin\/api\/tracking\/(\d+)$/);
+  if (trackingItem && (method === 'GET' || method === 'PUT')) {
+    const shipment = findById(db.shipments, trackingItem[1]);
+    if (!shipment) throw httpError(404, 'Shipment not found.');
+    if (method === 'GET') {
+      send(res, 200, { success: true, data: publicShipment(shipment) });
+      return;
+    }
+    const updated = normalizeShipment(await readInput(req), shipment);
+    Object.assign(shipment, updated, { updates: shipment.updates, status: shipment.status });
+    saveDb();
+    send(res, 200, { success: true, data: publicShipment(shipment) });
+    return;
+  }
+
   const shipmentUpdate = pathname.match(/^\/admin\/api\/tracking\/(\d+)\/updates$/);
   if (method === 'POST' && shipmentUpdate) {
     const shipment = findById(db.shipments, shipmentUpdate[1]);
