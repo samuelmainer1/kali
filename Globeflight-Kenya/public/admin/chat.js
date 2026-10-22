@@ -1,6 +1,7 @@
 (function () {
-  var state = { chats: [], active: null, thread: null, draft: '', unread: 0, sending: false };
+  var state = { chats: [], contacts: [], active: null, thread: null, draft: '', unread: 0, sending: false };
   var panel = null;
+  var contactsPage = null;
   var pollTimer = null;
 
   function token() {
@@ -18,6 +19,19 @@
     if (!then) return '';
     return new Intl.DateTimeFormat('en-KE', {
       timeZone: 'Africa/Nairobi',
+      hour: 'numeric',
+      minute: '2-digit',
+    }).format(new Date(iso));
+  }
+
+  function savedWhen(iso) {
+    var then = new Date(iso).getTime();
+    if (!then) return '';
+    return new Intl.DateTimeFormat('en-KE', {
+      timeZone: 'Africa/Nairobi',
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
       hour: 'numeric',
       minute: '2-digit',
     }).format(new Date(iso));
@@ -84,6 +98,270 @@
   function close() {
     if (panel) panel.remove();
     panel = null;
+  }
+
+  function loadContacts() {
+    if (!token()) return Promise.resolve();
+    return api('/admin/api/chat/contacts', { headers: authHeaders() }).then(function (body) {
+      state.contacts = body.data || [];
+      if (contactsPage) fillContacts();
+    }).catch(function () {});
+  }
+
+  function closeContacts() {
+    if (contactsPage) contactsPage.remove();
+    contactsPage = null;
+    paintContactsLink();
+  }
+
+  function messageButtons() {
+    var found = [];
+    var nodes = document.querySelectorAll('.MuiListItemButton-root');
+    for (var i = 0; i < nodes.length; i++) {
+      var text = (nodes[i].innerText || '').replace(/\s+/g, ' ').trim();
+      if (text === 'Messages') found.push(nodes[i]);
+    }
+    return found;
+  }
+
+  function messagesAnchor() {
+    var found = messageButtons();
+    for (var i = 0; i < found.length; i++) {
+      var rect = found[i].getBoundingClientRect();
+      if (rect.width > 20 && rect.bottom > 0 && rect.top < window.innerHeight) return found[i];
+    }
+    return found[0] || null;
+  }
+
+  function menuRow(anchor) {
+    var node = anchor;
+    while (node && node.parentElement) {
+      var parent = node.parentElement;
+      var rows = 0;
+      for (var i = 0; i < parent.children.length; i++) {
+        var child = parent.children[i];
+        if (child.classList && child.classList.contains('gf-chat-contacts-link')) continue;
+        if (child.querySelector && child.querySelector('.MuiListItemButton-root')) rows += 1;
+      }
+      if (rows >= 3) return node;
+      node = parent;
+    }
+    return anchor;
+  }
+
+  function paintContactsLink() {
+    var open = !!contactsPage;
+    var links = document.querySelectorAll('.gf-chat-contacts-link');
+    for (var i = 0; i < links.length; i++) {
+      links[i].style.background = open ? 'rgba(136, 195, 0, 0.12)' : 'transparent';
+      links[i].style.color = open ? '#6BA300' : '#1a202c';
+    }
+  }
+
+  function makeContactsLink() {
+    var link = document.createElement('button');
+    link.type = 'button';
+    link.className = 'gf-chat-contacts-link';
+    link.setAttribute('aria-label', 'Live chat contacts');
+    link.style.cssText = 'display:flex;align-items:center;gap:10px;width:calc(100% - 16px);margin:4px 8px;padding:10px 12px;border:0;border-radius:10px;background:transparent;color:#1a202c;font:600 0.95rem -apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif;text-align:left;cursor:pointer';
+    link.innerHTML = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M7 4.5h10A2.5 2.5 0 0 1 19.5 7v10a2.5 2.5 0 0 1-2.5 2.5H7A2.5 2.5 0 0 1 4.5 17V7A2.5 2.5 0 0 1 7 4.5Z" stroke="currentColor" stroke-width="1.6"></path><path d="M8 9.5h8M8 13h5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"></path></svg><span>Live chat contacts</span>';
+    link.addEventListener('click', function (event) {
+      event.preventDefault();
+      event.stopPropagation();
+      openContacts();
+    });
+    return link;
+  }
+
+  function mountContactsLink() {
+    var existing = document.querySelectorAll('.gf-chat-contacts-link');
+    if (!token()) {
+      for (var i = 0; i < existing.length; i++) existing[i].remove();
+      closeContacts();
+      return;
+    }
+    var anchors = messageButtons();
+    var kept = [];
+    for (var a = 0; a < anchors.length; a++) {
+      var row = menuRow(anchors[a]);
+      if (!row || !row.parentNode) continue;
+      var next = row.nextElementSibling;
+      var link = next && next.classList && next.classList.contains('gf-chat-contacts-link') ? next : null;
+      if (!link) {
+        link = makeContactsLink();
+        row.parentNode.insertBefore(link, row.nextSibling);
+      }
+      kept.push(link);
+    }
+    var all = document.querySelectorAll('.gf-chat-contacts-link');
+    for (var j = 0; j < all.length; j++) {
+      if (kept.indexOf(all[j]) === -1) all[j].remove();
+    }
+    var labeled = null;
+    for (var k = 0; k < kept.length; k++) {
+      var rect = kept[k].getBoundingClientRect();
+      if (!labeled && rect.width > 20) labeled = kept[k];
+    }
+    if (!labeled && kept[0]) labeled = kept[0];
+    for (var n = 0; n < kept.length; n++) {
+      if (kept[n] === labeled) kept[n].id = 'gf-chat-contacts-link';
+      else kept[n].removeAttribute('id');
+    }
+    paintContactsLink();
+  }
+
+  function contentBox() {
+    if (window.innerWidth < 700) return { top: 0, left: 0 };
+    var top = 64;
+    var left = 0;
+    var appbar = document.querySelector('.MuiAppBar-root, header');
+    if (appbar) {
+      var bar = appbar.getBoundingClientRect();
+      if (bar.height > 20 && bar.bottom > 0) top = Math.round(bar.bottom);
+    }
+    var anchor = messagesAnchor();
+    var drawer = anchor && anchor.closest('.MuiDrawer-paper');
+    if (drawer) {
+      var edge = drawer.getBoundingClientRect();
+      if (edge.left >= -2 && edge.right > 80) left = Math.round(edge.right);
+    }
+    return { top: top, left: left };
+  }
+
+  function placeContactsPage() {
+    if (!contactsPage) return;
+    var box = contentBox();
+    contactsPage.style.top = box.top + 'px';
+    contactsPage.style.left = box.left + 'px';
+    var mode = window.innerWidth < 800 ? 'cards' : 'table';
+    if (contactsPage.dataset.mode !== mode) fillContacts();
+  }
+
+  function fillContacts() {
+    var body = document.getElementById('gf-chat-contacts-body');
+    if (!body) return;
+    if (contactsPage) contactsPage.dataset.mode = window.innerWidth < 800 ? 'cards' : 'table';
+    body.textContent = '';
+    if (!state.contacts.length) {
+      var empty = document.createElement('div');
+      empty.textContent = 'No saved contacts yet. A visitor’s email and phone number appear here when they start a chat.';
+      empty.style.cssText = 'padding:28px 8px;color:#4a5568;font-size:15px;line-height:1.5';
+      body.appendChild(empty);
+      return;
+    }
+    if (window.innerWidth < 800) {
+      state.contacts.forEach(function (contact) {
+        var card = document.createElement('article');
+        card.style.cssText = 'background:#fff;border:1px solid #e6eed4;border-radius:12px;padding:14px;margin:0 0 12px';
+        var top = document.createElement('div');
+        top.style.cssText = 'display:flex;align-items:center;justify-content:space-between;gap:12px';
+        var name = document.createElement('div');
+        name.textContent = contact.name || 'Visitor';
+        name.style.cssText = 'font-weight:800;font-size:16px;color:#1a202c';
+        var button = document.createElement('button');
+        button.type = 'button';
+        button.textContent = 'Open chat';
+        button.style.cssText = 'border:0;border-radius:8px;background:#88C300;color:#fff;font-weight:800;padding:8px 12px;cursor:pointer';
+        button.addEventListener('click', function () { showChat(contact.chatId); });
+        top.append(name, button);
+        var email = document.createElement('div');
+        email.textContent = contact.email || '';
+        email.style.cssText = 'margin-top:8px;font-weight:700;font-size:15px;color:#1a202c;word-break:break-word';
+        var phone = document.createElement('div');
+        phone.textContent = contact.phone || '';
+        phone.style.cssText = 'margin-top:4px;font-weight:700;font-size:15px;color:#1a202c';
+        var saved = document.createElement('div');
+        saved.textContent = 'Saved ' + savedWhen(contact.createdAt);
+        saved.style.cssText = 'margin-top:6px;font-size:13px;color:#4a5568';
+        card.append(top, email, phone, saved);
+        body.appendChild(card);
+      });
+      return;
+    }
+    var table = document.createElement('table');
+    table.style.cssText = 'width:100%;border-collapse:collapse;background:#fff;border:1px solid #e6eed4;border-radius:12px;overflow:hidden';
+    var head = document.createElement('thead');
+    var headRow = document.createElement('tr');
+    ['Name', 'Email', 'Phone', 'Saved', ''].forEach(function (label) {
+      var cell = document.createElement('th');
+      cell.textContent = label;
+      cell.style.cssText = 'text-align:left;padding:12px 14px;font-size:12px;letter-spacing:.04em;text-transform:uppercase;color:#5f8a00;background:#f7f8f4;border-bottom:1px solid #e6eed4';
+      headRow.appendChild(cell);
+    });
+    head.appendChild(headRow);
+    var rows = document.createElement('tbody');
+    state.contacts.forEach(function (contact) {
+      var row = document.createElement('tr');
+      function cell(value, strong) {
+        var item = document.createElement('td');
+        item.textContent = value || '—';
+        item.style.cssText = 'padding:12px 14px;border-bottom:1px solid #eef2e8;font-size:14px;color:#1a202c;vertical-align:middle' + (strong ? ';font-weight:700' : '');
+        return item;
+      }
+      var open = document.createElement('td');
+      open.style.cssText = 'padding:12px 14px;border-bottom:1px solid #eef2e8;text-align:right';
+      var button = document.createElement('button');
+      button.type = 'button';
+      button.textContent = 'Open chat';
+      button.style.cssText = 'border:0;border-radius:8px;background:#88C300;color:#fff;font-weight:800;padding:8px 12px;cursor:pointer';
+      button.addEventListener('click', function () { showChat(contact.chatId); });
+      open.appendChild(button);
+      row.append(cell(contact.name || 'Visitor', false), cell(contact.email, true), cell(contact.phone, true), cell(savedWhen(contact.createdAt), false), open);
+      rows.appendChild(row);
+    });
+    table.append(head, rows);
+    var wrap = document.createElement('div');
+    wrap.style.cssText = 'overflow:auto';
+    wrap.appendChild(table);
+    body.appendChild(wrap);
+  }
+
+  function openContacts() {
+    if (contactsPage) {
+      closeContacts();
+      return;
+    }
+    close();
+    var box = contentBox();
+    contactsPage = document.createElement('section');
+    contactsPage.id = 'gf-chat-contacts';
+    contactsPage.setAttribute('role', 'dialog');
+    contactsPage.setAttribute('aria-label', 'Live chat contacts');
+    contactsPage.style.cssText = 'position:fixed;right:0;bottom:0;z-index:1400;overflow:auto;background:#fafbf8;padding:28px 24px 40px;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif';
+    contactsPage.style.top = box.top + 'px';
+    contactsPage.style.left = box.left + 'px';
+    var headingRow = document.createElement('div');
+    headingRow.style.cssText = 'display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:18px';
+    var title = document.createElement('div');
+    var heading = document.createElement('h1');
+    heading.textContent = 'Live chat contacts';
+    heading.style.cssText = 'margin:0;font-size:28px;line-height:1.2;color:#1a202c';
+    var sub = document.createElement('p');
+    sub.textContent = 'Email and phone number saved when someone starts a live chat.';
+    sub.style.cssText = 'margin:6px 0 0;color:#4a5568;font-size:15px';
+    title.append(heading, sub);
+    var closeBtn = document.createElement('button');
+    closeBtn.type = 'button';
+    closeBtn.textContent = 'Close';
+    closeBtn.style.cssText = 'border:1px solid #d9e2c8;background:#fff;color:#1a202c;font-weight:700;border-radius:8px;padding:8px 14px;cursor:pointer';
+    closeBtn.addEventListener('click', closeContacts);
+    headingRow.append(title, closeBtn);
+    var list = document.createElement('div');
+    list.id = 'gf-chat-contacts-body';
+    contactsPage.append(headingRow, list);
+    document.body.appendChild(contactsPage);
+    paintContactsLink();
+    fillContacts();
+    loadContacts();
+  }
+
+  function showChat(id) {
+    closeContacts();
+    state.active = id;
+    refreshInbox().then(function () {
+      if (!panel) render();
+      if (id) openThread(id);
+    });
   }
 
   function bubble(message) {
@@ -215,12 +493,20 @@
     sub.textContent = 'You are signed in, so you answer these chats.';
     sub.style.cssText = 'font-size:12px;color:#d7e7b0';
     title.append(heading, sub);
+    var actions = document.createElement('div');
+    actions.style.cssText = 'display:flex;align-items:center;gap:8px';
+    var saved = document.createElement('button');
+    saved.type = 'button';
+    saved.textContent = 'Saved contacts';
+    saved.style.cssText = 'border:1px solid rgba(255,255,255,.35);background:transparent;color:#fff;font-weight:700;border-radius:8px;padding:6px 10px;cursor:pointer';
+    saved.addEventListener('click', openContacts);
     var closeBtn = document.createElement('button');
     closeBtn.type = 'button';
     closeBtn.textContent = 'Close';
     closeBtn.style.cssText = 'border:0;background:transparent;color:#fff;font-weight:700;cursor:pointer';
     closeBtn.addEventListener('click', close);
-    head.append(title, closeBtn);
+    actions.append(saved, closeBtn);
+    head.append(title, actions);
 
     var body = document.createElement('div');
     body.style.cssText = 'flex:1;display:flex;min-height:0';
@@ -270,6 +556,7 @@
   }
 
   window.gfOpenChat = function () {
+    closeContacts();
     if (panel) {
       close();
       return;
@@ -313,6 +600,8 @@
       badgeNode.textContent = state.unread > 9 ? '9+' : String(state.unread);
       badgeNode.style.display = state.unread ? 'flex' : 'none';
     }
+    mountContactsLink();
+    placeContactsPage();
   }
 
   function beat() {
@@ -324,6 +613,7 @@
   setInterval(function () {
     beat();
     refreshInbox();
+    if (contactsPage) loadContacts();
     if (panel && state.active) openThread(state.active);
   }, 4000);
   document.addEventListener('mousedown', function (event) {
@@ -334,8 +624,18 @@
     close();
   });
   document.addEventListener('keydown', function (event) {
-    if (event.key === 'Escape') close();
+    if (event.key !== 'Escape') return;
+    if (contactsPage) closeContacts();
+    else close();
   });
+  document.addEventListener('click', function (event) {
+    if (!contactsPage) return;
+    if (contactsPage.contains(event.target)) return;
+    var link = event.target.closest ? event.target.closest('.gf-chat-contacts-link') : null;
+    if (link) return;
+    var anchor = event.target.closest ? event.target.closest('a, .MuiListItemButton-root') : null;
+    if (anchor) closeContacts();
+  }, true);
   setTimeout(function () { beat(); refreshInbox(); }, 600);
   pollTimer = null;
 })();

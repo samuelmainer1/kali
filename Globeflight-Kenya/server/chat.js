@@ -149,6 +149,47 @@ async function groqReply(history) {
   }
 }
 
+function saveChatContact(db, chat) {
+  db.chatContacts ||= [];
+  let row = db.chatContacts.find((item) => item.chatId === chat.id);
+  const now = new Date().toISOString();
+  if (!row) {
+    row = {
+      id: nextId(db.chatContacts),
+      chatId: chat.id,
+      createdAt: now,
+    };
+    db.chatContacts.unshift(row);
+  }
+  row.name = chat.visitorName || '';
+  row.email = chat.visitorEmail;
+  row.phone = chat.visitorPhone;
+  row.updatedAt = now;
+}
+
+export function listChatContacts(db) {
+  db.chatContacts ||= [];
+  let changed = false;
+  for (const chat of db.chats || []) {
+    if (!chat.visitorEmail || !chat.visitorPhone) continue;
+    if (db.chatContacts.some((row) => row.chatId === chat.id)) continue;
+    saveChatContact(db, chat);
+    changed = true;
+  }
+  const contacts = [...db.chatContacts].sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)));
+  return {
+    changed,
+    contacts: contacts.map((row) => ({
+      id: row.id,
+      chatId: row.chatId,
+      name: row.name || '',
+      email: row.email,
+      phone: row.phone,
+      createdAt: row.createdAt,
+    })),
+  };
+}
+
 export function startVisitorChat(db, { token, email, phone, name }) {
   const visitorEmail = validEmail(email);
   const visitorPhone = validPhone(phone);
@@ -184,6 +225,7 @@ export function startVisitorChat(db, { token, email, phone, name }) {
     chat.updatedAt = now;
     captured = true;
   }
+  if (captured) saveChatContact(db, chat);
   return { thread: publicThread(db, chat, createdToken), captured, chat };
 }
 

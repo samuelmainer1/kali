@@ -32,8 +32,9 @@ Email
 
 Live chat
   The public site has a chat button at the bottom right. A visitor enters
-  an email and phone number before the chat starts. Those details show
-  in the dashboard chat and are emailed to cs@globeflight.co.ke when
+  an email and phone number before the chat starts. Those details are
+  saved under Live chat contacts in the dashboard menu, and they also
+  show in the chat itself. They are emailed to cs@globeflight.co.ke when
   RESEND_API_KEY is set. While an admin is signed in to this dashboard,
   that person answers. When nobody is signed in, the assistant answers
   if GROQ_API_KEY is set in .env. The key stays out of this public

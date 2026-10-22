@@ -19,6 +19,7 @@ import {
   staffInbox,
   staffReply,
   staffThread,
+  listChatContacts,
 } from './chat.js';
 
 const ROOT = path.dirname(fileURLToPath(import.meta.url));
@@ -81,6 +82,7 @@ function loadDb() {
   db.notifications ||= [];
   db.chats ||= [];
   db.chatMessages ||= [];
+  db.chatContacts ||= [];
   db.applications ||= [];
   db.shipments ||= [];
   return db;
@@ -1583,6 +1585,14 @@ async function handle(req, res) {
     requireRole(sessionUser, ['admin', 'superadmin']);
     markStaffPresent(sessionUser.id);
     send(res, 200, { success: true, data: staffInbox(db) });
+    return;
+  }
+
+  if (method === 'GET' && pathname === '/admin/api/chat/contacts') {
+    requireRole(sessionUser, ['admin', 'superadmin']);
+    const listed = listChatContacts(db);
+    if (listed.changed) saveDb();
+    send(res, 200, { success: true, data: listed.contacts });
     return;
   }
 
