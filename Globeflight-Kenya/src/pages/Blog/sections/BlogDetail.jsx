@@ -5,7 +5,7 @@ import axios from "axios"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Calendar, User as UserIcon, ArrowLeft, Share2, Facebook, Twitter, Linkedin, Link as LinkIcon } from "lucide-react"
-import { useParams, useNavigate } from "react-router-dom"
+import { Link, useParams, useNavigate } from "react-router-dom"
 import { Helmet } from "react-helmet-async"
 import { getApiImageUrl, handleImageError } from '@/utils/imageUtils'
 
@@ -13,10 +13,6 @@ import { getApiImageUrl, handleImageError } from '@/utils/imageUtils'
 const API_BASE = import.meta.env.DEV
   ? '/admin/api'
   : 'https://globeflight.co.ke/admin/api';
-
-const Link = ({ to, children, className }) => (
-  <a href={to} className={className}>{children}</a>
-)
 
 const BlogDetailsPage = () => {
   const { slug } = useParams()
@@ -240,7 +236,7 @@ const BlogDetailsPage = () => {
 
               {/* Category Badge */}
               {post.category && (
-                <Link to={`/category/${post.category.slug}`}>
+                <Link to={`/blog/category/${post.category.slug}`}>
                   <span className="inline-block px-4 py-2 bg-[#88C300] text-white text-sm font-semibold rounded-lg mb-6 hover:bg-[#6ea000] transition-colors">
                     {post.category.name}
                   </span>

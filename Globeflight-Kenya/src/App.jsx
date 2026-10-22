@@ -2,6 +2,8 @@
 import React, { Suspense } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import MainLayout from './layout/MainLayout';
+import ScrollToTop from './components/ScrollToTop';
+import NotFound from './pages/NotFound';
 import Landing from '@/pages/Landing'; // New IOR-focused landing page
 import Home from '@/pages/Home'; // Original home page moved to /home
 import Services from '@/pages/Services';
@@ -20,6 +22,7 @@ const JobDetail = React.lazy(() => import('@/pages/JobDetail')); // <-- Add this
 function App() {
   return (
     <BrowserRouter>
+      <ScrollToTop />
       <Routes>
         <Route path="/" element={<MainLayout />}>
           {/* New IOR-focused landing page as the default route */}
@@ -68,6 +71,7 @@ function App() {
               </Suspense>
             }
           />
+          <Route path="*" element={<NotFound />} />
         </Route>
       </Routes>
     </BrowserRouter>

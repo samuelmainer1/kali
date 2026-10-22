@@ -12,7 +12,6 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import CallToActionSection from "@/components/CallToActionSection"
 import ScrollOnSideSection from "@/components/ScrollOnSideSection"
-import Hero from "@/pages/Services/sections/Hero"
 import { ChevronLeft, ChevronRight, Calendar, Share2, Facebook, Twitter, Linkedin, MapPin, Clock, Phone, Mail, CheckCircle2, Award } from 'lucide-react'
 import { getApiImageUrl, handleImageError } from '@/utils/imageUtils'
 import { services, getServiceBySlug } from '@/data/services'
@@ -146,8 +145,8 @@ export default function ServiceDetail() {
   const contactInfo = [
     { icon: MapPin, label: "Location", value: "NEXTGEN MALL, 3rd Floor, Suite 39/40, Mombasa Road", type: "address" },
     { icon: Clock, label: "Processing Time", value: "30min - 1hour", type: "text" },
-    { icon: Phone, label: "Call Us", value: "+254729341277", type: "tel" },
-    { icon: Mail, label: "Email", value: "saleskenya@globeflight.co.ke", type: "email" },
+    { icon: Phone, label: "Call Us", value: "+254 729 341 277", type: "tel" },
+    { icon: Mail, label: "Email", value: "cs@globeflight.co.ke", type: "email" },
   ];
 
   return (
@@ -175,9 +174,7 @@ export default function ServiceDetail() {
         {faqSchema && <script type="application/ld+json">{JSON.stringify(faqSchema)}</script>}
       </Helmet>
 
-      <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white">
-        <Hero />
-        
+      <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white pt-36">
         {/* Reading Progress Bar */}
         <div className="fixed top-0 left-0 w-full h-1 bg-gray-100 z-50">
           <div 

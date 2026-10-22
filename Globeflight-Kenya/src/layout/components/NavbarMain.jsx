@@ -194,15 +194,16 @@ const NavbarMain = ({ data, pathname, isSticky, toggleMobileMenu, isMobileMenuOp
                 aria-label="Blog Categories"
               >
                 {categories.map(cat => (
-                  <a
+                  <Link
                     key={cat.slug}
-                    href={`/blog/category/${cat.slug}`}
+                    to={`/blog/category/${cat.slug}`}
                     className="block px-5 py-3 text-gray-700 hover:bg-[#88C300]/10 hover:text-[#88C300] font-medium transition-colors duration-200"
                     role="menuitem"
                     title={cat.name}
+                    onClick={() => setCatDropdownOpen(false)}
                   >
                     {cat.name}
-                  </a>
+                  </Link>
                 ))}
               </div>
             )}

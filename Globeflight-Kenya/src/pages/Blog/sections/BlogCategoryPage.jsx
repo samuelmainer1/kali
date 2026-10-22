@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Calendar as CalendarIcon, User as UserIcon, ArrowLeft, Tag as TagIcon } from "lucide-react"
-import { useParams, useNavigate } from "react-router-dom"
+import { Link, useParams, useNavigate } from "react-router-dom"
 import { Helmet } from "react-helmet-async"
 import { getApiImageUrl, handleImageError } from '@/utils/imageUtils'
 
@@ -14,10 +14,6 @@ import { getApiImageUrl, handleImageError } from '@/utils/imageUtils'
 const API_BASE = import.meta.env.DEV
   ? '/admin/api'
   : 'https://globeflight.co.ke/admin/api';
-
-const Link = ({ to, children, className }) => (
-  <a href={to} className={className}>{children}</a>
-)
 
 const BlogCategoryPage = () => {
   const { slug } = useParams()

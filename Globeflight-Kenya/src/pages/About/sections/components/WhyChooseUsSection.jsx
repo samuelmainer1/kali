@@ -1,6 +1,7 @@
 import React from 'react'
 import { motion } from 'framer-motion'
 import { ArrowRight } from 'lucide-react'
+import { Link } from 'react-router-dom'
 import { Helmet } from 'react-helmet-async'
 
 const WhyChooseUsSection = ({ setSelectedImage }) => {
@@ -97,13 +98,13 @@ const WhyChooseUsSection = ({ setSelectedImage }) => {
                   </span>
                 ))}
               </div>
-              <a
-                href="/services"
+              <Link
+                to="/services"
                 className="inline-flex items-center gap-2 text-green-600 font-semibold text-lg hover:text-green-700 transition-colors group/link"
               >
                 Learn More
                 <ArrowRight className="w-5 h-5 group-hover/link:translate-x-2 transition-transform" />
-              </a>
+              </Link>
             </div>
           </motion.div>
         ))}

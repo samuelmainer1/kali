@@ -2,6 +2,20 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+    <script>
+      if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+      (function gfOpenAtTop() {
+        if (location.hash) return;
+        var html = document.documentElement;
+        html.style.scrollBehavior = 'auto';
+        window.scrollTo(0, 0);
+        html.scrollTop = 0;
+        if (document.body) document.body.scrollTop = 0;
+      })();
+      document.addEventListener('DOMContentLoaded', function () {
+        if (!location.hash) window.scrollTo(0, 0);
+      });
+    </script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
     <!-- Primary Meta Tags -->
