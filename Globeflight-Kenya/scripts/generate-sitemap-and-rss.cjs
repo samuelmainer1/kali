@@ -50,6 +50,7 @@ const staticPages = [
   { url: '/contact-us', changefreq: 'monthly', priority: '0.8' },
   { url: '/track', changefreq: 'weekly', priority: '0.6' },
   { url: '/jobs', changefreq: 'weekly', priority: '0.6' },
+  { url: '/unsubscribe', changefreq: 'yearly', priority: '0.3' },
 ];
 
 function formatDate(date) {
@@ -142,7 +143,7 @@ async function generateRSS() {
       rss += `      <link>${SITE_URL}/blog/${blog.slug}</link>\n`;
       rss += `      <guid isPermaLink="true">${SITE_URL}/blog/${blog.slug}</guid>\n`;
       rss += `      <description>${escapeXml(blog.shortDescription || '')}</description>\n`;
-      rss += `      <pubDate>${new Date(blog.publishedAt).toUTCString()}</pubDate>\n`;
+      rss += `      <pubDate>${new Date(blog.publishedAt || blog.createdAt || Date.now()).toUTCString()}</pubDate>\n`;
       rss += '    </item>\n';
     });
 

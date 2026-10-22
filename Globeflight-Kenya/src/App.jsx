@@ -18,6 +18,7 @@ import BlogHome from "@/pages/Blog/BlogHome"; // <-- Import BlogHome
 import BlogCategoryPage from "@/pages/Blog/sections/BlogCategoryPage"; // <-- Import BlogCategoryPage
 const JobPage = React.lazy(() => import('@/pages/JobPage')); // <-- Add this line
 const JobDetail = React.lazy(() => import('@/pages/JobDetail')); // <-- Add this line
+const UnsubscribePage = React.lazy(() => import('@/pages/Blog/sections/UnsubscribePage'));
 
 function App() {
   return (
@@ -68,6 +69,14 @@ function App() {
             element={
               <Suspense fallback={<div className="py-20 text-center">Loading Job Details...</div>}>
                 <JobDetail />
+              </Suspense>
+            }
+          />
+          <Route
+            path="unsubscribe"
+            element={
+              <Suspense fallback={<div className="py-20 text-center">Loading...</div>}>
+                <UnsubscribePage />
               </Suspense>
             }
           />

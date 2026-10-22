@@ -24,6 +24,12 @@ A sample shipment is included so tracking can be tried immediately:
   Number: GF20261001
   Page:   http://127.0.0.1:5173/track?trackingNumber=GF20261001
 
+Email
+  Replies and new-message notices are sent when RESEND_API_KEY is set
+  in the server environment. The key stays out of this public repository.
+  See .env.example. Until that key is set, a reply is saved and the
+  dashboard says the email was not sent.
+
 Start the API before the dashboard:
 
   cd Globeflight-Kenya

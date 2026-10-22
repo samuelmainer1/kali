@@ -553,6 +553,9 @@ export default function BlogGrid() {
                     {subscribeLoading ? 'Subscribing...' : 'Subscribe'}
                   </Button>
                 </form>
+                <p className="text-sm text-white/85">
+                  <Link to="/unsubscribe" className="underline hover:text-white">Unsubscribe</Link>
+                </p>
                 {subscribeError && (
                   <p className="text-sm text-red-200">{subscribeError}</p>
                 )}

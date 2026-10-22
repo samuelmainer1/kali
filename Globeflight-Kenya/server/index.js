@@ -7,10 +7,35 @@ import http from 'node:http';
 import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
+import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
+import { newMessageEmailText, notifyAddress, replyEmailText, sendMail } from './mail.js';
+
+const ROOT = path.dirname(fileURLToPath(import.meta.url));
+
+function loadEnvFile(file) {
+  if (!fs.existsSync(file)) return;
+  for (const line of fs.readFileSync(file, 'utf8').split('\n')) {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith('#')) continue;
+    const eq = trimmed.indexOf('=');
+    if (eq < 1) continue;
+    const key = trimmed.slice(0, eq).trim();
+    let value = trimmed.slice(eq + 1).trim();
+    if (
+      (value.startsWith('"') && value.endsWith('"')) ||
+      (value.startsWith("'") && value.endsWith("'"))
+    ) {
+      value = value.slice(1, -1);
+    }
+    if (process.env[key] == null || process.env[key] === '') process.env[key] = value;
+  }
+}
+
+loadEnvFile(path.join(ROOT, '..', '.env'));
+loadEnvFile(path.join(ROOT, '.env'));
 
 const PORT = Number(process.env.PORT || 5000);
-const ROOT = path.dirname(fileURLToPath(import.meta.url));
 const DB_PATH = path.join(ROOT, 'data', 'db.json');
 const AUTH_PATH = path.join(ROOT, 'data', 'auth.json');
 const UPLOAD_DIR = path.join(ROOT, 'uploads');
@@ -44,6 +69,14 @@ function saveDb() {
   const tmp = `${DB_PATH}.tmp`;
   fs.writeFileSync(tmp, JSON.stringify(db, null, 2));
   fs.renameSync(tmp, DB_PATH);
+}
+
+function refreshPublicFeeds() {
+  const script = path.join(ROOT, '..', 'scripts', 'generate-sitemap-and-rss.cjs');
+  const result = spawnSync(process.execPath, [script], { encoding: 'utf8' });
+  if (result.status !== 0) {
+    console.error(result.stderr || result.stdout || 'Sitemap update failed.');
+  }
 }
 
 function slugify(value) {
@@ -1260,14 +1293,23 @@ async function handle(req, res) {
   if (method === 'POST' && pathname === '/admin/api/contacts/public') {
     const body = await readInput(req);
     const { _files, ...fields } = body;
-    db.contacts.unshift({
+    const contact = {
       id: nextId(db.contacts),
       ...fields,
       isRead: false,
       isStarred: false,
       createdAt: new Date().toISOString(),
-    });
+    };
+    db.contacts.unshift(contact);
     saveDb();
+    const notice = await sendMail({
+      to: notifyAddress(),
+      subject: `New website message from ${contact.name || 'a visitor'}`,
+      text: newMessageEmailText(presentContact(contact)),
+    });
+    if (!notice.sent && notice.reason !== 'not-configured') {
+      console.error('New message email failed:', notice.reason);
+    }
     send(res, 200, { success: true, message: 'Message sent.' });
     return;
   }
@@ -1571,6 +1613,7 @@ async function handle(req, res) {
     blog.id = nextId(db.blogs);
     db.blogs.unshift(blog);
     saveDb();
+    refreshPublicFeeds();
     send(res, 201, { success: true, data: presentBlog(blog) });
     return;
   }
@@ -1586,12 +1629,14 @@ async function handle(req, res) {
       const updated = blogFromRequest(await readInput(req), blog);
       Object.assign(blog, updated);
       saveDb();
+      refreshPublicFeeds();
       send(res, 200, { success: true, data: presentBlog(blog) });
       return;
     }
     if (method === 'DELETE') {
       db.blogs = db.blogs.filter((item) => item !== blog);
       saveDb();
+      refreshPublicFeeds();
       send(res, 200, { success: true });
       return;
     }
@@ -1774,7 +1819,23 @@ async function handle(req, res) {
     item.isReplied = true;
     item.isRead = true;
     saveDb();
-    send(res, 200, { success: true, data: presentContact(item) });
+    const presented = presentContact(item);
+    const result = await sendMail({
+      to: presented.email,
+      subject: `Re: ${presented.subject || 'Your message to Globeflight Kenya'}`,
+      text: replyEmailText(presented, replyMessage),
+    });
+    if (!result.sent && result.reason !== 'not-configured' && result.reason !== 'no-address') {
+      console.error('Reply email failed:', result.reason);
+    }
+    const message = result.sent
+      ? `Reply sent to ${presented.email}.`
+      : result.reason === 'no-address'
+        ? 'Reply saved. This message has no email address to send to.'
+        : result.reason === 'not-configured'
+          ? 'Reply saved. Email is not connected yet, so it was not sent.'
+          : 'Reply saved, but the email could not be sent.';
+    send(res, 200, { success: true, emailSent: result.sent, message, data: presented });
     return;
   }
   const contactId = pathname.match(/^\/admin\/api\/contacts\/(\d+)$/);
