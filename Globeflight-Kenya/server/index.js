@@ -557,6 +557,80 @@ function verifyPassword(password, auth) {
   return actual.length === given.length && crypto.timingSafeEqual(actual, given);
 }
 
+function hashPassword(password) {
+  const salt = crypto.randomBytes(16).toString('hex');
+  const hash = crypto.scryptSync(String(password), salt, 64).toString('hex');
+  return { salt, hash };
+}
+
+function loadAuth() {
+  const raw = JSON.parse(fs.readFileSync(AUTH_PATH, 'utf8'));
+  if (Array.isArray(raw.users)) return raw;
+  if (raw && raw.email) {
+    return {
+      users: [
+        {
+          id: 1,
+          email: raw.email,
+          fullName: raw.fullName || 'Globeflight Admin',
+          phone: '',
+          department: '',
+          role: raw.role || 'superadmin',
+          isActive: true,
+          salt: raw.salt,
+          hash: raw.hash,
+          createdAt: new Date().toISOString(),
+          lastLoginAt: null,
+        },
+      ],
+    };
+  }
+  return { users: [] };
+}
+
+let authStore = loadAuth();
+
+function saveAuth() {
+  const tmp = `${AUTH_PATH}.tmp`;
+  fs.writeFileSync(tmp, JSON.stringify(authStore, null, 2));
+  fs.renameSync(tmp, AUTH_PATH);
+}
+
+function presentAccount(user) {
+  return {
+    id: user.id,
+    email: user.email,
+    fullName: user.fullName,
+    phone: user.phone || '',
+    department: user.department || '',
+    role: user.role,
+    isActive: user.isActive !== false,
+    avatarUrl: user.avatarUrl || null,
+    lastLoginAt: user.lastLoginAt || null,
+    createdAt: user.createdAt || null,
+  };
+}
+
+function findAccountByEmail(email) {
+  const needle = String(email || '').trim().toLowerCase();
+  return authStore.users.find((user) => String(user.email).toLowerCase() === needle);
+}
+
+function requireRole(user, roles) {
+  if (!roles.includes(user.role)) throw httpError(403, 'You do not have permission to do that.');
+}
+
+const ACCOUNT_ROLES = ['user', 'admin', 'superadmin'];
+
+function otherActiveSuperadmins(exceptId) {
+  return authStore.users.filter(
+    (user) =>
+      user.role === 'superadmin' &&
+      user.isActive !== false &&
+      String(user.id) !== String(exceptId)
+  ).length;
+}
+
 const SHIPMENT_STATUSES = [
   'created',
   'collected',
@@ -779,13 +853,15 @@ async function handle(req, res) {
 
   if (method === 'POST' && pathname === '/admin/api/auth/login') {
     const body = await readInput(req);
-    const auth = JSON.parse(fs.readFileSync(AUTH_PATH, 'utf8'));
-    const email = String(body.email || '').trim().toLowerCase();
-    if (email !== String(auth.email).toLowerCase() || !verifyPassword(body.password, auth)) {
+    const account = findAccountByEmail(body.email);
+    if (!account || !verifyPassword(body.password, account)) {
       throw httpError(401, 'Invalid email or password.');
     }
+    if (account.isActive === false) throw httpError(403, 'This account is turned off.');
+    account.lastLoginAt = new Date().toISOString();
+    saveAuth();
     const token = crypto.randomBytes(32).toString('hex');
-    const user = { id: 1, email: auth.email, fullName: auth.fullName, role: auth.role };
+    const user = presentAccount(account);
     sessions.set(token, { user, exp: Date.now() + SESSION_MS });
     send(res, 200, { token, user, success: true });
     return;
@@ -940,7 +1016,118 @@ async function handle(req, res) {
     return;
   }
 
-  requireUser(req);
+  const sessionUser = requireUser(req);
+
+  if (
+    pathname.startsWith('/admin/api/enhanced-tracking') ||
+    pathname.startsWith('/admin/api/tracking/')
+  ) {
+    requireRole(sessionUser, ['admin', 'superadmin']);
+  }
+  if (pathname.startsWith('/admin/api/jobs')) {
+    requireRole(sessionUser, ['superadmin']);
+  }
+
+  if (method === 'GET' && pathname === '/admin/api/users/stats') {
+    requireRole(sessionUser, ['admin', 'superadmin']);
+    const roleDistribution = ACCOUNT_ROLES.map((role) => ({
+      role,
+      count: authStore.users.filter((user) => user.role === role).length,
+    }));
+    send(res, 200, { success: true, data: { roleDistribution } });
+    return;
+  }
+  if (method === 'GET' && pathname === '/admin/api/users') {
+    requireRole(sessionUser, ['admin', 'superadmin']);
+    const users = [...authStore.users]
+      .sort((a, b) => String(a.fullName).localeCompare(String(b.fullName)))
+      .map(presentAccount);
+    send(res, 200, { success: true, data: { users } });
+    return;
+  }
+  if (method === 'POST' && pathname === '/admin/api/users') {
+    requireRole(sessionUser, ['admin', 'superadmin']);
+    const body = await readInput(req);
+    const fullName = String(body.fullName || '').trim();
+    const email = String(body.email || '').trim();
+    const password = String(body.password || '');
+    const role = String(body.role || 'user');
+    if (!fullName || !email || !password) throw httpError(400, 'Name, email, and password are required.');
+    if (!ACCOUNT_ROLES.includes(role)) throw httpError(400, 'Choose a valid role.');
+    if (findAccountByEmail(email)) throw httpError(400, 'That email is already used.');
+    const account = {
+      id: nextId(authStore.users),
+      email,
+      fullName,
+      phone: String(body.phone || '').trim(),
+      department: String(body.department || '').trim(),
+      role,
+      isActive: true,
+      ...hashPassword(password),
+      createdAt: new Date().toISOString(),
+      lastLoginAt: null,
+    };
+    authStore.users.push(account);
+    saveAuth();
+    send(res, 201, { success: true, data: presentAccount(account) });
+    return;
+  }
+  const userActive = pathname.match(/^\/admin\/api\/users\/(\d+)\/toggle-active$/);
+  if (method === 'PATCH' && userActive) {
+    requireRole(sessionUser, ['admin', 'superadmin']);
+    const account = findById(authStore.users, userActive[1]);
+    if (!account) throw httpError(404, 'User not found.');
+    const nextActive = account.isActive === false;
+    if (account.role === 'superadmin' && account.isActive !== false && !nextActive && otherActiveSuperadmins(account.id) === 0) {
+      throw httpError(400, 'Keep at least one superadmin signed in.');
+    }
+    account.isActive = nextActive;
+    saveAuth();
+    send(res, 200, { success: true, data: presentAccount(account) });
+    return;
+  }
+  const userId = pathname.match(/^\/admin\/api\/users\/(\d+)$/);
+  if (userId && method === 'PUT') {
+    requireRole(sessionUser, ['admin', 'superadmin']);
+    const account = findById(authStore.users, userId[1]);
+    if (!account) throw httpError(404, 'User not found.');
+    const body = await readInput(req);
+    const fullName = String(body.fullName || '').trim();
+    const email = String(body.email || '').trim();
+    const role = String(body.role || account.role);
+    if (!fullName || !email) throw httpError(400, 'Name and email are required.');
+    if (!ACCOUNT_ROLES.includes(role)) throw httpError(400, 'Choose a valid role.');
+    if (authStore.users.some((user) => user !== account && String(user.email).toLowerCase() === email.toLowerCase())) {
+      throw httpError(400, 'That email is already used.');
+    }
+    const nextActive = asBool(body.isActive, account.isActive !== false);
+    const losesSuperadmin = account.role === 'superadmin' && account.isActive !== false && (role !== 'superadmin' || !nextActive);
+    if (losesSuperadmin && otherActiveSuperadmins(account.id) === 0) {
+      throw httpError(400, 'Keep at least one superadmin.');
+    }
+    account.fullName = fullName;
+    account.email = email;
+    account.phone = String(body.phone || '').trim();
+    account.department = String(body.department || '').trim();
+    account.role = role;
+    account.isActive = nextActive;
+    saveAuth();
+    send(res, 200, { success: true, data: presentAccount(account) });
+    return;
+  }
+  if (userId && method === 'DELETE') {
+    requireRole(sessionUser, ['admin', 'superadmin']);
+    const account = findById(authStore.users, userId[1]);
+    if (!account) throw httpError(404, 'User not found.');
+    if (String(account.id) === String(sessionUser.id)) throw httpError(400, 'You cannot delete the account you are signed in with.');
+    if (account.role === 'superadmin' && account.isActive !== false && otherActiveSuperadmins(account.id) === 0) {
+      throw httpError(400, 'Keep at least one superadmin.');
+    }
+    authStore.users = authStore.users.filter((user) => user !== account);
+    saveAuth();
+    send(res, 200, { success: true });
+    return;
+  }
 
   if (method === 'POST' && pathname === '/admin/api/uploads') {
     const body = await readInput(req);
