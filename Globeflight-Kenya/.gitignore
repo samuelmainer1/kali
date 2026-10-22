@@ -26,4 +26,6 @@ dist-ssr
 .env.production
 .env.local
 server/data/*.tmp
+server/uploads/*
+!server/uploads/.gitkeep
 email_log.txt

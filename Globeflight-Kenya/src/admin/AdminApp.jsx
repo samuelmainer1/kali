@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { NavLink, Navigate, Route, Routes, useNavigate } from 'react-router-dom';
 import {
   Briefcase,
@@ -11,8 +11,9 @@ import {
   Plus,
   Truck,
 } from 'lucide-react';
-import { api, getToken, setToken } from './adminApi';
+import { api, getToken, setToken, uploadImage } from './adminApi';
 import TrackingAdmin from './TrackingAdmin';
+import BlogEditor from './BlogEditor';
 
 const inputClass =
   'w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 outline-none focus:border-[#88C300] focus:ring-2 focus:ring-[#88C300]/30';
@@ -105,7 +106,7 @@ function Login({ onSuccess }) {
       <form onSubmit={submit} className="w-full max-w-md rounded-2xl bg-white p-8 shadow-xl">
         <p className="text-sm font-semibold uppercase tracking-wide text-[#6ea000]">Globeflight</p>
         <h1 className="mt-2 text-2xl font-semibold text-gray-900">Welcome back</h1>
-        <p className="mt-1 text-sm text-gray-600">Sign in to your local admin account. Changes stay in this project.</p>
+        <p className="mt-1 text-sm text-gray-600">Sign in to manage shipments, blogs, messages, and newsletter emails.</p>
         <Notice error={error} />
         <div className="mt-6 space-y-4">
           <Field label="Email">
@@ -392,6 +393,9 @@ function BlogAdmin() {
 }
 
 function BlogForm({ initial, categories, onCancel, onSaved }) {
+  const imageRef = useRef(null);
+  const [preview, setPreview] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
   const [form, setForm] = useState({
     title: initial?.title || '',
     slug: initial?.slug || '',
@@ -409,6 +413,21 @@ function BlogForm({ initial, categories, onCancel, onSaved }) {
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
   const set = (key) => (value) => setForm((current) => ({ ...current, [key]: value }));
+
+  async function uploadFeatured(event) {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file) return;
+    setUploadingImage(true);
+    setError('');
+    try {
+      set('featuredImage')(await uploadImage(file));
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setUploadingImage(false);
+    }
+  }
 
   async function submit(event) {
     event.preventDefault();
@@ -429,8 +448,27 @@ function BlogForm({ initial, categories, onCancel, onSaved }) {
       <TextInput label="Title" value={form.title} onChange={set('title')} required />
       <TextInput label="Slug" value={form.slug} onChange={set('slug')} placeholder="Leave blank to build it from the title" />
       <Area label="Short description" value={form.shortDescription} onChange={set('shortDescription')} />
-      <Area label="Content (HTML)" value={form.content} onChange={set('content')} rows={12} />
+      <div>
+        <div className="mb-1.5 flex items-center justify-between">
+          <span className="text-sm font-medium text-gray-700">Post</span>
+          <button type="button" className="text-sm font-medium text-[#4f7300]" onClick={() => setPreview((current) => !current)}>
+            {preview ? 'Back to editor' : 'Preview'}
+          </button>
+        </div>
+        {preview ? (
+          <div className="blog-preview rounded-lg border border-gray-300 bg-white px-4 py-3" dangerouslySetInnerHTML={{ __html: form.content || '<p>Nothing to preview yet.</p>' }} />
+        ) : (
+          <BlogEditor key={initial?.id || 'new'} value={form.content} onChange={set('content')} />
+        )}
+      </div>
       <TextInput label="Featured image URL" value={form.featuredImage} onChange={set('featuredImage')} />
+      <div>
+        <button type="button" className="text-sm font-medium text-[#4f7300]" onClick={() => imageRef.current?.click()}>
+          {uploadingImage ? 'Uploading image...' : 'Upload featured image'}
+        </button>
+        <input ref={imageRef} type="file" accept="image/jpeg,image/png,image/webp,image/gif" className="hidden" onChange={uploadFeatured} />
+        {form.featuredImage && <img src={form.featuredImage} alt="" className="mt-3 h-32 w-full rounded-lg object-cover" />}
+      </div>
       <Field label="Category">
         <select className={inputClass} value={form.categoryId} onChange={(e) => set('categoryId')(e.target.value)}>
           <option value="">None</option>

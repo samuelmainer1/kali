@@ -2,91 +2,241 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://globeflight.co.ke/</loc>
-    <lastmod>2025-12-22</lastmod>
+    <lastmod>2026-10-22</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://globeflight.co.ke/about</loc>
-    <lastmod>2025-12-22</lastmod>
+    <loc>https://globeflight.co.ke/about-us</loc>
+    <lastmod>2026-10-22</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://globeflight.co.ke/services</loc>
-    <lastmod>2025-12-22</lastmod>
+    <lastmod>2026-10-22</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
     <loc>https://globeflight.co.ke/services/warehousing-and-distribution-services</loc>
-    <lastmod>2025-12-22</lastmod>
+    <lastmod>2026-10-22</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://globeflight.co.ke/services/sea-freight-services</loc>
-    <lastmod>2025-12-22</lastmod>
+    <lastmod>2026-10-22</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://globeflight.co.ke/services/customs-clearance-and-brokerage</loc>
-    <lastmod>2025-12-22</lastmod>
+    <lastmod>2026-10-22</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://globeflight.co.ke/services/international-import-and-export-express</loc>
-    <lastmod>2025-12-22</lastmod>
+    <lastmod>2026-10-22</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://globeflight.co.ke/services/consolidation-services</loc>
-    <lastmod>2025-12-22</lastmod>
+    <lastmod>2026-10-22</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://globeflight.co.ke/services/big-drop-kenya-e-commerce-marketplace-and-fulfillment</loc>
-    <lastmod>2025-12-22</lastmod>
+    <lastmod>2026-10-22</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://globeflight.co.ke/services/air-freight-services</loc>
-    <lastmod>2025-12-22</lastmod>
+    <lastmod>2026-10-22</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://globeflight.co.ke/services/importer-and-exporter-of-records</loc>
-    <lastmod>2025-12-22</lastmod>
+    <lastmod>2026-10-22</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://globeflight.co.ke/blog</loc>
-    <lastmod>2025-12-22</lastmod>
+    <lastmod>2026-10-22</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://globeflight.co.ke/contact</loc>
-    <lastmod>2025-12-22</lastmod>
+    <loc>https://globeflight.co.ke/contact-us</loc>
+    <lastmod>2026-10-22</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://globeflight.co.ke/track</loc>
-    <lastmod>2025-12-22</lastmod>
+    <lastmod>2026-10-22</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://globeflight.co.ke/quote</loc>
-    <lastmod>2025-12-22</lastmod>
+    <loc>https://globeflight.co.ke/jobs</loc>
+    <lastmod>2026-10-22</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://globeflight.co.ke/blog/customs-clearance-in-kenya-a-complete-guide-for-importers-or-globeflight</loc>
+    <lastmod>2026-10-21</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://globeflight.co.ke/blog/freight-forwarding-in-kenya-everything-your-business-needs-to-know</loc>
+    <lastmod>2026-10-21</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://globeflight.co.ke/blog/kra-advance-cargo-declaration-acd-10-things-every-kenyan-importer-must-know-before-shipping</loc>
+    <lastmod>2026-10-21</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://globeflight.co.ke/blog/how-to-import-goods-into-kenya-a-step-by-step-guide-for-businesses</loc>
+    <lastmod>2026-10-21</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://globeflight.co.ke/blog/kra-introduces-advance-cargo-declaration-acd-what-importers-and-exporters-need-to-know</loc>
+    <lastmod>2026-10-21</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://globeflight.co.ke/blog/why-customs-delays-happen-and-how-to-avoid-them-in-2026</loc>
+    <lastmod>2026-10-21</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://globeflight.co.ke/blog/how-to-choose-the-right-warehousing-partner-for-your-business-7-key-factors-to-consider</loc>
+    <lastmod>2026-10-21</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://globeflight.co.ke/blog/importer-of-record-kenya-everything-your-business-needs-to-know</loc>
+    <lastmod>2026-10-21</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://globeflight.co.ke/blog/customs-clearance-in-kenya-step-by-step-process-costs-and-required-documents-2026-guide</loc>
+    <lastmod>2026-10-21</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://globeflight.co.ke/blog/why-every-container-gets-a-check-up-from-may-1st</loc>
+    <lastmod>2026-10-21</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://globeflight.co.ke/blog/the-ultimate-guide-to-choosing-the-right-air-freight-service</loc>
+    <lastmod>2026-10-21</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://globeflight.co.ke/blog/middle-east-security-escalation-impact-on-global-transportation-and-logistics</loc>
+    <lastmod>2026-10-21</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://globeflight.co.ke/blog/logistics-distribution-101-what-exactly-is-distribution-logistics</loc>
+    <lastmod>2026-10-21</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://globeflight.co.ke/blog/kebs-announces-expiry-of-pvoc-contracts-what-importers-must-do-now</loc>
+    <lastmod>2026-10-21</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://globeflight.co.ke/blog/naivasha-depot-operationalised-to-decongest-port-of-mombasa</loc>
+    <lastmod>2026-10-21</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://globeflight.co.ke/blog/kra-and-kpa-joint-reforms-to-decongest-mombasa-port</loc>
+    <lastmod>2026-10-21</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://globeflight.co.ke/blog/sea-freight-solutions</loc>
+    <lastmod>2026-10-21</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://globeflight.co.ke/blog/merry-christmas-and-a-happy-holiday-season</loc>
+    <lastmod>2026-10-21</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://globeflight.co.ke/blog/kpa-effects-new-cargo-handling-fees</loc>
+    <lastmod>2026-10-21</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://globeflight.co.ke/blog/office-closure-in-observance-of-jamhuri-day</loc>
+    <lastmod>2026-10-21</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://globeflight.co.ke/blog/kenyas-motor-import-guide-every-regulation-tax-and-loophole-explained</loc>
+    <lastmod>2026-10-21</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://globeflight.co.ke/blog/south-sudan-imports-affected-as-kenyan-clearing-agents-halt-services-over-fees</loc>
+    <lastmod>2026-10-21</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://globeflight.co.ke/blog/globeflight-worldwide-express-kenya-your-trusted-importerexporter-of-record-partner</loc>
+    <lastmod>2026-10-21</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://globeflight.co.ke/blog/advanced-port-community-system-that-is-anticipated-to-boost-kenyas-trade</loc>
+    <lastmod>2026-10-21</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://globeflight.co.ke/blog/kenya-digitizes-customs-at-busia-border-to-seal-revenue-leaks</loc>
+    <lastmod>2026-10-21</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>

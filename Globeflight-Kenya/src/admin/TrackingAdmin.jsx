@@ -84,14 +84,35 @@ export default function TrackingAdmin() {
     load();
   }, [query]);
 
+  async function updateStatus(shipment, status) {
+    if (status === shipment.status) return;
+    const label = statusLabel(status);
+    const latest = shipment.updates?.[shipment.updates.length - 1];
+    const location = latest?.location || shipment.destination || shipment.origin || 'In transit';
+    setError('');
+    try {
+      await api(`/tracking/${shipment.id}/updates`, {
+        method: 'POST',
+        body: {
+          status,
+          location,
+          description: `Status updated to ${label}.`,
+        },
+      });
+      setMessage(`${shipment.trackingNumber} is now ${label}. The public track page shows this update.`);
+      load();
+    } catch (err) {
+      setError(err.message);
+    }
+  }
+
   return (
     <div>
       <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold text-gray-900">Tracking</h1>
           <p className="mt-1 max-w-2xl text-sm text-gray-600">
-            Add a shipment, then record each stage. Customers see the same record at /track.
-            Live customer shipments were not copied into this project.
+            Add a shipment, then change its status in the list. Customers see that update at /track. Open a row to add a location note.
           </p>
         </div>
         <button
@@ -175,10 +196,17 @@ export default function TrackingAdmin() {
                       <td className="px-4 py-3 font-medium text-gray-900">{shipment.trackingNumber}</td>
                       <td className="px-4 py-3 text-gray-700">{shipment.origin} → {shipment.destination}</td>
                       <td className="px-4 py-3 text-gray-700">{shipment.senderName} → {shipment.receiverName}</td>
-                      <td className="px-4 py-3">
-                        <span className="rounded-full bg-[#88C300]/15 px-2 py-1 text-xs font-semibold text-[#3d5a00]">
-                          {statusLabel(shipment.status)}
-                        </span>
+                      <td className="px-4 py-3" onClick={(event) => event.stopPropagation()}>
+                        <select
+                          className="rounded-lg border border-gray-300 bg-white px-2 py-1 text-xs font-semibold text-gray-800"
+                          value={shipment.status || 'created'}
+                          aria-label={`Status for ${shipment.trackingNumber}`}
+                          onChange={(event) => updateStatus(shipment, event.target.value)}
+                        >
+                          {STATUSES.map(([value, label]) => (
+                            <option key={value} value={value}>{label}</option>
+                          ))}
+                        </select>
                       </td>
                     </tr>
                   ))}

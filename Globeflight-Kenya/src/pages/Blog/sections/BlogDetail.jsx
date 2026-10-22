@@ -150,8 +150,8 @@ const BlogDetailsPage = () => {
     )
   }
 
-  const pageTitle = `${post.title} | Globeflight Kenya Blog`;
-  const pageDesc = post.shortDescription || post.title;
+  const pageTitle = post.metaTitle || `${post.title} | Globeflight Kenya Blog`;
+  const pageDesc = post.metaDescription || post.shortDescription || post.title;
   const canonicalUrl = `https://globeflight.co.ke/blog/${post.slug}`;
   const imageUrl = getApiImageUrl(post.featuredImage);
 
@@ -160,17 +160,17 @@ const BlogDetailsPage = () => {
       <Helmet>
         <title>{pageTitle}</title>
         <meta name="description" content={pageDesc} />
-        <meta name="keywords" content={`${post.category?.name || ''}, Globeflight Kenya, logistics, shipping, blog`} />
+        <meta name="keywords" content={[...(Array.isArray(post.tags) ? post.tags : []), post.category?.name, 'Globeflight Kenya', 'logistics', 'shipping'].filter(Boolean).join(', ')} />
         <link rel="canonical" href={canonicalUrl} />
         <meta property="og:type" content="article" />
         <meta property="og:url" content={canonicalUrl} />
-        <meta property="og:title" content={post.title} />
+        <meta property="og:title" content={pageTitle} />
         <meta property="og:description" content={pageDesc} />
         <meta property="og:image" content={imageUrl} />
         <meta property="article:published_time" content={post.publishedAt} />
         <meta property="article:author" content={post.author?.fullName || 'Anonymous'} />
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content={post.title} />
+        <meta name="twitter:title" content={pageTitle} />
         <meta name="twitter:description" content={pageDesc} />
         <meta name="twitter:image" content={imageUrl} />
         <script type="application/ld+json">

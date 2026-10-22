@@ -13,6 +13,7 @@ const PORT = Number(process.env.PORT || 5000);
 const ROOT = path.dirname(fileURLToPath(import.meta.url));
 const DB_PATH = path.join(ROOT, 'data', 'db.json');
 const AUTH_PATH = path.join(ROOT, 'data', 'auth.json');
+const UPLOAD_DIR = path.join(ROOT, 'uploads');
 const SESSION_MS = 7 * 24 * 60 * 60 * 1000;
 
 const sessions = new Map();
@@ -161,10 +162,12 @@ function parseMultipart(buffer, contentType) {
     if (!name) continue;
     const filename = /filename="([^"]*)"/.exec(headers);
     if (filename && filename[1]) {
+      const typeMatch = /content-type:\s*([^\r\n]+)/i.exec(headers);
       files.push({
         field: name[1],
         filename: filename[1],
-        size: Buffer.byteLength(body, 'latin1'),
+        type: typeMatch ? typeMatch[1].trim().toLowerCase() : '',
+        data: Buffer.from(body, 'latin1'),
       });
     } else if (fields[name[1]] === undefined) {
       fields[name[1]] = Buffer.from(body, 'latin1').toString('utf8');
@@ -541,6 +544,29 @@ async function handle(req, res) {
   const pathname = url.pathname.replace(/\/+$/, '') || '/';
   const method = req.method || 'GET';
 
+  if (method === 'GET' && pathname.startsWith('/uploads/')) {
+    const name = path.basename(pathname);
+    const filePath = path.join(UPLOAD_DIR, name);
+    if (name !== path.basename(name) || !fs.existsSync(filePath) || !fs.statSync(filePath).isFile()) {
+      throw httpError(404, 'File not found.');
+    }
+    const types = {
+      '.jpg': 'image/jpeg',
+      '.jpeg': 'image/jpeg',
+      '.png': 'image/png',
+      '.webp': 'image/webp',
+      '.gif': 'image/gif',
+    };
+    const data = fs.readFileSync(filePath);
+    res.writeHead(200, {
+      'Content-Type': types[path.extname(name).toLowerCase()] || 'application/octet-stream',
+      'Content-Length': data.length,
+      'Cache-Control': 'public, max-age=86400',
+    });
+    res.end(data);
+    return;
+  }
+
   if (method === 'OPTIONS') {
     res.writeHead(204, {
       'Access-Control-Allow-Origin': '*',
@@ -717,6 +743,25 @@ async function handle(req, res) {
   }
 
   requireUser(req);
+
+  if (method === 'POST' && pathname === '/admin/api/uploads') {
+    const body = await readInput(req);
+    const file = (body._files || []).find((item) => item.data && item.data.length);
+    if (!file) throw httpError(400, 'Choose an image to upload.');
+    const extensions = {
+      'image/jpeg': 'jpg',
+      'image/png': 'png',
+      'image/webp': 'webp',
+      'image/gif': 'gif',
+    };
+    const ext = extensions[file.type];
+    if (!ext) throw httpError(400, 'Upload a JPG, PNG, WEBP, or GIF image.');
+    const filename = `${Date.now()}-${crypto.randomBytes(4).toString('hex')}.${ext}`;
+    fs.mkdirSync(UPLOAD_DIR, { recursive: true });
+    fs.writeFileSync(path.join(UPLOAD_DIR, filename), file.data);
+    send(res, 201, { success: true, data: { url: `/uploads/${filename}` } });
+    return;
+  }
 
   if (method === 'GET' && pathname === '/admin/api/stats') {
     send(res, 200, {

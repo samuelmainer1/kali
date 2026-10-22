@@ -34,22 +34,22 @@ function fetchFromAPI(url) {
 const SITE_URL = 'https://globeflight.co.ke';
 
 // Static pages configuration
+const servicesFile = fs.readFileSync(path.join(__dirname, '..', 'src', 'data', 'services.js'), 'utf8');
+const servicePages = [...servicesFile.matchAll(/"slug": "([^"]+)"/g)].map((match) => ({
+  url: `/services/${match[1]}`,
+  changefreq: 'monthly',
+  priority: '0.7',
+}));
+
 const staticPages = [
   { url: '/', changefreq: 'weekly', priority: '1.0' },
-  { url: '/about', changefreq: 'monthly', priority: '0.8' },
+  { url: '/about-us', changefreq: 'monthly', priority: '0.8' },
   { url: '/services', changefreq: 'monthly', priority: '0.9' },
-  { url: '/services/warehousing-and-distribution-services', changefreq: 'monthly', priority: '0.7' },
-  { url: '/services/sea-freight-services', changefreq: 'monthly', priority: '0.7' },
-  { url: '/services/customs-clearance-and-brokerage', changefreq: 'monthly', priority: '0.7' },
-  { url: '/services/international-import-and-export-express', changefreq: 'monthly', priority: '0.7' },
-  { url: '/services/consolidation-services', changefreq: 'monthly', priority: '0.7' },
-  { url: '/services/big-drop-kenya-e-commerce-marketplace-and-fulfillment', changefreq: 'monthly', priority: '0.7' },
-  { url: '/services/air-freight-services', changefreq: 'monthly', priority: '0.7' },
-  { url: '/services/importer-and-exporter-of-records', changefreq: 'monthly', priority: '0.7' },
+  ...servicePages,
   { url: '/blog', changefreq: 'daily', priority: '0.9' },
-  { url: '/contact', changefreq: 'monthly', priority: '0.8' },
+  { url: '/contact-us', changefreq: 'monthly', priority: '0.8' },
   { url: '/track', changefreq: 'weekly', priority: '0.6' },
-  { url: '/quote', changefreq: 'monthly', priority: '0.8' }
+  { url: '/jobs', changefreq: 'weekly', priority: '0.6' },
 ];
 
 function formatDate(date) {
@@ -71,15 +71,9 @@ async function generateSitemap() {
   try {
     console.log('📚 Fetching published blog posts from API...');
 
-    let blogs = [];
-    try {
-      const response = await fetchFromAPI(`${API_BASE_URL}/api/blogs?limit=1000`);
-      blogs = response.data || [];
-      console.log(`✅ Found ${blogs.length} published blog posts`);
-    } catch (error) {
-      console.warn('⚠️  Could not fetch blogs from API, generating sitemap with static pages only');
-      console.warn(`   Error: ${error.message}`);
-    }
+    const db = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'server', 'data', 'db.json'), 'utf8'));
+    const blogs = (db.blogs || []).filter((blog) => blog.isPublished !== false && blog.slug);
+    console.log(`Found ${blogs.length} published blog posts`);
 
     let sitemap = '<?xml version="1.0" encoding="UTF-8"?>\n';
     sitemap += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n';
@@ -124,14 +118,8 @@ async function generateRSS() {
   try {
     console.log('📰 Generating RSS feed...');
 
-    let blogs = [];
-    try {
-      const response = await fetchFromAPI(`${API_BASE_URL}/api/blogs?limit=50`);
-      blogs = response.data || [];
-    } catch (error) {
-      console.warn('⚠️  Could not fetch blogs from API, generating empty RSS feed');
-      console.warn(`   Error: ${error.message}`);
-    }
+    const db = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'server', 'data', 'db.json'), 'utf8'));
+    const blogs = (db.blogs || []).filter((blog) => blog.isPublished !== false && blog.slug).slice(0, 50);
 
     let rss = '<?xml version="1.0" encoding="UTF-8"?>\n';
     rss += '<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">\n';
