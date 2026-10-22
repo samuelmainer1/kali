@@ -3,6 +3,7 @@ import { Helmet } from 'react-helmet-async'
 import Navbar from './components/Navbar'
 import { Outlet, useLocation } from 'react-router-dom'
 import Footer from './components/Footer'
+import LiveChat from '@/components/LiveChat'
 import { footerItems, navbaritems } from '@/constants/layout'
 
 const MainLayout = () => {
@@ -275,6 +276,7 @@ const MainLayout = () => {
         
         {/* Footer */}
         <Footer data={footerItems} />
+        <LiveChat />
       </div>
     </>
   );

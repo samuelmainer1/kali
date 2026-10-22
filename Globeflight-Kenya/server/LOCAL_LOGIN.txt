@@ -30,6 +30,12 @@ Email
   See .env.example. Until that key is set, a reply is saved and the
   dashboard says the email was not sent.
 
+Live chat
+  The public site has a chat button at the bottom right. While an admin
+  is signed in to this dashboard, that person answers. When nobody is
+  signed in, the assistant answers if GROQ_API_KEY is set in .env.
+  The key stays out of this public repository.
+
 Start the API before the dashboard:
 
   cd Globeflight-Kenya

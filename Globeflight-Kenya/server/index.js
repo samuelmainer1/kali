@@ -10,6 +10,15 @@ import crypto from 'node:crypto';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { newMessageEmailText, notifyAddress, replyEmailText, sendMail } from './mail.js';
+import {
+  isStaffOnline,
+  markStaffPresent,
+  postVisitorMessage,
+  readVisitorChat,
+  staffInbox,
+  staffReply,
+  staffThread,
+} from './chat.js';
 
 const ROOT = path.dirname(fileURLToPath(import.meta.url));
 
@@ -42,6 +51,16 @@ const UPLOAD_DIR = path.join(ROOT, 'uploads');
 const SESSION_MS = 7 * 24 * 60 * 60 * 1000;
 
 const sessions = new Map();
+const chatHits = new Map();
+
+function allowChatMessage(key) {
+  const now = Date.now();
+  const recent = (chatHits.get(key) || []).filter((time) => now - time < 5 * 60 * 1000);
+  if (recent.length >= 12) return false;
+  recent.push(now);
+  chatHits.set(key, recent);
+  return true;
+}
 
 function httpError(status, message) {
   const error = new Error(message);
@@ -59,6 +78,8 @@ function loadDb() {
   db.contacts ||= [];
   db.subscribers ||= [];
   db.notifications ||= [];
+  db.chats ||= [];
+  db.chatMessages ||= [];
   db.applications ||= [];
   db.shipments ||= [];
   return db;
@@ -690,7 +711,7 @@ function send(res, status, payload) {
     'Content-Type': 'application/json; charset=utf-8',
     'Content-Length': Buffer.byteLength(body),
     'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Headers': 'Content-Type, Authorization, Accept',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization, Accept, X-Chat-Token',
     'Access-Control-Allow-Methods': 'GET, POST, PUT, PATCH, DELETE, OPTIONS',
     'Cache-Control': 'no-store',
   });
@@ -1224,7 +1245,7 @@ async function handle(req, res) {
   if (method === 'OPTIONS') {
     res.writeHead(204, {
       'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Headers': 'Content-Type, Authorization, Accept',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization, Accept, X-Chat-Token',
       'Access-Control-Allow-Methods': 'GET, POST, PUT, PATCH, DELETE, OPTIONS',
     });
     res.end();
@@ -1445,6 +1466,47 @@ async function handle(req, res) {
     return;
   }
 
+  if (method === 'GET' && pathname === '/admin/api/chat/status') {
+    send(res, 200, { success: true, data: { staffOnline: isStaffOnline() } });
+    return;
+  }
+
+  if (method === 'GET' && pathname === '/admin/api/chat') {
+    send(res, 200, { success: true, data: readVisitorChat(db, req.headers['x-chat-token']) });
+    return;
+  }
+
+  if (method === 'POST' && pathname === '/admin/api/chat/messages') {
+    const body = await readInput(req);
+    const token = String(req.headers['x-chat-token'] || '');
+    const limitKey = token || req.socket.remoteAddress || 'visitor';
+    if (!allowChatMessage(limitKey)) {
+      throw httpError(429, 'Please wait a moment before sending another message.');
+    }
+    const data = await postVisitorMessage(db, { token, text: body.text, name: body.name }, (chat, text) => {
+      const name = chat.visitorName || 'a visitor';
+      const existing = (db.notifications || []).find((note) => note.type === 'chat' && note.refId === chat.id);
+      if (existing) {
+        existing.isRead = false;
+        existing.title = clip(`Live chat from ${name}`, 80);
+        existing.detail = clip(text, 160);
+        existing.createdAt = new Date().toISOString();
+        db.notifications = [existing, ...(db.notifications || []).filter((note) => note !== existing)];
+        return;
+      }
+      addNotification({
+        type: 'chat',
+        title: `Live chat from ${name}`,
+        detail: text,
+        link: '/chat',
+        refId: chat.id,
+      });
+    });
+    saveDb();
+    send(res, 200, { success: true, data });
+    return;
+  }
+
   const sessionUser = requireUser(req);
 
   if (
@@ -1455,6 +1517,46 @@ async function handle(req, res) {
   }
   if (pathname.startsWith('/admin/api/jobs')) {
     requireRole(sessionUser, ['superadmin']);
+  }
+
+  if (method === 'POST' && pathname === '/admin/api/chat/presence') {
+    requireRole(sessionUser, ['admin', 'superadmin']);
+    markStaffPresent(sessionUser.id);
+    send(res, 200, { success: true, data: { staffOnline: true } });
+    return;
+  }
+
+  if (method === 'GET' && pathname === '/admin/api/chat/inbox') {
+    requireRole(sessionUser, ['admin', 'superadmin']);
+    markStaffPresent(sessionUser.id);
+    send(res, 200, { success: true, data: staffInbox(db) });
+    return;
+  }
+
+  const chatThread = pathname.match(/^\/admin\/api\/chat\/inbox\/(\d+)$/);
+  if (chatThread && method === 'GET') {
+    requireRole(sessionUser, ['admin', 'superadmin']);
+    markStaffPresent(sessionUser.id);
+    const data = staffThread(db, chatThread[1]);
+    for (const note of db.notifications || []) {
+      if (note.type === 'chat' && String(note.refId) === String(chatThread[1])) note.isRead = true;
+    }
+    saveDb();
+    send(res, 200, { success: true, data });
+    return;
+  }
+
+  const chatReply = pathname.match(/^\/admin\/api\/chat\/inbox\/(\d+)\/reply$/);
+  if (chatReply && method === 'POST') {
+    requireRole(sessionUser, ['admin', 'superadmin']);
+    const body = await readInput(req);
+    const data = staffReply(db, chatReply[1], sessionUser, body.text);
+    for (const note of db.notifications || []) {
+      if (note.type === 'chat' && String(note.refId) === String(chatReply[1])) note.isRead = true;
+    }
+    saveDb();
+    send(res, 200, { success: true, data });
+    return;
   }
 
   if (method === 'GET' && pathname === '/admin/api/users/stats') {

@@ -68,7 +68,7 @@
     ].join(';');
 
     var label = document.createElement('div');
-    label.textContent = note.type === 'subscriber' ? 'Newsletter' : 'Message';
+    label.textContent = note.type === 'subscriber' ? 'Newsletter' : note.type === 'chat' ? 'Live chat' : 'Message';
     label.style.cssText = 'font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:#5f8a00';
 
     var title = document.createElement('div');
@@ -86,6 +86,11 @@
     button.append(label, title, detail, time);
     button.addEventListener('click', function () {
       mark({ id: note.id }).finally(function () {
+        if (note.type === 'chat' && window.gfOpenChat) {
+          close();
+          window.gfOpenChat();
+          return;
+        }
         window.location.assign('/admin' + (note.link || '/'));
       });
     });
