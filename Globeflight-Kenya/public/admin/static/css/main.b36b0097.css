@@ -5,3 +5,26 @@ body{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;font-f
 .ProseMirror blockquote{background:#f3f8e6;border-left:6px solid #88C300;border-radius:0 12px 12px 0;color:#1f2937;font-size:1.05rem;font-style:italic;margin:1.25rem 0;padding:1rem 1.1rem .9rem 1.2rem}
 .ProseMirror blockquote::before{color:#88C300;content:"\201C";display:block;font-size:2.4rem;font-style:normal;font-weight:700;line-height:.8;margin-bottom:.2rem}
 .ProseMirror blockquote p{margin:0}
+
+.ProseMirror table{border-collapse:collapse;margin:1rem 0;width:100%}
+.ProseMirror td,.ProseMirror th{border:1px solid #d1d5db;padding:.55rem .7rem;vertical-align:top}
+.ProseMirror th{background:#f3f8e6;font-weight:700}
+.ProseMirror td p,.ProseMirror th p{margin:0}
+#gf-blog-preview{background:#fff;max-height:500px;overflow:auto;padding:16px 18px}
+#gf-blog-preview h1{font-size:2rem;font-weight:700;line-height:1.25;margin:1rem 0 .5rem}
+#gf-blog-preview h2{font-size:1.5rem;font-weight:700;margin:1rem 0 .5rem}
+#gf-blog-preview h3{font-size:1.25rem;font-weight:700;margin:.9rem 0 .4rem}
+#gf-blog-preview h4{font-size:1.1rem;font-weight:700;margin:.8rem 0 .35rem}
+#gf-blog-preview p{line-height:1.7;margin:.75rem 0}
+#gf-blog-preview ul{list-style:disc;margin:.75rem 0;padding-left:1.5rem}
+#gf-blog-preview ol{list-style:decimal;margin:.75rem 0;padding-left:1.5rem}
+#gf-blog-preview blockquote{background:#f3f8e6;border-left:6px solid #88C300;border-radius:0 12px 12px 0;font-style:italic;margin:1rem 0;padding:1rem 1.1rem .9rem 1.2rem}
+#gf-blog-preview blockquote::before{color:#88C300;content:"\201C";display:block;font-size:2.4rem;font-style:normal;font-weight:700;line-height:.8}
+#gf-blog-preview pre{background:#111827;border-radius:8px;color:#f9fafb;font-family:ui-monospace,Menlo,Consolas,monospace;padding:12px}
+#gf-blog-preview a{color:#4f7300;text-decoration:underline}
+#gf-blog-preview img{border-radius:8px;max-width:100%}
+#gf-blog-preview table{border-collapse:collapse;margin:1rem 0;width:100%}
+#gf-blog-preview td,#gf-blog-preview th{border:1px solid #d1d5db;padding:.55rem .7rem;vertical-align:top}
+#gf-blog-preview th{background:#f3f8e6;font-weight:700}
+#gf-blog-preview u{text-decoration:underline}
+#gf-blog-preview strong{font-weight:700}
