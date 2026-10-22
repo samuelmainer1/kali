@@ -94,9 +94,10 @@ function addNotification(entry) {
 }
 
 function messageNotification(contact) {
-  const name = clip(contact.name, 60) || 'a visitor';
-  const about = clip(contact.subject || contact.inquiryType, 80);
-  const message = clip(contact.message, 120);
+  const presented = presentContact(contact);
+  const name = clip(presented.name, 60) || 'a visitor';
+  const about = clip(presented.subject, 80);
+  const message = clip(presented.message, 120);
   return {
     type: 'message',
     title: `New message from ${name}`,
@@ -117,6 +118,53 @@ function removeNotifications(type, refId) {
   db.notifications = (db.notifications || []).filter(
     (note) => !(note.type === type && note.refId === refId)
   );
+}
+
+function ensureNotifications() {
+  db.notifications ||= [];
+  let changed = false;
+  for (const contact of db.contacts) {
+    if (db.notifications.some((note) => note.type === 'message' && note.refId === contact.id)) continue;
+    const note = messageNotification(contact);
+    db.notifications.push({ id: nextId(db.notifications), ...note, isRead: false });
+    changed = true;
+  }
+  for (const subscriber of db.subscribers) {
+    if (subscriber.isActive === false) continue;
+    if (db.notifications.some((note) => note.type === 'subscriber' && note.refId === subscriber.id)) continue;
+    db.notifications.push({
+      id: nextId(db.notifications),
+      type: 'subscriber',
+      title: 'New newsletter subscriber',
+      detail: subscriber.email,
+      link: '/newsletter-subscribers',
+      refId: subscriber.id,
+      isRead: false,
+      createdAt: subscriber.createdAt || new Date().toISOString(),
+    });
+    changed = true;
+  }
+  if (!changed) return;
+  db.notifications.sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)));
+  saveDb();
+}
+
+function presentSubscriber(item) {
+  return {
+    ...item,
+    isActive: item.isActive !== false,
+    unsubscribedAt: item.unsubscribedAt || null,
+  };
+}
+
+function subscriberStats() {
+  const items = db.subscribers.map(presentSubscriber);
+  return {
+    total: items.length,
+    active: items.filter((item) => item.isActive).length,
+    unsubscribed: items.filter((item) => !item.isActive).length,
+    thisMonth: createdThisMonth(items),
+  };
 }
 
 function refreshPublicFeeds() {
@@ -1237,8 +1285,29 @@ async function handle(req, res) {
     const body = await readInput(req);
     const email = String(body.email || '').trim().toLowerCase();
     if (!email.includes('@')) throw httpError(400, 'Please enter a valid email address.');
-    if (!db.subscribers.some((item) => item.email === email)) {
-      const subscriber = { id: nextId(db.subscribers), email, createdAt: new Date().toISOString() };
+    const existing = db.subscribers.find((item) => item.email === email);
+    if (existing) {
+      if (existing.isActive === false) {
+        existing.isActive = true;
+        existing.unsubscribedAt = null;
+        addNotification({
+          type: 'subscriber',
+          title: 'New newsletter subscriber',
+          detail: existing.email,
+          link: '/newsletter-subscribers',
+          refId: existing.id,
+          createdAt: new Date().toISOString(),
+        });
+        saveDb();
+      }
+    } else {
+      const subscriber = {
+        id: nextId(db.subscribers),
+        email,
+        isActive: true,
+        unsubscribedAt: null,
+        createdAt: new Date().toISOString(),
+      };
       db.subscribers.unshift(subscriber);
       addNotification({
         type: 'subscriber',
@@ -1257,8 +1326,12 @@ async function handle(req, res) {
   if (method === 'POST' && pathname === '/admin/api/blogs/newsletter/unsubscribe') {
     const body = await readInput(req);
     const email = String(body.email || '').trim().toLowerCase();
-    db.subscribers = db.subscribers.filter((item) => item.email !== email);
-    saveDb();
+    const existing = db.subscribers.find((item) => item.email === email);
+    if (existing && existing.isActive !== false) {
+      existing.isActive = false;
+      existing.unsubscribedAt = new Date().toISOString();
+      saveDb();
+    }
     send(res, 200, { success: true, message: 'Unsubscribed.' });
     return;
   }
@@ -1508,7 +1581,7 @@ async function handle(req, res) {
     return;
   }
   if (method === 'GET' && pathname === '/admin/api/dashboard/notifications') {
-    send(res, 200, { success: true, data: [] });
+    send(res, 200, { success: true, data: (db.notifications || []).slice(0, 30) });
     return;
   }
 
@@ -1936,6 +2009,57 @@ async function handle(req, res) {
     return;
   }
 
+  if (method === 'GET' && pathname === '/admin/api/blogs/newsletter/stats') {
+    send(res, 200, { success: true, data: subscriberStats() });
+    return;
+  }
+  if (method === 'GET' && pathname === '/admin/api/blogs/newsletter/subscribers') {
+    const page = Math.max(1, Number(url.searchParams.get('page') || 1));
+    const limit = Math.max(1, Math.min(100, Number(url.searchParams.get('limit') || 10)));
+    const search = String(url.searchParams.get('search') || '').trim().toLowerCase();
+    let items = db.subscribers.map(presentSubscriber);
+    if (search) items = items.filter((item) => String(item.email).includes(search));
+    items.sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)));
+    const total = items.length;
+    const pages = Math.max(1, Math.ceil(total / limit) || 1);
+    const safePage = Math.min(page, pages);
+    const subscribers = items.slice((safePage - 1) * limit, safePage * limit);
+    send(res, 200, {
+      success: true,
+      data: { subscribers, pagination: { total, page: safePage, pages, limit } },
+    });
+    return;
+  }
+  const subscriberItem = pathname.match(
+    /^\/admin\/api\/blogs\/newsletter\/subscribers\/(\d+)(?:\/(unsubscribe|resubscribe))?$/
+  );
+  if (subscriberItem) {
+    const item = findById(db.subscribers, subscriberItem[1]);
+    if (!item) throw httpError(404, 'Subscriber not found.');
+    const action = subscriberItem[2];
+    if (method === 'DELETE' && !action) {
+      db.subscribers = db.subscribers.filter((row) => row !== item);
+      removeNotifications('subscriber', item.id);
+      saveDb();
+      send(res, 200, { success: true });
+      return;
+    }
+    if (method === 'PATCH' && action === 'unsubscribe') {
+      item.isActive = false;
+      item.unsubscribedAt = new Date().toISOString();
+      saveDb();
+      send(res, 200, { success: true, data: presentSubscriber(item) });
+      return;
+    }
+    if (method === 'PATCH' && action === 'resubscribe') {
+      item.isActive = true;
+      item.unsubscribedAt = null;
+      saveDb();
+      send(res, 200, { success: true, data: presentSubscriber(item) });
+      return;
+    }
+  }
+
   if (method === 'GET' && pathname === '/admin/api/subscribers') {
     send(res, 200, { success: true, data: db.subscribers });
     return;
@@ -1957,6 +2081,8 @@ const server = http.createServer((req, res) => {
     }
   });
 });
+
+ensureNotifications();
 
 server.listen(PORT, '127.0.0.1', () => {
   console.log(`Local admin API listening on http://127.0.0.1:${PORT}`);
