@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import {
   LayoutGrid,
@@ -82,6 +82,9 @@ export default function VendorDashboard() {
   const [hours, setHours] = useState(defaultVendorHours());
   const [csvText, setCsvText] = useState('name,price,stock,categorySlug,description,brand\n');
   const [notice, setNotice] = useState('');
+  const [selectedProductIds, setSelectedProductIds] = useState(() => new Set());
+  const [bulkDeleting, setBulkDeleting] = useState(false);
+  const selectAllProductsRef = useRef(null);
 
   async function refresh() {
     setLoading(true);
@@ -199,14 +202,71 @@ export default function VendorDashboard() {
     }
   }
 
+  const allProductsSelected = products.length > 0 && products.every((p) => selectedProductIds.has(p.id));
+  const someProductsSelected = products.some((p) => selectedProductIds.has(p.id));
+
+  useEffect(() => {
+    if (selectAllProductsRef.current) {
+      selectAllProductsRef.current.indeterminate = someProductsSelected && !allProductsSelected;
+    }
+  }, [someProductsSelected, allProductsSelected]);
+
   async function removeProduct(id) {
     if (!confirm('Delete this product?')) return;
     try {
       await api.delete(`/products/${id}`);
       flash('Product removed');
+      setSelectedProductIds((prev) => {
+        if (!prev.has(id)) return prev;
+        const next = new Set(prev);
+        next.delete(id);
+        return next;
+      });
       await refresh();
     } catch (e) {
       setError(e.message);
+    }
+  }
+
+  function toggleProductSelected(id) {
+    setSelectedProductIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  function toggleSelectAllProducts() {
+    setSelectedProductIds((prev) => {
+      if (allProductsSelected) return new Set();
+      const next = new Set(prev);
+      products.forEach((p) => next.add(p.id));
+      return next;
+    });
+  }
+
+  async function deleteSelectedProducts() {
+    const ids = [...selectedProductIds];
+    if (!ids.length || bulkDeleting) return;
+    if (
+      !window.confirm(
+        `Delete ${ids.length} product${ids.length === 1 ? '' : 's'} permanently? This cannot be undone.`
+      )
+    ) {
+      return;
+    }
+    setBulkDeleting(true);
+    try {
+      const res = await api.post('/products/bulk-delete', { ids });
+      const count = res.deleted ?? ids.length;
+      flash(`${count} product${count === 1 ? '' : 's'} deleted`);
+      setSelectedProductIds(new Set());
+      await refresh();
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setBulkDeleting(false);
     }
   }
 
@@ -351,10 +411,42 @@ export default function VendorDashboard() {
           )}
 
           {tab === 'products' && (
-            <div className="mt-8 overflow-x-auto rounded-2xl border border-ink/5 bg-white shadow-lift">
+            <div className="mt-8">
+              {selectedProductIds.size > 0 && (
+                <div className="mb-4 flex flex-wrap items-center gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm">
+                  <span className="font-semibold text-red-800">{selectedProductIds.size} selected</span>
+                  <button
+                    type="button"
+                    onClick={deleteSelectedProducts}
+                    disabled={bulkDeleting}
+                    className="inline-flex items-center gap-1 rounded-lg bg-red-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-red-700 disabled:opacity-60"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                    {bulkDeleting ? 'Deleting…' : 'Delete selected'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedProductIds(new Set())}
+                    className="text-xs font-semibold text-red-800 underline underline-offset-2"
+                  >
+                    Clear
+                  </button>
+                </div>
+              )}
+            <div className="overflow-x-auto rounded-2xl border border-ink/5 bg-white shadow-lift">
               <table className="w-full text-sm text-left">
                 <thead className="border-b border-ink/10 text-ink-mute">
                   <tr>
+                    <th className="p-4 w-10">
+                      <input
+                        ref={selectAllProductsRef}
+                        type="checkbox"
+                        checked={allProductsSelected}
+                        disabled={products.length === 0}
+                        onChange={toggleSelectAllProducts}
+                        aria-label="Select all products"
+                      />
+                    </th>
                     <th className="p-4">Product</th>
                     <th className="p-4">Price</th>
                     <th className="p-4">Stock</th>
@@ -365,6 +457,14 @@ export default function VendorDashboard() {
                 <tbody>
                   {products.map((p) => (
                     <tr key={p.id} className="border-b border-ink/5 last:border-0">
+                      <td className="p-4">
+                        <input
+                          type="checkbox"
+                          checked={selectedProductIds.has(p.id)}
+                          onChange={() => toggleProductSelected(p.id)}
+                          aria-label={`Select ${p.name}`}
+                        />
+                      </td>
                       <td className="p-4">
                         <div className="flex items-center gap-3">
                           <img src={p.images?.[0]} alt="" className="h-10 w-10 rounded-lg object-cover" />
@@ -398,13 +498,14 @@ export default function VendorDashboard() {
                   ))}
                   {products.length === 0 && (
                     <tr>
-                      <td colSpan={5} className="p-8 text-center text-sm text-ink-mute">
+                      <td colSpan={6} className="p-8 text-center text-sm text-ink-mute">
                         No products listed yet.
                       </td>
                     </tr>
                   )}
                 </tbody>
               </table>
+            </div>
             </div>
           )}
 
