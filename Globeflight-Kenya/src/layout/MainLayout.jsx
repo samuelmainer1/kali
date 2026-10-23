@@ -57,6 +57,11 @@ const MainLayout = () => {
           title: `${baseTitle} - About Us | Your Trusted Logistics Partner`,
           description: "Learn about Globeflight Kenya's journey as a leading logistics company. Discover our mission, values, and commitment to excellence in shipping services.",
         };
+      case '/home':
+        return {
+          title: `${baseTitle} - Shipping, Tracking and Logistics from Nairobi`,
+          description: "Globeflight Kenya ships air freight, sea freight, and parcels from Nairobi, with warehousing in Mlolongo and customs clearance through Union Green Logistics Ltd.",
+        };
       case '/blog':
         return {
           title: `${baseTitle} - Blog | Latest News & Industry Updates`,
@@ -94,18 +99,18 @@ const MainLayout = () => {
         <meta property="og:url" content={`https://globeflight.co.ke${location.pathname}`} />
         <meta property="og:title" content={title} />
         <meta property="og:description" content={description} />
-        <meta property="og:image" content="https://globeflight.co.ke/logo.png" />
+        <meta property="og:image" content="https://globeflight.co.ke/logo-og.png" />
         <meta property="og:image:width" content="1200" />
         <meta property="og:image:height" content="630" />
         <meta property="og:site_name" content="Globeflight Kenya" />
-        <meta property="og:locale" content="en_US" />
+        <meta property="og:locale" content="en_KE" />
         
         {/* Twitter */}
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:url" content={`https://globeflight.co.ke${location.pathname}`} />
         <meta name="twitter:title" content={title} />
         <meta name="twitter:description" content={description} />
-        <meta name="twitter:image" content="https://globeflight.co.ke/logo.png" />
+        <meta name="twitter:image" content="https://globeflight.co.ke/logo-og.png" />
         
         {/* Canonical URL */}
         <link rel="canonical" href={`https://globeflight.co.ke${location.pathname}`} />

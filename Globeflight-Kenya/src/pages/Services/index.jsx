@@ -161,10 +161,6 @@ const HomePage = () => {
         
         <link rel="canonical" href="https://globeflight.co.ke/services" />
         
-        {/* Alternate Language Tags */}
-        <link rel="alternate" hrefLang="en" href="https://globeflight.co.ke/services" />
-        <link rel="alternate" hrefLang="sw" href="https://globeflight.co.ke/sw/services" />
-        
         {/* Structured Data */}
         <script type="application/ld+json">
           {JSON.stringify(organizationSchema)}

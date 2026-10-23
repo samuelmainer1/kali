@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Mail, CheckCircle, XCircle, AlertCircle } from "lucide-react"
+import { Helmet } from "react-helmet-async"
 
 const API_BASE = import.meta.env.DEV
   ? '/admin/api'
@@ -68,6 +69,11 @@ const UnsubscribePage = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white flex items-center justify-center px-4 pt-36 pb-16">
+      <Helmet>
+        <title>Unsubscribe | Globeflight Kenya</title>
+        <meta name="robots" content="noindex, nofollow" />
+        <link rel="canonical" href="https://globeflight.co.ke/unsubscribe" />
+      </Helmet>
       <Card className="w-full max-w-md shadow-xl">
         <CardHeader className="text-center pb-4">
           <div className="mx-auto w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-4">

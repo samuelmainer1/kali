@@ -1,6 +1,5 @@
 import React from 'react'
 import { motion } from 'framer-motion'
-import { Helmet } from 'react-helmet-async'
 
 const ServicesGridSection = ({ setSelectedImage }) => {
   return (
@@ -11,16 +10,6 @@ const ServicesGridSection = ({ setSelectedImage }) => {
       transition={{ duration: 0.7 }}
       className="mt-32"
     >
-      <Helmet>
-        <title>Comprehensive Logistics Services | Globeflight Kenya</title>
-        <meta name="description" content="Explore our full range of logistics services: e-commerce fulfillment, cargo consolidation, consulting, and expert support. Globeflight Kenya delivers tailored, end-to-end logistics solutions for your business." />
-        <meta property="og:title" content="Comprehensive Logistics Services | Globeflight Kenya" />
-        <meta property="og:description" content="Explore our full range of logistics services: e-commerce fulfillment, cargo consolidation, consulting, and expert support. Globeflight Kenya delivers tailored, end-to-end logistics solutions for your business." />
-        <meta property="og:image" content="/service.jpg" />
-        <meta property="og:type" content="website" />
-        <meta property="og:url" content="https://globeflight.co.ke/services" />
-        <link rel="canonical" href="https://globeflight.co.ke/services" />
-      </Helmet>
       <div className="text-center mb-12">
         {/*<motion.div
           initial={{ opacity: 0, y: 20 }}

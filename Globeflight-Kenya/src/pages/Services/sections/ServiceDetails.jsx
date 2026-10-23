@@ -49,6 +49,12 @@ export default function ServiceDetail() {
 
   if (!service) return (
     <div className="min-h-screen flex items-center justify-center">
+      <Helmet>
+        <title>Service not found | Globeflight Kenya</title>
+        <meta name="robots" content="noindex, follow" />
+        <link rel="canonical" href="https://globeflight.co.ke/services" />
+        <meta property="og:url" content="https://globeflight.co.ke/services" />
+      </Helmet>
       <div className="text-center">
         <p className="text-xl text-gray-800">Service not found.</p>
         <Link to="/services" className="mt-4 inline-block text-blue-600">Back to services</Link>

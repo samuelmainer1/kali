@@ -43,6 +43,7 @@ const servicePages = [...servicesFile.matchAll(/"slug": "([^"]+)"/g)].map((match
 
 const staticPages = [
   { url: '/', changefreq: 'weekly', priority: '1.0' },
+  { url: '/home', changefreq: 'weekly', priority: '0.8' },
   { url: '/about-us', changefreq: 'monthly', priority: '0.8' },
   { url: '/services', changefreq: 'monthly', priority: '0.9' },
   ...servicePages,
@@ -50,7 +51,6 @@ const staticPages = [
   { url: '/contact-us', changefreq: 'monthly', priority: '0.8' },
   { url: '/track', changefreq: 'weekly', priority: '0.6' },
   { url: '/jobs', changefreq: 'weekly', priority: '0.6' },
-  { url: '/unsubscribe', changefreq: 'yearly', priority: '0.3' },
 ];
 
 function formatDate(date) {
@@ -76,20 +76,49 @@ async function generateSitemap() {
     const blogs = (db.blogs || []).filter((blog) => blog.isPublished !== false && blog.slug);
     console.log(`Found ${blogs.length} published blog posts`);
 
+    const now = new Date();
+    const jobs = (db.jobs || []).filter((job) => {
+      if (!job.slug || job.isPublished === false || job.isClosed) return false;
+      if (job.applicationDeadline && new Date(job.applicationDeadline) < now) return false;
+      return true;
+    });
+    const activeCategorySlugs = new Set(
+      (db.categories || []).filter((category) => category.isActive !== false && category.slug).map((category) => category.slug)
+    );
+    const categories = [...activeCategorySlugs]
+      .filter((slug) => blogs.some((blog) => blog.category && blog.category.slug === slug))
+      .sort();
+
     let sitemap = '<?xml version="1.0" encoding="UTF-8"?>\n';
     sitemap += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n';
 
-    // Add static pages
-    staticPages.forEach(page => {
+    const addUrl = (loc, lastmod, changefreq, priority) => {
       sitemap += '  <url>\n';
-      sitemap += `    <loc>${SITE_URL}${page.url}</loc>\n`;
-      sitemap += `    <lastmod>${formatDate()}</lastmod>\n`;
-      sitemap += `    <changefreq>${page.changefreq}</changefreq>\n`;
-      sitemap += `    <priority>${page.priority}</priority>\n`;
+      sitemap += `    <loc>${SITE_URL}${loc}</loc>\n`;
+      sitemap += `    <lastmod>${formatDate(lastmod)}</lastmod>\n`;
+      sitemap += `    <changefreq>${changefreq}</changefreq>\n`;
+      sitemap += `    <priority>${priority}</priority>\n`;
       sitemap += '  </url>\n';
+    };
+
+    staticPages.forEach(page => {
+      addUrl(page.url, null, page.changefreq, page.priority);
     });
 
-    // Add blog posts
+    jobs.forEach(job => {
+      addUrl(`/jobs/${job.slug}`, job.updatedAt || job.createdAt, 'weekly', '0.5');
+    });
+
+    categories.forEach(slug => {
+      const latest = blogs
+        .filter((blog) => blog.category && blog.category.slug === slug)
+        .map((blog) => blog.updatedAt || blog.publishedAt)
+        .filter(Boolean)
+        .sort()
+        .pop();
+      addUrl(`/blog/category/${slug}`, latest, 'weekly', '0.5');
+    });
+
     blogs.forEach(blog => {
       sitemap += '  <url>\n';
       sitemap += `    <loc>${SITE_URL}/blog/${blog.slug}</loc>\n`;
@@ -105,7 +134,7 @@ async function generateSitemap() {
     const sitemapPath = path.join(__dirname, '..', 'public', 'sitemap.xml');
     fs.writeFileSync(sitemapPath, sitemap);
     console.log(`✅ Sitemap generated successfully at ${sitemapPath}`);
-    console.log(`📊 Total URLs: ${staticPages.length + blogs.length}`);
+    console.log(`📊 Total URLs: ${staticPages.length + jobs.length + categories.length + blogs.length}`);
 
     return blogs;
   } catch (error) {
