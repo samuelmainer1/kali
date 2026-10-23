@@ -935,6 +935,26 @@ function jobStats() {
   };
 }
 
+function adminTestimonialList(url) {
+  const published = url.searchParams.get('published');
+  let items = [...db.testimonials];
+  if (published === 'true') items = items.filter((item) => item.isPublished !== false);
+  if (published === 'false') items = items.filter((item) => item.isPublished === false);
+  return { testimonials: items };
+}
+
+function testimonialStats() {
+  const published = db.testimonials.filter((item) => item.isPublished !== false);
+  const ratings = db.testimonials.map((item) => Number(item.rating)).filter((rating) => Number.isFinite(rating));
+  const average = ratings.length ? ratings.reduce((sum, rating) => sum + rating, 0) / ratings.length : 0;
+  return {
+    total: db.testimonials.length,
+    published: published.length,
+    drafts: db.testimonials.length - published.length,
+    avgRating: Math.round(average * 10) / 10,
+  };
+}
+
 function normalizeTestimonial(body, existing = {}) {
   const name = String(body.name ?? existing.name ?? '').trim();
   const content = String(body.content ?? existing.content ?? '').trim();
@@ -2096,8 +2116,12 @@ async function handle(req, res) {
     }
   }
 
+  if (method === 'GET' && pathname === '/admin/api/testimonials/stats') {
+    send(res, 200, { success: true, data: testimonialStats() });
+    return;
+  }
   if (method === 'GET' && pathname === '/admin/api/testimonials') {
-    send(res, 200, { success: true, data: db.testimonials });
+    send(res, 200, { success: true, data: adminTestimonialList(url) });
     return;
   }
   if (method === 'POST' && pathname === '/admin/api/testimonials') {
@@ -2106,6 +2130,16 @@ async function handle(req, res) {
     db.testimonials.unshift(item);
     saveDb();
     send(res, 201, { success: true, data: item });
+    return;
+  }
+  const testimonialToggle = pathname.match(/^\/admin\/api\/testimonials\/(\d+)\/toggle-publish$/);
+  if (method === 'PATCH' && testimonialToggle) {
+    const item = findById(db.testimonials, testimonialToggle[1]);
+    if (!item) throw httpError(404, 'Testimonial not found.');
+    item.isPublished = item.isPublished === false;
+    item.updatedAt = new Date().toISOString();
+    saveDb();
+    send(res, 200, { success: true, data: item });
     return;
   }
   const testimonialId = pathname.match(/^\/admin\/api\/testimonials\/(\d+)$/);
