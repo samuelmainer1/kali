@@ -5,6 +5,7 @@ import { api, formatKES } from '../lib/api';
 import ProductCard from '../components/ProductCard';
 import TestimonialsCarousel from '../components/TestimonialsCarousel';
 import { preventBrokenProductImage, resolveProductImage } from '../lib/productImage';
+import { nextCategoryImageOnError, resolveCategoryImage } from '../lib/categoryImage';
 import { useCart } from '../context/CartContext';
 import { useUI } from '../context/UIContext';
 import { useRecentlyViewed } from '../context/RecentlyViewedContext';
@@ -91,21 +92,33 @@ function catLabel(slug, name, t) {
 }
 
 function CategoryTile({ category, index, tall, t }) {
-  const [imgOk, setImgOk] = useState(Boolean(category.image));
+  const [src, setSrc] = useState(() => resolveCategoryImage(category));
+  const [imgOk, setImgOk] = useState(() => Boolean(resolveCategoryImage(category)));
   const gradient = TILE_GRADIENTS[index % TILE_GRADIENTS.length];
+
+  useEffect(() => {
+    const next = resolveCategoryImage(category);
+    setSrc(next);
+    setImgOk(Boolean(next));
+  }, [category.image, category.slug]);
+
   return (
     <Link
       to={`/category/${category.slug}`}
       className={`group relative rounded-xl overflow-hidden ${tall ? 'h-40 md:h-48' : 'rounded-lg h-28 md:h-32'}`}
     >
-      {imgOk && category.image ? (
+      {imgOk && src ? (
         <>
           <img
-            src={category.image}
+            src={src}
             alt={category.name}
             className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
             loading="lazy"
-            onError={() => setImgOk(false)}
+            onError={(e) => {
+              const fallback = nextCategoryImageOnError(e.currentTarget.src, category);
+              if (fallback) setSrc(fallback);
+              else setImgOk(false);
+            }}
           />
           <div className={`absolute inset-0 ${tall ? 'bg-black/45 group-hover:bg-black/55' : 'bg-black/40 group-hover:bg-black/50'} transition-colors`} />
         </>

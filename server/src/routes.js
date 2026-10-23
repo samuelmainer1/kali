@@ -532,16 +532,25 @@ router.patch('/admin/site', authRequired, requireRole('admin'), (req, res) => {
   res.json({ site: { ...site, heroes: site.heroes || savedHeroes, promoBanners: site.promoBanners || savedPromos || [] } });
 });
 
+function withCategoryTileImage(category) {
+  const image = String(category?.image || '').trim();
+  if (image) return category;
+  const slug = String(category?.slug || '')
+    .toLowerCase()
+    .replace(/[^a-z0-9-]/g, '');
+  return slug ? { ...category, image: `/categories/${slug}.webp` } : category;
+}
+
 router.get('/categories', authOptional, (req, res) => {
   if (!req.user || req.user.role !== 'admin') {
     return withPublicCache(req, res, 60_000, () => {
       let list = readDb().categories || [];
-      list = list.filter((c) => !c.hidden);
+      list = list.filter((c) => !c.hidden).map(withCategoryTileImage);
       res.json({ categories: list });
     });
   }
 
-  let list = readDb().categories || [];
+  let list = (readDb().categories || []).map(withCategoryTileImage);
   res.json({ categories: list });
 });
 
