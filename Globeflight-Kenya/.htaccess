@@ -32,6 +32,14 @@
   RewriteCond %{REQUEST_URI} ^/uploads/ [NC]
   RewriteRule ^uploads/(.*)$ http://127.0.0.1:5000/uploads/$1 [P,L]
 
+  # A new article is added to the sitemap for whatever address this site is using.
+  RewriteCond %{HTTP_HOST} ^([^:]+)
+  RewriteRule ^sitemap\.xml$ http://127.0.0.1:5000/sitemap.xml?host=%1 [P,QSA,L]
+  RewriteCond %{HTTP_HOST} ^([^:]+)
+  RewriteRule ^rss\.xml$ http://127.0.0.1:5000/rss.xml?host=%1 [P,QSA,L]
+  RewriteCond %{HTTP_HOST} ^([^:]+)
+  RewriteRule ^robots\.txt$ http://127.0.0.1:5000/robots.txt?host=%1 [P,QSA,L]
+
   # Required for LiteSpeed proxying (preserves Authorization headers)
   RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
 
@@ -222,6 +230,14 @@ ErrorDocument 500 /index.html
   # Proxy /uploads/* → Node app on localhost:5000 (for uploaded files)
   RewriteCond %{REQUEST_URI} ^/uploads/ [NC]
   RewriteRule ^uploads/(.*)$ http://127.0.0.1:5000/uploads/$1 [P,L]
+
+  # A new article is added to the sitemap for whatever address this site is using.
+  RewriteCond %{HTTP_HOST} ^([^:]+)
+  RewriteRule ^sitemap\.xml$ http://127.0.0.1:5000/sitemap.xml?host=%1 [P,QSA,L]
+  RewriteCond %{HTTP_HOST} ^([^:]+)
+  RewriteRule ^rss\.xml$ http://127.0.0.1:5000/rss.xml?host=%1 [P,QSA,L]
+  RewriteCond %{HTTP_HOST} ^([^:]+)
+  RewriteRule ^robots\.txt$ http://127.0.0.1:5000/robots.txt?host=%1 [P,QSA,L]
 
   # Required for LiteSpeed proxying (preserves Authorization headers)
   RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]

@@ -7,8 +7,8 @@ import http from 'node:http';
 import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
-import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
+import { createRequire } from 'node:module';
 import { newMessageEmailText, notifyAddress, replyEmailText, sendMail } from './mail.js';
 import {
   isStaffOnline,
@@ -23,6 +23,8 @@ import {
 } from './chat.js';
 
 const ROOT = path.dirname(fileURLToPath(import.meta.url));
+const require = createRequire(import.meta.url);
+const { DEFAULT_ORIGIN, cleanOrigin, buildFeeds } = require('../scripts/feed-builder.cjs');
 
 function loadEnvFile(file) {
   if (!fs.existsSync(file)) return;
@@ -191,11 +193,35 @@ function subscriberStats() {
   };
 }
 
-function refreshPublicFeeds() {
-  const script = path.join(ROOT, '..', 'scripts', 'generate-sitemap-and-rss.cjs');
-  const result = spawnSync(process.execPath, [script], { encoding: 'utf8' });
-  if (result.status !== 0) {
-    console.error(result.stderr || result.stdout || 'Sitemap update failed.');
+function requestOrigin(req, url) {
+  const queryHost = String(url?.searchParams?.get('host') || '').split(',')[0].trim();
+  const forwarded = String(req?.headers?.['x-forwarded-host'] || '').split(',')[0].trim();
+  const headerHost = String(req?.headers?.host || '').split(',')[0].trim();
+  const host = (queryHost || forwarded || headerHost).replace(/:\d+$/, '').toLowerCase();
+  const local = !host || host === 'localhost' || host === '127.0.0.1' || host === '0.0.0.0';
+  if (!local && /^[a-z0-9.-]+$/.test(host)) {
+    const proto = String(req?.headers?.['x-forwarded-proto'] || 'https').split(',')[0].trim();
+    return cleanOrigin(`${proto === 'http' ? 'http' : 'https'}://${host}`);
+  }
+  return cleanOrigin(process.env.SITE_URL || DEFAULT_ORIGIN);
+}
+
+function refreshPublicFeeds(req) {
+  try {
+    const origin = requestOrigin(req, req ? new URL(req.url || '/', 'http://127.0.0.1') : null);
+    const feeds = buildFeeds(db, origin);
+    const folders = [
+      path.join(ROOT, '..', 'public'),
+      path.join(ROOT, '..', 'dist'),
+    ];
+    if (process.env.WEB_ROOT) folders.push(process.env.WEB_ROOT);
+    folders.forEach((folder) => {
+      if (!fs.existsSync(folder)) return;
+      fs.writeFileSync(path.join(folder, 'sitemap.xml'), feeds.sitemap);
+      fs.writeFileSync(path.join(folder, 'rss.xml'), feeds.rss);
+    });
+  } catch (error) {
+    console.error(error.message || 'Sitemap update failed.');
   }
 }
 
@@ -1255,6 +1281,20 @@ async function handle(req, res) {
     return;
   }
 
+  if (method === 'GET' && (pathname === '/sitemap.xml' || pathname === '/rss.xml' || pathname === '/robots.txt')) {
+    const origin = requestOrigin(req, url);
+    const feeds = buildFeeds(db, origin);
+    const body = pathname === '/sitemap.xml' ? feeds.sitemap : pathname === '/rss.xml' ? feeds.rss : feeds.robots;
+    const type = pathname === '/robots.txt' ? 'text/plain; charset=utf-8' : 'application/xml; charset=utf-8';
+    res.writeHead(200, {
+      'Content-Type': type,
+      'Content-Length': Buffer.byteLength(body),
+      'Cache-Control': 'public, max-age=300',
+    });
+    res.end(body);
+    return;
+  }
+
   if (method === 'GET' && pathname === '/admin/api/health') {
     send(res, 200, { success: true, data: { ok: true } });
     return;
@@ -1909,7 +1949,7 @@ async function handle(req, res) {
     blog.id = nextId(db.blogs);
     db.blogs.unshift(blog);
     saveDb();
-    refreshPublicFeeds();
+    refreshPublicFeeds(req);
     send(res, 201, { success: true, data: presentBlog(blog) });
     return;
   }
@@ -1925,14 +1965,14 @@ async function handle(req, res) {
       const updated = blogFromRequest(await readInput(req), blog);
       Object.assign(blog, updated);
       saveDb();
-      refreshPublicFeeds();
+      refreshPublicFeeds(req);
       send(res, 200, { success: true, data: presentBlog(blog) });
       return;
     }
     if (method === 'DELETE') {
       db.blogs = db.blogs.filter((item) => item !== blog);
       saveDb();
-      refreshPublicFeeds();
+      refreshPublicFeeds(req);
       send(res, 200, { success: true });
       return;
     }
