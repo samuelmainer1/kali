@@ -34,6 +34,7 @@ let logs = '';
 let customerToken = '';
 let pendingVendorToken = '';
 let approvedVendorToken = '';
+let adminToken = '';
 
 async function api(pathname, { method = 'GET', body, token } = {}) {
   const res = await fetch(`${BASE}${pathname}`, {
@@ -134,6 +135,10 @@ before(async () => {
   const approved = await login('beauty@bigdrop.co.ke');
   assert.equal(approved.status, 200, `vendor login failed: ${approved.text}`);
   approvedVendorToken = approved.json.token;
+
+  const admin = await login('info@bigdrop.co.ke');
+  assert.equal(admin.status, 200, `admin login failed: ${admin.text}`);
+  adminToken = admin.json.token;
 });
 
 after(() => {
@@ -277,6 +282,84 @@ test('ordering more than the available stock is refused', async () => {
   });
   assert.equal(order.status, 400, order.text);
   assert.match(order.json.error, /Insufficient stock/);
+});
+
+test('a shopper cannot bulk-delete products', async () => {
+  const products = await visibleProducts();
+  const res = await api('/api/products/bulk-delete', {
+    method: 'POST',
+    token: customerToken,
+    body: { ids: [products[0].id] },
+  });
+  assert.equal(res.status, 403, res.text);
+  assert.match(res.json.error, /Insufficient permissions/);
+});
+
+test('bulk-delete refuses an empty selection', async () => {
+  const res = await api('/api/products/bulk-delete', {
+    method: 'POST',
+    token: approvedVendorToken,
+    body: { ids: [] },
+  });
+  assert.equal(res.status, 400, res.text);
+  assert.match(res.json.error, /at least one product/);
+});
+
+test("a vendor cannot bulk-delete another vendor's product", async () => {
+  const products = await visibleProducts();
+  const other = products.find((p) => p.vendorId && p.vendorId !== 'usr_vendor1');
+  assert.ok(other, 'demo catalogue should include another vendor\'s product');
+  const before = products.length;
+  const res = await api('/api/products/bulk-delete', {
+    method: 'POST',
+    token: approvedVendorToken,
+    body: { ids: [other.id] },
+  });
+  assert.equal(res.status, 403, res.text);
+  assert.match(res.json.error, /Not your product/);
+  const after = await visibleProducts(`?after=${Date.now()}`);
+  assert.equal(after.length, before, 'a refused bulk-delete must not remove anything');
+  assert.ok(after.some((p) => p.id === other.id));
+});
+
+test('admin can delete many products at once', async () => {
+  const stamp = Date.now();
+  const created = [];
+  for (let i = 0; i < 3; i += 1) {
+    const res = await api('/api/products', {
+      method: 'POST',
+      token: approvedVendorToken,
+      body: {
+        name: `Bulk Delete Test ${stamp} ${i}`,
+        description: 'Temporary listing for bulk delete test',
+        price: 100 + i,
+        stock: 2,
+        categoryId: 'cat_1',
+      },
+    });
+    assert.equal(res.status, 201, res.text);
+    created.push(res.json.product.id);
+  }
+
+  const keep = created[2];
+  const gone = created.slice(0, 2);
+  const res = await api('/api/products/bulk-delete', {
+    method: 'POST',
+    token: adminToken,
+    body: { ids: [...gone, 'prd_does_not_exist'] },
+  });
+  assert.equal(res.status, 200, res.text);
+  assert.equal(res.json.deleted, 2);
+
+  const leftover = await api('/api/products?status=pending', { token: adminToken });
+  assert.equal(leftover.status, 200, leftover.text);
+  const leftoverIds = leftover.json.products.map((p) => p.id);
+  assert.equal(leftoverIds.includes(keep), true, 'unselected product must remain');
+  assert.equal(
+    gone.some((id) => leftoverIds.includes(id)),
+    false,
+    'selected products must be gone'
+  );
 });
 
 test('cash on delivery follows the store setting', async () => {

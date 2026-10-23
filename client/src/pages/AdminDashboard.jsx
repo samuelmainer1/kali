@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import {
   LayoutGrid,
@@ -164,6 +164,9 @@ export default function AdminDashboard() {
   const [products, setProducts] = useState([]);
   const [productFilter, setProductFilter] = useState('all');
   const [productQuery, setProductQuery] = useState('');
+  const [selectedProductIds, setSelectedProductIds] = useState(() => new Set());
+  const [bulkDeleting, setBulkDeleting] = useState(false);
+  const selectAllProductsRef = useRef(null);
   const [orders, setOrders] = useState([]);
   const [messages, setMessages] = useState([]);
   const [analytics, setAnalytics] = useState(null);
@@ -218,6 +221,12 @@ export default function AdminDashboard() {
       return terms.every((term) => haystack.includes(term));
     });
   }, [products, productQuery]);
+
+  const visibleProductIds = useMemo(() => visibleProducts.map((p) => p.id), [visibleProducts]);
+  const selectedCount = selectedProductIds.size;
+  const allVisibleSelected =
+    visibleProductIds.length > 0 && visibleProductIds.every((id) => selectedProductIds.has(id));
+  const someVisibleSelected = visibleProductIds.some((id) => selectedProductIds.has(id));
 
   async function loadOverview() {
     const s = await api.get('/dashboard/stats');
@@ -361,8 +370,15 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     loadProducts(productFilter).catch((e) => setError(e.message));
+    setSelectedProductIds(new Set());
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [productFilter]);
+
+  useEffect(() => {
+    if (selectAllProductsRef.current) {
+      selectAllProductsRef.current.indeterminate = someVisibleSelected && !allVisibleSelected;
+    }
+  }, [someVisibleSelected, allVisibleSelected]);
 
   function flash(msg) {
     setError('');
@@ -442,9 +458,60 @@ export default function AdminDashboard() {
     try {
       await api.delete(`/products/${id}`);
       flash('Product deleted');
+      setSelectedProductIds((prev) => {
+        if (!prev.has(id)) return prev;
+        const next = new Set(prev);
+        next.delete(id);
+        return next;
+      });
       await Promise.all([loadProducts(), loadOverview()]);
     } catch (e) {
       setError(e.message);
+    }
+  }
+
+  function toggleProductSelected(id) {
+    setSelectedProductIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  function toggleSelectAllVisibleProducts() {
+    setSelectedProductIds((prev) => {
+      const next = new Set(prev);
+      if (allVisibleSelected) {
+        visibleProductIds.forEach((id) => next.delete(id));
+      } else {
+        visibleProductIds.forEach((id) => next.add(id));
+      }
+      return next;
+    });
+  }
+
+  async function deleteSelectedProducts() {
+    const ids = [...selectedProductIds];
+    if (!ids.length || bulkDeleting) return;
+    if (
+      !window.confirm(
+        `Delete ${ids.length} product${ids.length === 1 ? '' : 's'} permanently? This cannot be undone.`
+      )
+    ) {
+      return;
+    }
+    setBulkDeleting(true);
+    try {
+      const res = await api.post('/products/bulk-delete', { ids });
+      const count = res.deleted ?? ids.length;
+      flash(`${count} product${count === 1 ? '' : 's'} deleted`);
+      setSelectedProductIds(new Set());
+      await Promise.all([loadProducts(), loadOverview()]);
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setBulkDeleting(false);
     }
   }
 
@@ -1048,6 +1115,39 @@ export default function AdminDashboard() {
                 </button>
               </div>
 
+              {selectedCount > 0 && (
+                <div className="mt-4 flex flex-wrap items-center gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm">
+                  <span className="font-semibold text-red-800">
+                    {selectedCount} selected
+                  </span>
+                  {!allVisibleSelected && visibleProductIds.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={toggleSelectAllVisibleProducts}
+                      className="text-xs font-semibold text-red-800 underline underline-offset-2"
+                    >
+                      Select all {visibleProductIds.length} shown
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={deleteSelectedProducts}
+                    disabled={bulkDeleting}
+                    className="inline-flex items-center gap-1 rounded-lg bg-red-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-red-700 disabled:opacity-60"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                    {bulkDeleting ? 'Deleting…' : 'Delete selected'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedProductIds(new Set())}
+                    className="text-xs font-semibold text-red-800 underline underline-offset-2"
+                  >
+                    Clear
+                  </button>
+                </div>
+              )}
+
               {showAddProduct && (
                 <AdminAddProduct
                   categories={categories}
@@ -1066,6 +1166,16 @@ export default function AdminDashboard() {
                 <table className="w-full text-sm text-left">
                   <thead className="border-b border-ink/10 text-ink-mute">
                     <tr>
+                      <th className="p-4 w-10">
+                        <input
+                          ref={selectAllProductsRef}
+                          type="checkbox"
+                          checked={allVisibleSelected}
+                          disabled={visibleProductIds.length === 0}
+                          onChange={toggleSelectAllVisibleProducts}
+                          aria-label="Select all products shown"
+                        />
+                      </th>
                       <th className="p-4">Product</th>
                       <th className="p-4">Vendor</th>
                       <th className="p-4">Price</th>
@@ -1077,6 +1187,14 @@ export default function AdminDashboard() {
                   <tbody>
                     {visibleProducts.map((p) => (
                       <tr key={p.id} className="border-b border-ink/5 last:border-0">
+                        <td className="p-4">
+                          <input
+                            type="checkbox"
+                            checked={selectedProductIds.has(p.id)}
+                            onChange={() => toggleProductSelected(p.id)}
+                            aria-label={`Select ${p.name}`}
+                          />
+                        </td>
                         <td className="p-4">
                           <div className="flex items-center gap-3">
                             <img src={p.images?.[0]} alt="" className="h-10 w-10 rounded-lg object-cover" />
@@ -1177,7 +1295,7 @@ export default function AdminDashboard() {
                     ))}
                     {visibleProducts.length === 0 && (
                       <tr>
-                        <td colSpan={6} className="p-8 text-center text-sm text-ink-mute">
+                        <td colSpan={7} className="p-8 text-center text-sm text-ink-mute">
                           {products.length > 0 ? (
                             <>
                               No product matches “{productQuery.trim()}”

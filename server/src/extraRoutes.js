@@ -3,7 +3,7 @@ import { Router } from 'express';
 import { nanoid } from 'nanoid';
 import { readDb, updateDb, writeDb, dbPath, actorFrom } from './db.js';
 import { authRequired, requireRole, authOptional } from './auth.js';
-import { persistImages, saveDataUrl, deleteLocalUpload } from './uploads.js';
+import { persistImages, saveDataUrl, deleteLocalUpload, deleteLocalUploads } from './uploads.js';
 import { gscVerificationTokens } from './seo.js';
 import { parseWooCommerceCsv, materializeImages, slugifyName } from './wooCommerce.js';
 import { startStk, confirmStk, recordStkCallback, startCard, confirmCard, paymentStatus } from './payments.js';
@@ -597,6 +597,60 @@ router.post('/products/bulk', authRequired, requireRole('vendor', 'admin'), asyn
     }).catch(() => {});
   }
   res.status(201).json({ created, errors, count: created.length });
+});
+
+const BULK_DELETE_MAX = 2000;
+
+function uniqueProductIds(raw) {
+  if (!Array.isArray(raw)) return null;
+  const seen = new Set();
+  const ids = [];
+  for (const value of raw) {
+    const id = String(value ?? '').trim();
+    if (!id || seen.has(id)) continue;
+    seen.add(id);
+    ids.push(id);
+  }
+  return ids;
+}
+
+router.post('/products/bulk-delete', authRequired, requireRole('vendor', 'admin'), (req, res) => {
+  const ids = uniqueProductIds(req.body?.ids);
+  if (!ids) return res.status(400).json({ error: 'Send a list of product ids' });
+  if (!ids.length) return res.status(400).json({ error: 'Select at least one product' });
+  if (ids.length > BULK_DELETE_MAX) {
+    return res.status(400).json({ error: `Too many products at once (max ${BULK_DELETE_MAX})` });
+  }
+
+  const idSet = new Set(ids);
+  const db = readDb();
+  const matches = db.products.filter((p) => idSet.has(p.id));
+  if (req.user.role === 'vendor' && matches.some((p) => p.vendorId !== req.user.id)) {
+    return res.status(403).json({ error: 'Not your product' });
+  }
+  if (!matches.length) return res.status(404).json({ error: 'No matching products' });
+
+  const deleteSet = new Set(matches.map((p) => p.id));
+  const preview = matches.slice(0, 8).map((p) => p.name).join(', ');
+  updateDb(
+    (d) => {
+      const remaining = d.products.filter((p) => !deleteSet.has(p.id));
+      const usedByRemaining = new Set(remaining.flatMap((p) => p.images || []));
+      const images = [...new Set(matches.flatMap((p) => p.images || []))];
+      deleteLocalUploads(images, (url) => usedByRemaining.has(url));
+      d.products = remaining;
+    },
+    {
+      actor: actorFrom(req),
+      action: 'product.bulk-delete',
+      detail: `${matches.length} product(s): ${preview}${matches.length > 8 ? '…' : ''}`,
+    }
+  );
+  res.json({
+    ok: true,
+    deleted: matches.length,
+    ids: matches.map((p) => p.id),
+  });
 });
 
 router.patch('/products/:id/stock-action', authRequired, requireRole('vendor', 'admin'), (req, res) => {
