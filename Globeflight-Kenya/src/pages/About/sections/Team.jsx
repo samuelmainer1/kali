@@ -34,9 +34,9 @@ const Team = () => {
             OUR LEADERSHIP
           </span>*/}
           
-          <h1 className="mb-6 text-5xl font-black leading-tight text-gray-900 md:text-7xl">
+          <h2 className="mb-6 text-5xl font-black leading-tight text-gray-900 md:text-7xl">
             Meet The <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-500 to-emerald-600">Team</span>
-          </h1>
+          </h2>
           
           <p className="text-xl leading-relaxed text-gray-600 md:text-2xl">
             Our experienced team of professionals is dedicated to delivering excellence and innovation in global logistics

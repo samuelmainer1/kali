@@ -8,16 +8,13 @@ import { Input } from "@/components/ui/input"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Calendar, ChevronLeft, ChevronRight, Search, User as UserIcon, Tag as TagIcon } from "lucide-react"
 import { Helmet } from "react-helmet-async"
+import { Link } from "react-router-dom"
 import { getApiImageUrl, handleImageError } from '@/utils/imageUtils'
 
 // API Configuration
 const API_BASE = import.meta.env.DEV
   ? '/admin/api'
   : 'https://globeflight.co.ke/admin/api';
-
-const Link = ({ to, children, className }) => (
-  <a href={to} className={className}>{children}</a>
-)
 
 export default function BlogGrid() {
   const [posts, setPosts] = useState([])
@@ -556,6 +553,9 @@ export default function BlogGrid() {
                     {subscribeLoading ? 'Subscribing...' : 'Subscribe'}
                   </Button>
                 </form>
+                <p className="text-sm text-white/85">
+                  <Link to="/unsubscribe" className="underline hover:text-white">Unsubscribe</Link>
+                </p>
                 {subscribeError && (
                   <p className="text-sm text-red-200">{subscribeError}</p>
                 )}

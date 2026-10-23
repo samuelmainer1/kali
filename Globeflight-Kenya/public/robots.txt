@@ -4,11 +4,12 @@ Allow: /
 # Sitemap
 Sitemap: https://globeflight.co.ke/sitemap.xml
 
-# Disallow admin areas
+# Disallow admin areas and the newsletter form
 Disallow: /admin/
 Disallow: /api/
 Disallow: /_next/
 Disallow: /static/
+Disallow: /unsubscribe
 
 # Allow important pages
 Allow: /

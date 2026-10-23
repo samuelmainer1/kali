@@ -5,7 +5,6 @@ import { motion } from 'framer-motion'
 import { CheckCircle, Globe, Shield, Clock, ArrowRight } from 'lucide-react'
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
-import { Helmet } from 'react-helmet-async'
 
 export default function Hero() {
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -18,17 +17,6 @@ export default function Hero() {
 
   return (
     <>
-      <Helmet>
-        <title>Logistics & Shipping Services | Globeflight Kenya</title>
-        <meta name="description" content="Discover modern, efficient, and secure logistics and shipping services with Globeflight Kenya. Air, sea, warehousing, customs, and more." />
-        <meta property="og:title" content="Logistics & Shipping Services | Globeflight Kenya" />
-        <meta property="og:description" content="Discover modern, efficient, and secure logistics and shipping services with Globeflight Kenya. Air, sea, warehousing, customs, and more." />
-        <meta property="og:image" content="/service.jpg" />
-        <meta property="og:type" content="website" />
-        <meta property="og:url" content="https://globeflight.co.ke/services" />
-        <link rel="canonical" href="https://globeflight.co.ke/services" />
-      </Helmet>
-
       <style>{`
         @keyframes float {
           0%, 100% {

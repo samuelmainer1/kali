@@ -15,6 +15,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { useToast } from "@/components/ui/use-toast"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Loader2, Send, MapPin, Phone, Mail } from "lucide-react"
+import { Link } from "react-router-dom"
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import '@/lib/leafletIconFix'
@@ -36,6 +37,9 @@ const services = [
   { id: "ecommerce", label: "E-commerce Logistics" },
   { id: "roadTransport", label: "Road Transport" },
   { id: "projectCargo", label: "Project Cargo" },
+  { id: "logistics", label: "Logistics" },
+  { id: "safetySecurity", label: "Safety & Security" },
+  { id: "importerOfRecord", label: "Importer of Record (IOR)" },
 ]
 
 const inquiryTypes = [
@@ -452,15 +456,15 @@ export default function GlobalflightContactForm() {
               <CardContent className="p-6">
                 <h3 className="text-lg font-bold mb-4">Quick Links</h3>
                 <div className="space-y-3">
-                  <a href="/home" className="block text-white/90 hover:text-white font-medium transition-colors">
+                  <Link to="/services" className="block text-white/90 hover:text-white font-medium transition-colors">
                     → Our Services
-                  </a>
-                  <a href="/track" className="block text-white/90 hover:text-white font-medium transition-colors">
+                  </Link>
+                  <Link to="/track" className="block text-white/90 hover:text-white font-medium transition-colors">
                     → Track Shipment
-                  </a>
-                  <a href="/about" className="block text-white/90 hover:text-white font-medium transition-colors">
+                  </Link>
+                  <Link to="/about-us" className="block text-white/90 hover:text-white font-medium transition-colors">
                     → About Us
-                  </a>
+                  </Link>
                 </div>
               </CardContent>
             </Card>

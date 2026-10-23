@@ -2,15 +2,28 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+    <script>
+      if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+      (function gfOpenAtTop() {
+        if (location.hash) return;
+        var html = document.documentElement;
+        html.style.scrollBehavior = 'auto';
+        window.scrollTo(0, 0);
+        html.scrollTop = 0;
+        if (document.body) document.body.scrollTop = 0;
+      })();
+      document.addEventListener('DOMContentLoaded', function () {
+        if (!location.hash) window.scrollTo(0, 0);
+      });
+    </script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
     <!-- Primary Meta Tags -->
-    <title>Globeflight Kenya - International Logistics & Shipping Services</title>
-    <meta name="title" content="Globeflight Kenya - International Logistics & Shipping Services" />
-    <meta name="description" content="Leading international logistics and shipping company in Kenya. We offer air freight, sea freight, road transport, warehousing, and customs clearance services across Africa and worldwide." />
+    <title>Importer of Record (IOR) Services Kenya | Globeflight Worldwide Express</title>
+    <meta name="title" content="Importer of Record (IOR) Services Kenya | Globeflight Worldwide Express" />
+    <meta name="description" content="Professional Importer of Record (IOR) services in Kenya. Expert customs clearance, KRA compliance, and import documentation. Trusted by multinationals and tech companies across Africa." />
     <meta name="keywords" content="Globeflight Kenya, international logistics, global shipping, freight forwarding, air freight, sea freight, warehousing, customs clearance, Kenya logistics, Africa shipping" />
     <meta name="author" content="Globeflight Kenya Ltd" />
-    <meta name="robots" content="index, follow" />
     <meta name="language" content="English" />
     <meta name="revisit-after" content="7 days" />
     <meta name="theme-color" content="#88C300" />
@@ -26,9 +39,8 @@
 
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website" />
-    <meta property="og:url" content="https://globeflight.co.ke/" />
-    <meta property="og:title" content="Globeflight Kenya - International Logistics & Shipping Services" />
-    <meta property="og:description" content="Leading international logistics and shipping company in Kenya. We offer air freight, sea freight, road transport, warehousing, and customs clearance services across Africa and worldwide." />
+    <meta property="og:title" content="Importer of Record (IOR) Services Kenya | Globeflight Worldwide Express" />
+    <meta property="og:description" content="Professional Importer of Record (IOR) services in Kenya. Expert customs clearance, KRA compliance, and import documentation. Trusted by multinationals and tech companies across Africa." />
     <meta property="og:image" content="https://globeflight.co.ke/logo-og.png" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
@@ -37,13 +49,9 @@
 
     <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:url" content="https://globeflight.co.ke/" />
-    <meta name="twitter:title" content="Globeflight Kenya - International Logistics & Shipping Services" />
-    <meta name="twitter:description" content="Leading international logistics and shipping company in Kenya. We offer air freight, sea freight, road transport, warehousing, and customs clearance services across Africa and worldwide." />
+    <meta name="twitter:title" content="Importer of Record (IOR) Services Kenya | Globeflight Worldwide Express" />
+    <meta name="twitter:description" content="Professional Importer of Record (IOR) services in Kenya. Expert customs clearance, KRA compliance, and import documentation. Trusted by multinationals and tech companies across Africa." />
     <meta name="twitter:image" content="https://globeflight.co.ke/logo-og.png" />
-
-    <!-- Canonical URL -->
-    <link rel="canonical" href="https://globeflight.co.ke/" />
 
     <!-- Preconnect for Performance -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -51,20 +59,6 @@
   </head>
   <body>
     <div id="root"></div>
-
-    <!--Start of Tawk.to Script-->
-    <script type="text/javascript">
-      var Tawk_API=Tawk_API||{}, Tawk_LoadStart=new Date();
-      (function(){
-        var s1=document.createElement("script"),s0=document.getElementsByTagName("script")[0];
-        s1.async=true;
-        s1.src='https://embed.tawk.to/6603e3d51ec1082f04dbdc97/1hpvj3v29';
-        s1.charset='UTF-8';
-        s1.setAttribute('crossorigin','*');
-        s0.parentNode.insertBefore(s1,s0);
-      })();
-    </script>
-    <!--End of Tawk.to Script-->
 
     <script type="module" src="/src/main.jsx"></script>
   </body>

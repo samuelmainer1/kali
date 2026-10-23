@@ -1,7 +1,7 @@
 import React from 'react'
 import { motion } from 'framer-motion'
 import { ArrowRight } from 'lucide-react'
-import { Helmet } from 'react-helmet-async'
+import { Link } from 'react-router-dom'
 
 const WhyChooseUsSection = ({ setSelectedImage }) => {
   const whyChooseUs = [
@@ -36,16 +36,6 @@ const WhyChooseUsSection = ({ setSelectedImage }) => {
 
   return (
     <div className="space-y-16">
-      <Helmet>
-        <title>Why Choose Globeflight Kenya | Premium Logistics & Freight Partner</title>
-        <meta name="description" content="Discover why Globeflight Kenya is the trusted logistics partner for businesses across East Africa and beyond. Explore our global network, expertise, and premium logistics solutions." />
-        <meta property="og:title" content="Why Choose Globeflight Kenya | Premium Logistics & Freight Partner" />
-        <meta property="og:description" content="Discover why Globeflight Kenya is the trusted logistics partner for businesses across East Africa and beyond. Explore our global network, expertise, and premium logistics solutions." />
-        <meta property="og:image" content="/globe.jpg" />
-        <meta property="og:type" content="website" />
-        <meta property="og:url" content="https://globeflight.co.ke/about#why-choose-us" />
-        <link rel="canonical" href="https://globeflight.co.ke/about#why-choose-us" />
-      </Helmet>
       <div className="text-center mb-12">
         {/*<motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -97,13 +87,13 @@ const WhyChooseUsSection = ({ setSelectedImage }) => {
                   </span>
                 ))}
               </div>
-              <a
-                href="/services"
+              <Link
+                to="/services"
                 className="inline-flex items-center gap-2 text-green-600 font-semibold text-lg hover:text-green-700 transition-colors group/link"
               >
                 Learn More
                 <ArrowRight className="w-5 h-5 group-hover/link:translate-x-2 transition-transform" />
-              </a>
+              </Link>
             </div>
           </motion.div>
         ))}

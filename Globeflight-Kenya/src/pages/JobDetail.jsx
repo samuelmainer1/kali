@@ -1,12 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
+import { Helmet } from "react-helmet-async";
 
 const API_BASE = import.meta.env.DEV
   ? '/admin/api'
   : 'https://globeflight.co.ke/admin/api';
-
-console.log('JobDetail API_BASE:', API_BASE);
 
 function JobDetail() {
   const { slug } = useParams();
@@ -36,15 +35,12 @@ function JobDetail() {
     setLoading(true);
     setError('');
     try {
-      console.log('Fetching job from:', `${API_BASE}/jobs/public/${slug}`);
       const res = await axios.get(`${API_BASE}/jobs/public/${slug}`, {
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
         }
       });
-      
-      console.log('Job response:', res.data);
       
       if (res.data.success && res.data.data) {
         setJob(res.data.data);
@@ -185,6 +181,12 @@ function JobDetail() {
   if (!job || error) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-50">
+        <Helmet>
+          <title>Job not found | Globeflight Kenya</title>
+          <meta name="robots" content="noindex, follow" />
+          <link rel="canonical" href="https://globeflight.co.ke/jobs" />
+          <meta property="og:url" content="https://globeflight.co.ke/jobs" />
+        </Helmet>
         <div className="text-center">
           <svg className="w-12 h-12 mx-auto text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -203,6 +205,11 @@ function JobDetail() {
 
   return (
     <div className="min-h-screen mt-12 bg-gray-50">
+      <Helmet>
+        <title>{job.title} | Careers | Globeflight Kenya</title>
+        <meta name="description" content={job.summary || job.description || `Apply for ${job.title} at Globeflight Kenya.`} />
+        <link rel="canonical" href={`https://globeflight.co.ke/jobs/${job.slug || slug}`} />
+      </Helmet>
       {/* Hero Section - Edge to Edge */}
       <section className="relative w-screen min-h-[60vh] overflow-hidden bg-gradient-to-br from-[#88C300] to-[#6ea000]" style={{ marginLeft: 'calc(-50vw + 50%)', marginRight: 'calc(-50vw + 50%)', width: '100vw' }}>
         {/* Background Pattern */}

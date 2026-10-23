@@ -99,6 +99,24 @@ export const faqs = [
       "Globeflight Kenya offers multiple international shipping options: EXPRESS AIR (1-3 days): Kenya to Europe/USA/Asia major cities, STANDARD AIR (3-7 days): Worldwide coverage including remote areas, SEA FREIGHT FCL (15-45 days): Most economical for large shipments, SEA FREIGHT LCL (20-50 days): Cost-effective for smaller cargo, MULTIMODAL (Variable): Combining air/sea/road for optimal cost-time balance. Transit times vary by destination, customs procedures, and service selected. We provide accurate ETAs for all international routes.",
   },
   {
+    question: "How does Globeflight handle safety and security?",
+    category: "safety",
+    answer:
+      "Cargo stored with Globeflight sits at the warehouse in Semco Business Park, Mombasa Road, Mlolongo. The building has 24-hour security and CCTV, and stock is tracked while it is there. Collection is during business hours unless you arrange another time. Air freight does not accept undeclared hazardous goods, explosives, lithium batteries without the required documents, or illegal items. We recommend that you keep your own insurance for the value of the goods. For a question about a particular shipment, email sam.maina@globeflight.co.ke or call +254 729 341 277.",
+  },
+  {
+    question: "What logistics services does Globeflight Kenya provide?",
+    category: "logistics",
+    answer:
+      "Globeflight Kenya is a logistics and freight forwarding company in Nairobi. The services are air freight, sea freight through the Port of Mombasa (full containers, shared containers, and vehicles), international express parcels and documents, consolidation of goods from several suppliers into one shipment, warehousing and distribution from Mlolongo, and road transport across East Africa with our sister company Union Green Logistics Ltd. Customs clearance is handled with Union Green Logistics Ltd. We also act as Importer of Record and Exporter of Record. The office is at Nextgen Mall, 3rd Floor, Suite 39/40, Mombasa Road. For a quote, email sam.maina@globeflight.co.ke or call +254 729 341 277.",
+  },
+  {
+    question: "Do you offer Importer of Record (IOR) services?",
+    category: "services",
+    answer:
+      "Yes. Importer of Record (IOR) and Exporter of Record (EOR) means Globeflight can be the company legally responsible for an import or export. A business outside the country can move goods through customs without opening its own local company. This is used where the paperwork and compliance matter, including IT, telecom, pharmaceutical, and high-value goods. Email sam.maina@globeflight.co.ke or call +254 729 341 277 and a person will confirm whether your shipment qualifies.",
+  },
+  {
     question: "What items have restrictions for international shipping through Globeflight Kenya?",
     answer:
       "International shipping restrictions vary by country but generally include: Prohibited items: illegal drugs, weapons without permits, counterfeit goods, and items banned by destination countries. Restricted items requiring special permits: hazardous materials (UN classified), live animals (need health certificates), precious metals/stones (require declarations), certain electronics (need export licenses), cultural artifacts, and pharmaceutical products. We provide country-specific guidance and handle permit applications. Always declare contents accurately for smooth international customs clearance. Email us for destination-specific restrictions.",

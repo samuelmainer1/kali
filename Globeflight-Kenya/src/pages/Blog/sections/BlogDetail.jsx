@@ -5,7 +5,7 @@ import axios from "axios"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Calendar, User as UserIcon, ArrowLeft, Share2, Facebook, Twitter, Linkedin, Link as LinkIcon } from "lucide-react"
-import { useParams, useNavigate } from "react-router-dom"
+import { Link, useParams, useNavigate } from "react-router-dom"
 import { Helmet } from "react-helmet-async"
 import { getApiImageUrl, handleImageError } from '@/utils/imageUtils'
 
@@ -13,10 +13,6 @@ import { getApiImageUrl, handleImageError } from '@/utils/imageUtils'
 const API_BASE = import.meta.env.DEV
   ? '/admin/api'
   : 'https://globeflight.co.ke/admin/api';
-
-const Link = ({ to, children, className }) => (
-  <a href={to} className={className}>{children}</a>
-)
 
 const BlogDetailsPage = () => {
   const { slug } = useParams()
@@ -132,6 +128,12 @@ const BlogDetailsPage = () => {
   if (error || !post) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
+        <Helmet>
+          <title>Article not found | Globeflight Kenya</title>
+          <meta name="robots" content="noindex, follow" />
+          <link rel="canonical" href="https://globeflight.co.ke/blog" />
+          <meta property="og:url" content="https://globeflight.co.ke/blog" />
+        </Helmet>
         <div className="text-center p-8 max-w-md">
           <div className="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-6">
             <svg className="w-10 h-10 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -150,8 +152,8 @@ const BlogDetailsPage = () => {
     )
   }
 
-  const pageTitle = `${post.title} | Globeflight Kenya Blog`;
-  const pageDesc = post.shortDescription || post.title;
+  const pageTitle = post.metaTitle || `${post.title} | Globeflight Kenya Blog`;
+  const pageDesc = post.metaDescription || post.shortDescription || post.title;
   const canonicalUrl = `https://globeflight.co.ke/blog/${post.slug}`;
   const imageUrl = getApiImageUrl(post.featuredImage);
 
@@ -160,17 +162,17 @@ const BlogDetailsPage = () => {
       <Helmet>
         <title>{pageTitle}</title>
         <meta name="description" content={pageDesc} />
-        <meta name="keywords" content={`${post.category?.name || ''}, Globeflight Kenya, logistics, shipping, blog`} />
+        <meta name="keywords" content={[...(Array.isArray(post.tags) ? post.tags : []), post.category?.name, 'Globeflight Kenya', 'logistics', 'shipping'].filter(Boolean).join(', ')} />
         <link rel="canonical" href={canonicalUrl} />
         <meta property="og:type" content="article" />
         <meta property="og:url" content={canonicalUrl} />
-        <meta property="og:title" content={post.title} />
+        <meta property="og:title" content={pageTitle} />
         <meta property="og:description" content={pageDesc} />
         <meta property="og:image" content={imageUrl} />
         <meta property="article:published_time" content={post.publishedAt} />
         <meta property="article:author" content={post.author?.fullName || 'Anonymous'} />
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content={post.title} />
+        <meta name="twitter:title" content={pageTitle} />
         <meta name="twitter:description" content={pageDesc} />
         <meta name="twitter:image" content={imageUrl} />
         <script type="application/ld+json">
@@ -240,7 +242,7 @@ const BlogDetailsPage = () => {
 
               {/* Category Badge */}
               {post.category && (
-                <Link to={`/category/${post.category.slug}`}>
+                <Link to={`/blog/category/${post.category.slug}`}>
                   <span className="inline-block px-4 py-2 bg-[#88C300] text-white text-sm font-semibold rounded-lg mb-6 hover:bg-[#6ea000] transition-colors">
                     {post.category.name}
                   </span>

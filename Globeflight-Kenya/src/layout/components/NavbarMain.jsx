@@ -169,12 +169,12 @@ const NavbarMain = ({ data, pathname, isSticky, toggleMobileMenu, isMobileMenuOp
               className={`relative text-sm lg:text-base font-semibold hover:text-[#88C300] transition-all duration-300 py-2 px-2 lg:px-3 whitespace-nowrap ${
                 pathname === "/blog" ? "text-[#88C300]" : "text-gray-700"
               }`}
-              title="News & Updates - Globeflight Kenya"
+              title="Blog - Globeflight Kenya"
               aria-haspopup="true"
               aria-expanded={catDropdownOpen ? "true" : "false"}
             >
               <span className="relative z-10 flex items-center gap-1">
-                Updates
+                Blog
                 <svg className="w-3 h-3 lg:w-4 lg:h-4 ml-1" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                   <path d="M19 9l-7 7-7-7" />
                 </svg>
@@ -194,15 +194,16 @@ const NavbarMain = ({ data, pathname, isSticky, toggleMobileMenu, isMobileMenuOp
                 aria-label="Blog Categories"
               >
                 {categories.map(cat => (
-                  <a
+                  <Link
                     key={cat.slug}
-                    href={`/blog/category/${cat.slug}`}
+                    to={`/blog/category/${cat.slug}`}
                     className="block px-5 py-3 text-gray-700 hover:bg-[#88C300]/10 hover:text-[#88C300] font-medium transition-colors duration-200"
                     role="menuitem"
                     title={cat.name}
+                    onClick={() => setCatDropdownOpen(false)}
                   >
                     {cat.name}
-                  </a>
+                  </Link>
                 ))}
               </div>
             )}
