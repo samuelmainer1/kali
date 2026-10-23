@@ -28,6 +28,7 @@ const categories = [
 
 // Assign categories to FAQs
 const categorizedFaqs = faqs.map((faq) => {
+  if (faq.category) return faq
   let category = "all"
   const q = faq.question.toUpperCase()
   if (

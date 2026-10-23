@@ -37,6 +37,9 @@ const services = [
   { id: "ecommerce", label: "E-commerce Logistics" },
   { id: "roadTransport", label: "Road Transport" },
   { id: "projectCargo", label: "Project Cargo" },
+  { id: "logistics", label: "Logistics" },
+  { id: "safetySecurity", label: "Safety & Security" },
+  { id: "importerOfRecord", label: "Importer of Record (IOR)" },
 ]
 
 const inquiryTypes = [
