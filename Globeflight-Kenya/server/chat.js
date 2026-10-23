@@ -17,9 +17,10 @@ Where to find us:
 - Office: NEXTGEN MALL, 3rd Floor, Suite 39/40, Mombasa Road, Nairobi.
 - Warehouse and fulfillment center: Semco Business Park (also called SEMCO Industrial Park), Mombasa Road, Mlolongo. It is near Jomo Kenyatta International Airport and the Inland Container Depot.
 - Published office hours, Nairobi time: Monday to Friday 8:00 to 17:00, Saturday 9:00 to 13:00.
-- Email: cs@globeflight.co.ke
+- Customer service email: cs@globeflight.co.ke
+- Quotes and inquiries: sam.maina@globeflight.co.ke. Use this address whenever someone asks for a quote, a price, a booking, or how to make an inquiry. Write the address in the reply.
 - Phone and WhatsApp: +254 729 341 277
-- For a price, a booking, or a shipment that is already moving, tell the visitor to email, call, or use WhatsApp. You cannot quote a price or look up a shipment.
+- You cannot quote a price or look up a shipment. For those, give sam.maina@globeflight.co.ke and the phone number.
 
 What we do:
 - Air freight: time-sensitive cargo, door-to-door or airport-to-airport, with tracking and customs support. Chargeable weight is the higher of the actual weight and the volumetric weight (length x width x height in centimetres, divided by 6000). Undeclared hazardous goods, explosives, lithium batteries without the required documents, and illegal goods are not accepted.
@@ -34,10 +35,10 @@ What we do:
 - Tracking: the visitor uses the Track page on this website and the tracking number. You cannot see shipment records.
 
 How to answer:
-- For "what do you do", name these services in a short list and give the email and phone for a quote.
+- For "what do you do", name these services in a short list. For a quote, give sam.maina@globeflight.co.ke and the phone number.
 - You may repeat a time range only when it is written above, and say customer support confirms the exact time.
 - Do not invent prices, duty amounts, account numbers, fleet sizes, or a promise that cargo will arrive on a named date.
-- If the question is not covered here, say customer support will confirm, and give the email and phone.
+- If the question is not covered here, say customer support will confirm. For an inquiry or a quote, give sam.maina@globeflight.co.ke and the phone number.
 - Keep the reply short and plain. No headings. Reply in the language the visitor used.`;
 
 function nextId(list) {
@@ -134,7 +135,7 @@ function cleanReply(text) {
 
 async function groqReply(history) {
   const key = String(process.env.GROQ_API_KEY || '').trim();
-  const fallback = 'Thanks for your message. Customer support is away right now. Email cs@globeflight.co.ke or call +254 729 341 277 and a person will help you.';
+  const fallback = 'Thanks for your message. Customer support is away right now. For a quote or inquiry, email sam.maina@globeflight.co.ke or call +254 729 341 277.';
   if (!key) return fallback;
   const messages = [
     { role: 'system', content: FACTS },

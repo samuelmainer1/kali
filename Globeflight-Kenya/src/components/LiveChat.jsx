@@ -187,7 +187,7 @@ export default function LiveChat() {
           <div ref={scroller} className="flex-1 space-y-3 overflow-y-auto bg-[#f7f8f4] px-3 py-3">
             <p className="rounded-xl bg-white px-3 py-2 text-sm leading-5 text-gray-600">
               {ready
-                ? "Ask about shipping, tracking, or customs. A person replies when customer support is signed in. Otherwise the assistant replies."
+                ? "Ask about shipping, tracking, or customs. For a quote or inquiry, email sam.maina@globeflight.co.ke. A person replies when customer support is signed in. Otherwise the assistant replies."
                 : "Enter your email and phone number so customer support can reach you. Then you can start the chat."}
             </p>
             {ready && messages.map((message) => {

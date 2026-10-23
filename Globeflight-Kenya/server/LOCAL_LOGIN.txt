@@ -39,7 +39,8 @@ Live chat
   that person answers. When nobody is signed in, the assistant answers
   if GROQ_API_KEY is set in .env. The assistant answers basic questions
   from the services and offices published on the website. It does not
-  give prices or look up a shipment. The key stays out of this public
+  give prices or look up a shipment. Quotes and inquiries in the chat
+  use sam.maina@globeflight.co.ke. The key stays out of this public
   repository.
 
 Start the API before the dashboard:
