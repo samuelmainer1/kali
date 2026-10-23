@@ -37,7 +37,9 @@ Live chat
   show in the chat itself. They are emailed to cs@globeflight.co.ke when
   RESEND_API_KEY is set. While an admin is signed in to this dashboard,
   that person answers. When nobody is signed in, the assistant answers
-  if GROQ_API_KEY is set in .env. The key stays out of this public
+  if GROQ_API_KEY is set in .env. The assistant answers basic questions
+  from the services and offices published on the website. It does not
+  give prices or look up a shipment. The key stays out of this public
   repository.
 
 Start the API before the dashboard:
