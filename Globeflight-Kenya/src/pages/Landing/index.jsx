@@ -125,13 +125,13 @@ const Landing = () => {
         <meta property="og:url" content="https://globeflight.co.ke/" />
         <meta property="og:title" content="Importer of Record (IOR) Services Kenya | Globeflight Worldwide Express" />
         <meta property="og:description" content="Professional Importer of Record (IOR) services in Kenya. Expert customs clearance, KRA compliance, and import documentation. Trusted by multinationals and tech companies across Africa." />
-        <meta property="og:image" content="https://globeflight.co.ke/logo.png" />
+        <meta property="og:image" content="https://globeflight.co.ke/logo-og.png" />
         
         <meta property="twitter:card" content="summary_large_image" />
         <meta property="twitter:url" content="https://globeflight.co.ke/" />
         <meta property="twitter:title" content="Importer of Record (IOR) Services Kenya | Globeflight Worldwide Express" />
         <meta property="twitter:description" content="Professional Importer of Record (IOR) services in Kenya. Expert customs clearance, KRA compliance, and import documentation. Trusted by multinationals and tech companies across Africa." />
-        <meta property="twitter:image" content="https://globeflight.co.ke/logo.png" />
+        <meta property="twitter:image" content="https://globeflight.co.ke/logo-og.png" />
         
         <script type="application/ld+json">
           {JSON.stringify({

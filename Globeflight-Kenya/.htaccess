@@ -51,11 +51,12 @@
   # MAIN WEBSITE - React Router Support
   # =============================================================================
 
-  # Handle React Router - send all requests to index.html
+  # Known public pages stay on the React app. Any other missing address
+  # falls through to the 404 page instead of pretending to be a real page.
   RewriteCond %{REQUEST_FILENAME} !-f
   RewriteCond %{REQUEST_FILENAME} !-d
   RewriteCond %{REQUEST_URI} !^/admin [NC]
-  RewriteRule . /index.html [L]
+  RewriteRule ^(home|about-us|contact-us|track|blog|jobs|unsubscribe|services)(/.*)?$ /index.html [L]
 </IfModule>
 
 # =============================================================================
@@ -178,7 +179,7 @@ Options -Indexes
 # ERROR PAGES
 # =============================================================================
 
-ErrorDocument 404 /index.html
+ErrorDocument 404 /404.html
 ErrorDocument 500 /index.html
 
 
@@ -241,11 +242,12 @@ ErrorDocument 500 /index.html
   # MAIN WEBSITE - React Router Support
   # =============================================================================
 
-  # Handle React Router - send all requests to index.html
+  # Known public pages stay on the React app. Any other missing address
+  # falls through to the 404 page instead of pretending to be a real page.
   RewriteCond %{REQUEST_FILENAME} !-f
   RewriteCond %{REQUEST_FILENAME} !-d
   RewriteCond %{REQUEST_URI} !^/admin [NC]
-  RewriteRule . /index.html [L]
+  RewriteRule ^(home|about-us|contact-us|track|blog|jobs|unsubscribe|services)(/.*)?$ /index.html [L]
 </IfModule>
 
 # =============================================================================
@@ -364,6 +366,6 @@ Options -Indexes
 # ERROR PAGES
 # =============================================================================
 
-ErrorDocument 404 /index.html
+ErrorDocument 404 /404.html
 ErrorDocument 500 /index.html
 

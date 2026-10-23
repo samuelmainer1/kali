@@ -34,8 +34,13 @@ const MainLayout = () => {
     switch(pathname) {
       case '/':
         return {
-          title: `${baseTitle} - International Logistics & Global Shipping Solutions`,
-          description: "Globeflight Kenya offers reliable international logistics and shipping solutions worldwide. Air freight, sea freight, warehousing, and customs clearance connecting Kenya and Africa to the global market.",
+          title: 'Importer of Record (IOR) Services Kenya | Globeflight Worldwide Express',
+          description: 'Professional Importer of Record (IOR) services in Kenya. Expert customs clearance, KRA compliance, and import documentation. Trusted by multinationals and tech companies across Africa.',
+        };
+      case '/contact-us':
+        return {
+          title: 'Contact Us | Frequently Asked Questions | Globeflight Kenya',
+          description: 'Contact Globeflight Kenya for logistics, shipping, and courier quotes. The same page answers common questions on safety, logistics, importer of record, freight, and customs.',
         };
       case '/services':
         return {
@@ -46,11 +51,6 @@ const MainLayout = () => {
         return {
           title: `${baseTitle} - Track Your Shipment | Real-time Tracking`,
           description: "Track your Globeflight Kenya shipment in real-time. Enter your tracking number to get instant updates on your cargo location and delivery status.",
-        };
-      case '/contact-us':
-        return {
-          title: `${baseTitle} - Contact Us | Get in Touch`,
-          description: "Contact Globeflight Kenya for all your logistics needs. Located in Nairobi, we provide 24/7 customer support for shipping and freight inquiries.",
         };
       case '/about-us':
         return {
@@ -107,6 +107,7 @@ const MainLayout = () => {
         
         {/* Twitter */}
         <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:site" content="@globeflight_ke" />
         <meta name="twitter:url" content={`https://globeflight.co.ke${location.pathname}`} />
         <meta name="twitter:title" content={title} />
         <meta name="twitter:description" content={description} />
@@ -245,6 +246,22 @@ const MainLayout = () => {
             },
             "foundingDate": "2010",
             "slogan": "Connecting Africa to the World"
+          })}
+        </script>
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "WebSite",
+            "@id": "https://globeflight.co.ke/#website",
+            "name": "Globeflight Kenya",
+            "url": "https://globeflight.co.ke",
+            "inLanguage": "en-KE",
+            "publisher": { "@id": "https://globeflight.co.ke/#organization" },
+            "potentialAction": {
+              "@type": "SearchAction",
+              "target": "https://globeflight.co.ke/track?trackingNumber={search_term_string}",
+              "query-input": "required name=search_term_string"
+            }
           })}
         </script>
         

@@ -82,16 +82,16 @@ const Faq = () => {
   return (
     <>
       <Helmet>
-        <title>FAQs - International Logistics Questions | Globeflight Kenya Global Shipping</title>
-        <meta name="description" content="Find answers about Globeflight Kenya's international shipping, global freight rates, worldwide delivery schedules, international warehousing, cargo tracking, and logistics services connecting Kenya and Africa to the world." />
+        <title>Contact Us | Frequently Asked Questions | Globeflight Kenya</title>
+        <meta name="description" content="Contact Globeflight Kenya for logistics, shipping, and courier quotes. The same page answers common questions on safety, logistics, importer of record, freight, and customs." />
         <meta name="keywords" content="Globeflight Kenya FAQ, international logistics FAQ, global shipping questions, international freight charges, worldwide cargo tracking, global warehousing, international delivery schedules, Africa to world shipping FAQ, Kenya international logistics questions, customs clearance FAQ, international shipping restrictions" />
-        <meta property="og:title" content="Frequently Asked Questions - Globeflight Kenya" />
-        <meta property="og:description" content="Get answers about our logistics, shipping, and transportation services across East Africa. Learn about freight charges, delivery schedules, cargo tracking, and more." />
+        <meta property="og:title" content="Contact Us | Frequently Asked Questions | Globeflight Kenya" />
+        <meta property="og:description" content="Contact Globeflight Kenya for logistics, shipping, and courier quotes. The same page answers common questions on safety, logistics, importer of record, freight, and customs." />
         <meta property="og:type" content="website" />
         <meta property="og:url" content="https://globeflight.co.ke/contact-us" />
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="FAQs - Globeflight Kenya Logistics" />
-        <meta name="twitter:description" content="Find answers about shipping, freight charges, delivery schedules, and logistics services across East Africa." />
+        <meta name="twitter:title" content="Contact Us | Frequently Asked Questions | Globeflight Kenya" />
+        <meta name="twitter:description" content="Contact Globeflight Kenya for logistics, shipping, and courier quotes. The same page answers common questions on safety, logistics, importer of record, freight, and customs." />
         
         <script type="application/ld+json">
           {JSON.stringify({
@@ -106,9 +106,7 @@ const Faq = () => {
                 "author": {
                   "@type": "Organization",
                   "name": "Globeflight Kenya"
-                },
-                "dateCreated": "2024-01-01",
-                "upvoteCount": Math.floor(Math.random() * 50) + 20
+                }
               }
             }))
           })}
@@ -169,9 +167,9 @@ const Faq = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
             >
-              <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
+              <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
                 Frequently Asked Questions
-              </h1>
+              </h2>
               <p className="text-lg md:text-xl text-gray-600">
                 Find answers to common questions about our international logistics services
               </p>

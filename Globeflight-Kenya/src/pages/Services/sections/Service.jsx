@@ -112,9 +112,9 @@ export default function Service() {
                 GLOBAL LOGISTICS SOLUTIONS
               </span>
             </div>*/}
-            <h1 className="text-4xl md:text-6xl font-bold mb-6">
+            <h2 className="text-4xl md:text-6xl font-bold mb-6">
               International <span className="text-transparent bg-clip-text" style={{ backgroundImage: 'linear-gradient(to right, #3B82F6, #88C300)' }}>Logistics Services</span>
-            </h1>
+            </h2>
             <h2 className="text-xl text-gray-600 leading-relaxed">
               Fast, reliable, and cost-effective shipping from Kenya to anywhere in the world. 
               Connecting Africa to Europe, Asia, Americas, and beyond.
