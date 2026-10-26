@@ -202,11 +202,25 @@ export default function LiveChat() {
           aria-label="Live chat"
           className="mb-3 flex h-[min(560px,calc(100dvh-11rem))] w-full flex-col overflow-hidden rounded-2xl border border-[#d7e7b0] bg-white shadow-2xl"
         >
-          <header className="flex items-center justify-between gap-3 bg-[#1a202c] px-4 py-3 text-white">
-            <div>
-              <h2 className="text-base font-bold">Globeflight</h2>
-              <p className="text-xs text-[#d7e7b0]">{status}</p>
-            </div>
+          <header className={`flex items-center justify-between gap-2 px-3 py-2.5 text-white ${ready ? "bg-[#88C300]" : "bg-[#1a202c]"}`}>
+            {ready ? (
+              <div className="flex min-w-0 items-center gap-2">
+                <img
+                  src={supportPhoto}
+                  alt="Globeflight customer support"
+                  className="h-11 w-11 shrink-0 rounded-full border-2 border-white object-cover object-[center_18%]"
+                />
+                <div className="min-w-0">
+                  <h2 className="truncate text-base font-bold leading-tight">Globeflight Kenya</h2>
+                  <p className="truncate text-xs">Globeflight Support team</p>
+                </div>
+              </div>
+            ) : (
+              <div>
+                <h2 className="text-base font-bold">Globeflight</h2>
+                <p className="text-xs text-[#d7e7b0]">{status}</p>
+              </div>
+            )}
             <div className="flex shrink-0 items-center gap-1">
               {ready && (
                 <button
@@ -228,46 +242,65 @@ export default function LiveChat() {
               </button>
             </div>
           </header>
-          <div ref={scroller} className="flex-1 space-y-3 overflow-y-auto bg-[#f7f8f4] px-3 py-3">
-            <div className={messages.length ? "sticky top-0 z-10 -mx-3 bg-[#f7f8f4] px-3 pb-1" : ""}>
-              <img
-                src={supportPhoto}
-                alt="Globeflight customer support"
-                className="mx-auto h-40 w-[7.5rem] rounded-2xl object-cover shadow-sm"
-              />
-            </div>
-            <p className="rounded-xl bg-white px-3 py-2 text-sm leading-5 text-gray-600">
-              {ready
-                ? "Ask about shipping, tracking, or customs. For a quote or inquiry, email sam.maina@globeflight.co.ke. A person replies when customer support is signed in. Otherwise the assistant replies."
-                : "Enter your email and phone number so customer support can reach you. Then you can start the chat."}
-            </p>
-            {ready && messages.map((message) => {
-              const mine = message.from === "visitor";
-              return (
-                <div key={message.id} className={mine ? "flex justify-end" : "flex items-end justify-start gap-2"}>
-                  {!mine && (
+          <div ref={scroller} className={`flex-1 space-y-3 overflow-y-auto px-3 py-3 ${ready ? "bg-white" : "bg-[#f7f8f4]"}`}>
+            {!ready && (
+              <p className="rounded-xl bg-white px-3 py-2 text-sm leading-5 text-gray-600">
+                Enter your email and phone number so customer support can reach you. Then you can start the chat.
+              </p>
+            )}
+            {ready && (
+              <>
+                <div className="ml-auto max-w-[88%] rounded-2xl bg-[#e5e5e5] px-4 py-3 text-sm leading-6 text-gray-900">
+                  <p>Name : Globeflight Kenya</p>
+                  <p>
+                    Email :{" "}
+                    <a className="underline" href="mailto:cs@globeflight.co.ke">cs@globeflight.co.ke</a>
+                  </p>
+                  <p>
+                    Phone :{" "}
+                    <a className="underline" href="tel:+254729341277">+254 729 341 277</a>
+                  </p>
+                </div>
+                <div>
+                  <p className="mb-1 pl-12 text-sm text-gray-800">Globeflight Kenya</p>
+                  <div className="flex items-end gap-2">
                     <img
                       src={supportPhoto}
                       alt=""
-                      className="h-9 w-9 shrink-0 rounded-full object-cover object-[center_18%]"
+                      className="h-10 w-10 shrink-0 rounded-full bg-[#f3f3f3] object-cover object-[center_18%]"
                     />
-                  )}
-                  <div
-                    className={
-                      mine
-                        ? "max-w-[85%] rounded-2xl rounded-br-md bg-[#88C300] px-3 py-2 text-sm text-white"
-                        : "max-w-[85%] rounded-2xl rounded-bl-md bg-white px-3 py-2 text-sm text-gray-800 shadow-sm"
-                    }
-                  >
-                    {!mine && (
-                      <p className="mb-1 text-[11px] font-bold uppercase tracking-wide text-[#5f8a00]">
-                        {message.authorName}
-                      </p>
-                    )}
-                    <p className="whitespace-pre-wrap leading-5">{message.text}</p>
-                    <p className={mine ? "mt-1 text-[11px] text-white/80" : "mt-1 text-[11px] text-gray-400"}>
-                      {when(message.createdAt)}
-                    </p>
+                    <div className="max-w-[78%] rounded-2xl bg-[#1f9d4a] px-3 py-2 text-sm leading-5 text-white">
+                      Hello! How can I assist you today with Globeflight Kenya?
+                    </div>
+                  </div>
+                </div>
+              </>
+            )}
+            {ready && messages.map((message) => {
+              const mine = message.from === "visitor";
+              if (mine) {
+                return (
+                  <div key={message.id} className="flex justify-end">
+                    <div className="max-w-[85%] rounded-2xl rounded-br-md bg-[#ececec] px-3 py-2 text-sm text-gray-800">
+                      <p className="whitespace-pre-wrap leading-5">{message.text}</p>
+                      <p className="mt-1 text-[11px] text-gray-400">{when(message.createdAt)}</p>
+                    </div>
+                  </div>
+                );
+              }
+              return (
+                <div key={message.id}>
+                  <p className="mb-1 pl-12 text-sm text-gray-800">{message.authorName || "Globeflight Kenya"}</p>
+                  <div className="flex items-end gap-2">
+                    <img
+                      src={supportPhoto}
+                      alt=""
+                      className="h-10 w-10 shrink-0 rounded-full bg-[#f3f3f3] object-cover object-[center_18%]"
+                    />
+                    <div className="max-w-[78%] rounded-2xl bg-[#1f9d4a] px-3 py-2 text-sm text-white">
+                      <p className="whitespace-pre-wrap leading-5">{message.text}</p>
+                      <p className="mt-1 text-[11px] text-white/80">{when(message.createdAt)}</p>
+                    </div>
                   </div>
                 </div>
               );
@@ -319,7 +352,7 @@ export default function LiveChat() {
                 }}
                 rows={2}
                 maxLength={1000}
-                placeholder="Write a message"
+                placeholder="Type here and press enter.."
                 className="min-h-[44px] flex-1 resize-none rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-[#88C300]"
               />
               <button
