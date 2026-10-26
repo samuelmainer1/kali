@@ -281,6 +281,7 @@ export async function postVisitorMessage(db, { token, text, name }, notify) {
   }
   chat.updatedAt = now;
   chat.staffUnread = Number(chat.staffUnread || 0) + 1;
+  if (typeof notify === 'function') await notify(chat, clean);
   if (isStaffOnline()) {
     chat.handler = 'staff';
   } else {
@@ -296,7 +297,6 @@ export async function postVisitorMessage(db, { token, text, name }, notify) {
     });
     chat.updatedAt = new Date().toISOString();
   }
-  notify(chat, clean);
   return publicThread(db, chat);
 }
 

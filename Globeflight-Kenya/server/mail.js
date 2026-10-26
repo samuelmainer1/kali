@@ -8,6 +8,36 @@ export function notifyAddress() {
   return process.env.MAIL_NOTIFY_TO || 'cs@globeflight.co.ke';
 }
 
+export function chatAlertAddresses() {
+  const list = ['sam.maina@globeflight.co.ke', notifyAddress()];
+  const seen = new Set();
+  const addresses = [];
+  for (const item of list) {
+    const email = String(item || '').trim();
+    const key = email.toLowerCase();
+    if (!key.includes('@') || seen.has(key)) continue;
+    seen.add(key);
+    addresses.push(email);
+  }
+  return addresses;
+}
+
+export function liveChatAlertText(chat, message) {
+  const lines = [
+    'Someone is in the live chat now.',
+    'Sign in to the admin dashboard and open Live chat. The assistant keeps replying until you are signed in.',
+    '',
+    `Name: ${oneLine(chat.visitorName, 'Not given')}`,
+    `Email: ${oneLine(chat.visitorEmail, 'Not given')}`,
+    `Phone: ${oneLine(chat.visitorPhone, 'Not given')}`,
+  ];
+  const wrote = String(message || '').trim();
+  if (wrote) {
+    lines.push('', 'They wrote:', wrote);
+  }
+  return lines.join('\n');
+}
+
 function oneLine(value, fallback) {
   const text = String(value || '').replace(/[\r\n]+/g, ' ').trim();
   return (text || fallback).slice(0, 140);
@@ -18,14 +48,16 @@ export function mailIsConfigured() {
 }
 
 export async function sendMail({ to, subject, text }) {
-  const address = String(to || '').trim();
-  if (!address.includes('@')) return { sent: false, reason: 'no-address' };
+  const addresses = (Array.isArray(to) ? to : [to])
+    .map((item) => String(item || '').trim())
+    .filter((item) => item.includes('@'));
+  if (!addresses.length) return { sent: false, reason: 'no-address' };
   if (!mailIsConfigured()) return { sent: false, reason: 'not-configured' };
 
   const resend = new Resend(process.env.RESEND_API_KEY);
   const { error } = await resend.emails.send({
     from: fromAddress(),
-    to: [address],
+    to: addresses,
     subject: oneLine(subject, 'Globeflight Kenya'),
     text: String(text || ''),
   });

@@ -9,7 +9,7 @@ import path from 'node:path';
 import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
-import { newMessageEmailText, notifyAddress, replyEmailText, sendMail } from './mail.js';
+import { chatAlertAddresses, liveChatAlertText, newMessageEmailText, notifyAddress, replyEmailText, sendMail } from './mail.js';
 import {
   isStaffOnline,
   markStaffPresent,
@@ -117,6 +117,25 @@ function addNotification(entry) {
     createdAt: entry.createdAt || new Date().toISOString(),
   });
   if (db.notifications.length > 80) db.notifications.length = 80;
+}
+
+function liveChatAlertDue(chat) {
+  const last = chat.lastAlertAt ? new Date(chat.lastAlertAt).getTime() : 0;
+  return !last || Date.now() - last > 10 * 60 * 1000;
+}
+
+async function emailLiveChat(chat, message) {
+  const notice = await sendMail({
+    to: chatAlertAddresses(),
+    subject: 'Someone is waiting in the live chat',
+    text: liveChatAlertText(chat, message),
+  });
+  if (notice.sent) chat.lastAlertAt = new Date().toISOString();
+  else if (notice.reason === 'not-configured') {
+    console.error('Live chat email was not sent. Set RESEND_API_KEY on the server.');
+  } else {
+    console.error('Live chat email failed:', notice.reason);
+  }
 }
 
 function messageNotification(contact) {
@@ -1567,23 +1586,8 @@ async function handle(req, res) {
           refId: chat.id,
         });
       }
+      await emailLiveChat(chat);
       saveDb();
-      const notice = await sendMail({
-        to: notifyAddress(),
-        subject: `Live chat from ${chat.visitorEmail}`,
-        text: [
-          'A visitor started a live chat.',
-          '',
-          `Name: ${chat.visitorName || 'Not given'}`,
-          `Email: ${chat.visitorEmail}`,
-          `Phone: ${chat.visitorPhone}`,
-          '',
-          'Reply from the dashboard live chat while you are signed in.',
-        ].join('\n'),
-      });
-      if (!notice.sent && notice.reason !== 'not-configured') {
-        console.error('Live chat email failed:', notice.reason);
-      }
     }
     send(res, 200, { success: true, data: started.thread });
     return;
@@ -1596,7 +1600,7 @@ async function handle(req, res) {
     if (!allowChatMessage(limitKey)) {
       throw httpError(429, 'Please wait a moment before sending another message.');
     }
-    const data = await postVisitorMessage(db, { token, text: body.text, name: body.name }, (chat, text) => {
+    const data = await postVisitorMessage(db, { token, text: body.text, name: body.name }, async (chat, text) => {
       const name = chat.visitorName || chat.visitorEmail || 'a visitor';
       const contact = [chat.visitorPhone, chat.visitorEmail].filter(Boolean).join(' · ');
       const detail = contact ? `${contact} — ${text}` : text;
@@ -1607,15 +1611,16 @@ async function handle(req, res) {
         existing.detail = clip(detail, 160);
         existing.createdAt = new Date().toISOString();
         db.notifications = [existing, ...(db.notifications || []).filter((note) => note !== existing)];
-        return;
+      } else {
+        addNotification({
+          type: 'chat',
+          title: `Live chat from ${name}`,
+          detail,
+          link: '/chat',
+          refId: chat.id,
+        });
       }
-      addNotification({
-        type: 'chat',
-        title: `Live chat from ${name}`,
-        detail,
-        link: '/chat',
-        refId: chat.id,
-      });
+      if (!isStaffOnline() && liveChatAlertDue(chat)) await emailLiveChat(chat, text);
     });
     saveDb();
     send(res, 200, { success: true, data });
