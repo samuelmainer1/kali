@@ -27,13 +27,24 @@ export default function LiveChat() {
   const scroller = useRef(null);
   const openRef = useRef(false);
   const seenRef = useRef(0);
+  const sessionRef = useRef(0);
   openRef.current = open;
 
+  function currentToken() {
+    return localStorage.getItem(TOKEN_KEY) || "";
+  }
+
+  function stillThisChat(session, token) {
+    return session === sessionRef.current && currentToken() === (token || "");
+  }
+
   async function load() {
-    const token = localStorage.getItem(TOKEN_KEY);
+    const session = sessionRef.current;
+    const token = currentToken();
     if (!token) {
       try {
         const status = await fetch("/admin/api/chat/status");
+        if (!stillThisChat(session, token)) return;
         if (status.ok) {
           const body = await status.json();
           setStaffOnline(Boolean(body.data && body.data.staffOnline));
@@ -47,6 +58,7 @@ export default function LiveChat() {
       const response = await fetch("/admin/api/chat", {
         headers: { "X-Chat-Token": token },
       });
+      if (!stillThisChat(session, token)) return;
       if (response.status === 404) {
         localStorage.removeItem(TOKEN_KEY);
         return;
@@ -91,13 +103,29 @@ export default function LiveChat() {
     });
   }
 
+  function newChat() {
+    sessionRef.current += 1;
+    localStorage.removeItem(TOKEN_KEY);
+    setReady(false);
+    setMessages([]);
+    setName("");
+    setEmail("");
+    setPhone("");
+    setDraft("");
+    setError("");
+    setUnseen(false);
+    setSending(false);
+    seenRef.current = 0;
+  }
+
   async function startChat(event) {
     event.preventDefault();
     if (sending) return;
+    const session = sessionRef.current;
+    const token = currentToken();
     setSending(true);
     setError("");
     try {
-      const token = localStorage.getItem(TOKEN_KEY) || "";
       const response = await fetch("/admin/api/chat/start", {
         method: "POST",
         headers: {
@@ -107,6 +135,7 @@ export default function LiveChat() {
         body: JSON.stringify({ email: email.trim(), phone: phone.trim(), name: name.trim() }),
       });
       const body = await response.json().catch(() => ({}));
+      if (!stillThisChat(session, token)) return;
       if (!response.ok) {
         setError(body.message || "Enter your email and phone number.");
         return;
@@ -126,10 +155,11 @@ export default function LiveChat() {
     event.preventDefault();
     const text = draft.trim();
     if (!text || sending) return;
+    const session = sessionRef.current;
+    const token = currentToken();
     setSending(true);
     setError("");
     try {
-      const token = localStorage.getItem(TOKEN_KEY) || "";
       const response = await fetch("/admin/api/chat/messages", {
         method: "POST",
         headers: {
@@ -139,6 +169,7 @@ export default function LiveChat() {
         body: JSON.stringify({ text, name: name.trim() }),
       });
       const body = await response.json().catch(() => ({}));
+      if (!stillThisChat(session, token)) return;
       if (!response.ok) {
         setError(body.message || "The message could not be sent.");
         return;
@@ -175,14 +206,26 @@ export default function LiveChat() {
               <h2 className="text-base font-bold">Globeflight</h2>
               <p className="text-xs text-[#d7e7b0]">{status}</p>
             </div>
-            <button
-              type="button"
-              onClick={toggle}
-              className="rounded-full px-2 py-1 text-sm text-white hover:bg-white/10"
-              aria-label="Close chat"
-            >
-              Close
-            </button>
+            <div className="flex shrink-0 items-center gap-1">
+              {ready && (
+                <button
+                  type="button"
+                  onClick={newChat}
+                  className="rounded-full px-2 py-1 text-sm text-white hover:bg-white/10"
+                  aria-label="New chat"
+                >
+                  New chat
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={toggle}
+                className="rounded-full px-2 py-1 text-sm text-white hover:bg-white/10"
+                aria-label="Close chat"
+              >
+                Close
+              </button>
+            </div>
           </header>
           <div ref={scroller} className="flex-1 space-y-3 overflow-y-auto bg-[#f7f8f4] px-3 py-3">
             <p className="rounded-xl bg-white px-3 py-2 text-sm leading-5 text-gray-600">
