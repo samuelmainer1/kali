@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import supportPhoto from "../assets/support-agent.jpg";
 
 const TOKEN_KEY = "gf-chat-token";
 
@@ -199,7 +200,7 @@ export default function LiveChat() {
         <section
           role="dialog"
           aria-label="Live chat"
-          className="mb-3 flex h-[min(480px,calc(100dvh-13rem))] w-full flex-col overflow-hidden rounded-2xl border border-[#d7e7b0] bg-white shadow-2xl"
+          className="mb-3 flex h-[min(560px,calc(100dvh-11rem))] w-full flex-col overflow-hidden rounded-2xl border border-[#d7e7b0] bg-white shadow-2xl"
         >
           <header className="flex items-center justify-between gap-3 bg-[#1a202c] px-4 py-3 text-white">
             <div>
@@ -228,6 +229,13 @@ export default function LiveChat() {
             </div>
           </header>
           <div ref={scroller} className="flex-1 space-y-3 overflow-y-auto bg-[#f7f8f4] px-3 py-3">
+            <div className={messages.length ? "sticky top-0 z-10 -mx-3 bg-[#f7f8f4] px-3 pb-1" : ""}>
+              <img
+                src={supportPhoto}
+                alt="Globeflight customer support"
+                className="mx-auto h-40 w-[7.5rem] rounded-2xl object-cover shadow-sm"
+              />
+            </div>
             <p className="rounded-xl bg-white px-3 py-2 text-sm leading-5 text-gray-600">
               {ready
                 ? "Ask about shipping, tracking, or customs. For a quote or inquiry, email sam.maina@globeflight.co.ke. A person replies when customer support is signed in. Otherwise the assistant replies."
@@ -236,7 +244,14 @@ export default function LiveChat() {
             {ready && messages.map((message) => {
               const mine = message.from === "visitor";
               return (
-                <div key={message.id} className={mine ? "flex justify-end" : "flex justify-start"}>
+                <div key={message.id} className={mine ? "flex justify-end" : "flex items-end justify-start gap-2"}>
+                  {!mine && (
+                    <img
+                      src={supportPhoto}
+                      alt=""
+                      className="h-9 w-9 shrink-0 rounded-full object-cover object-[center_18%]"
+                    />
+                  )}
                   <div
                     className={
                       mine
