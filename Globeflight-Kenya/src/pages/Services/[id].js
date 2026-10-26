@@ -99,13 +99,13 @@ export async function getStaticPaths() {
 export async function getStaticProps({ params }) {
   // Fetch service from backend API
   try {
-    const res = await fetch(`https://globeflight.co.ke/admin/api/services/public/${params.id}`);
+    const res = await fetch(`/admin/api/services/public/${params.id}`);
     const data = await res.json();
     if (!data.success || !data.data) {
       return { notFound: true };
     }
     // Optionally, fetch all services to get previous/next
-    const allRes = await fetch('https://globeflight.co.ke/admin/api/services/public?limit=100');
+    const allRes = await fetch('/admin/api/services/public?limit=100');
     const allData = await allRes.json();
     const services = allData.success ? allData.data.services : [];
     const index = services.findIndex(s => s.id.toString() === params.id || s.slug === params.id);

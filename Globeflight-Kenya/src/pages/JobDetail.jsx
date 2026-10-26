@@ -3,9 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { Helmet } from "react-helmet-async";
 
-const API_BASE = import.meta.env.DEV
-  ? '/admin/api'
-  : 'https://globeflight.co.ke/admin/api';
+import { API_BASE } from "@/constants/api";
 
 function JobDetail() {
   const { slug } = useParams();

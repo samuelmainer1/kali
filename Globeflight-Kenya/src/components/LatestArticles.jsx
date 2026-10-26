@@ -7,9 +7,7 @@ import { motion } from 'framer-motion';
 import { getApiImageUrl, handleImageError } from '@/utils/imageUtils';
 
 // API Configuration
-const API_BASE = import.meta.env.DEV
-  ? '/admin/api'
-  : 'https://globeflight.co.ke/admin/api';
+import { API_BASE } from "@/constants/api";
 
 const LatestArticles = ({ limit = 3, showViewAll = true }) => {
   const [articles, setArticles] = useState([]);

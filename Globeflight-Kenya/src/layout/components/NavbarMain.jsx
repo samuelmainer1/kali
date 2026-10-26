@@ -19,9 +19,7 @@ const NavbarMain = ({ data, pathname, isSticky, toggleMobileMenu, isMobileMenuOp
   const [catDropdownOpen, setCatDropdownOpen] = useState(false);
 
   // API base
-  const API_BASE = import.meta.env.DEV
-    ? '/admin/api'
-    : 'https://globeflight.co.ke/admin/api';
+  const API_BASE = "/admin/api";
 
   useEffect(() => {
     // Fetch categories on mount

@@ -17,9 +17,7 @@ import FooterMap from "./FooterMap"
 import FooterBottom from "./FooterBottom"
 
 // API Configuration
-const API_BASE = import.meta.env.DEV
-  ? '/admin/api'
-  : 'https://globeflight.co.ke/admin/api';
+import { API_BASE } from "@/constants/api";
 
 const Footer = ({ data }) => {
   const [showCookieConsent, setShowCookieConsent] = useState(false)

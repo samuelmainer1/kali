@@ -140,9 +140,7 @@ export default function GlobalflightContactForm() {
       console.log("Submitting form with values:", values)
 
       // Detect environment and use appropriate API URL
-      const apiEndpoint = import.meta.env.DEV
-        ? '/admin/api/contacts/public'
-        : 'https://globeflight.co.ke/admin/api/contacts/public'
+      const apiEndpoint = "/admin/api/contacts/public";
 
       console.log("Using API endpoint:", apiEndpoint)
 

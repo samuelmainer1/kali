@@ -9,9 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Mail, CheckCircle, XCircle, AlertCircle } from "lucide-react"
 import { Helmet } from "react-helmet-async"
 
-const API_BASE = import.meta.env.DEV
-  ? '/admin/api'
-  : 'https://globeflight.co.ke/admin/api';
+import { API_BASE } from "@/constants/api";
 
 const UnsubscribePage = () => {
   const [searchParams] = useSearchParams()

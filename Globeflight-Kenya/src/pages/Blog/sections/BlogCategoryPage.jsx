@@ -11,9 +11,7 @@ import { Helmet } from "react-helmet-async"
 import { getApiImageUrl, handleImageError } from '@/utils/imageUtils'
 
 // API Configuration
-const API_BASE = import.meta.env.DEV
-  ? '/admin/api'
-  : 'https://globeflight.co.ke/admin/api';
+import { API_BASE } from "@/constants/api";
 
 const BlogCategoryPage = () => {
   const { slug } = useParams()

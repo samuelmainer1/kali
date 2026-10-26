@@ -45,12 +45,7 @@ export const handleImageError = (e, fallbackSrc = '/globe1.jpg') => {
  * Gets the API base URL based on current environment
  * @returns {string} - API base URL
  */
-export const getApiBase = () => {
-  if (import.meta.env.DEV) {
-    return '/admin/api';
-  }
-  return 'https://globeflight.co.ke/admin/api';
-};
+export const getApiBase = () => "/admin/api";
 
 /**
  * Constructs image URL specifically for blog/service images from API
