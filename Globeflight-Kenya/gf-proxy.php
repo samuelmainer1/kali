@@ -46,6 +46,8 @@ $skip = array(
     'proxy-connection' => true,
     'te' => true,
     'trailer' => true,
+    'x-forwarded-for' => true,
+    'x-real-ip' => true,
 );
 
 $headers = array(
@@ -67,6 +69,13 @@ if (!$sawAuthorization && !empty($_SERVER['HTTP_AUTHORIZATION'])) {
     $headers[] = 'Authorization: ' . $_SERVER['HTTP_AUTHORIZATION'];
 } elseif (!$sawAuthorization && !empty($_SERVER['REDIRECT_HTTP_AUTHORIZATION'])) {
     $headers[] = 'Authorization: ' . $_SERVER['REDIRECT_HTTP_AUTHORIZATION'];
+}
+
+$clientIp = isset($_SERVER['REMOTE_ADDR']) ? (string) $_SERVER['REMOTE_ADDR'] : '';
+$clientIp = str_replace(array("\r", "\n", "\0"), '', $clientIp);
+if ($clientIp !== '') {
+    $headers[] = 'X-Forwarded-For: ' . $clientIp;
+    $headers[] = 'X-Real-IP: ' . $clientIp;
 }
 
 if (!function_exists('curl_init')) {
