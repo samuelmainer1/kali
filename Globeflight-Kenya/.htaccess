@@ -24,21 +24,23 @@
   # BACKEND PROXY RULES - MUST COME BEFORE REACT ROUTER RULES
   # =============================================================================
 
-  # Proxy /admin/api/* → Node app on localhost:5000
+  # The API crashes with "Internal Server Error" when the browser says
+  # this page is new.globeflight.co.ke. Pass the main site address instead.
+  # The visitor's browser still talks only to this subdomain.
   RewriteCond %{REQUEST_URI} ^/admin/api/ [NC]
-  RewriteRule ^admin/api/(.*)$ http://127.0.0.1:5000/admin/api/$1 [P,L]
+  RewriteRule ^admin/api/(.*)$ http://127.0.0.1:5000/admin/api/$1 [P,L,E=HTTP_ORIGIN:https://globeflight.co.ke]
 
   # Proxy /uploads/* → Node app on localhost:5000 (for uploaded files)
   RewriteCond %{REQUEST_URI} ^/uploads/ [NC]
-  RewriteRule ^uploads/(.*)$ http://127.0.0.1:5000/uploads/$1 [P,L]
+  RewriteRule ^uploads/(.*)$ http://127.0.0.1:5000/uploads/$1 [P,L,E=HTTP_ORIGIN:https://globeflight.co.ke]
 
   # A new article is added to the sitemap for whatever address this site is using.
   RewriteCond %{HTTP_HOST} ^([^:]+)
-  RewriteRule ^sitemap\.xml$ http://127.0.0.1:5000/sitemap.xml?host=%1 [P,QSA,L]
+  RewriteRule ^sitemap\.xml$ http://127.0.0.1:5000/sitemap.xml?host=%1 [P,QSA,L,E=HTTP_ORIGIN:https://globeflight.co.ke]
   RewriteCond %{HTTP_HOST} ^([^:]+)
-  RewriteRule ^rss\.xml$ http://127.0.0.1:5000/rss.xml?host=%1 [P,QSA,L]
+  RewriteRule ^rss\.xml$ http://127.0.0.1:5000/rss.xml?host=%1 [P,QSA,L,E=HTTP_ORIGIN:https://globeflight.co.ke]
   RewriteCond %{HTTP_HOST} ^([^:]+)
-  RewriteRule ^robots\.txt$ http://127.0.0.1:5000/robots.txt?host=%1 [P,QSA,L]
+  RewriteRule ^robots\.txt$ http://127.0.0.1:5000/robots.txt?host=%1 [P,QSA,L,E=HTTP_ORIGIN:https://globeflight.co.ke]
 
   # Required for LiteSpeed proxying (preserves Authorization headers)
   RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
@@ -90,6 +92,9 @@
   
   # Permissions Policy
   Header always set Permissions-Policy "geolocation=(), microphone=(), camera=()"
+
+  # Same reason as the proxy rules above: the API rejects this subdomain.
+  RequestHeader set Origin "https://globeflight.co.ke"
 </IfModule>
 
 # =============================================================================
@@ -223,21 +228,23 @@ ErrorDocument 500 /index.html
   # BACKEND PROXY RULES - MUST COME BEFORE REACT ROUTER RULES
   # =============================================================================
 
-  # Proxy /admin/api/* → Node app on localhost:5000
+  # The API crashes with "Internal Server Error" when the browser says
+  # this page is new.globeflight.co.ke. Pass the main site address instead.
+  # The visitor's browser still talks only to this subdomain.
   RewriteCond %{REQUEST_URI} ^/admin/api/ [NC]
-  RewriteRule ^admin/api/(.*)$ http://127.0.0.1:5000/admin/api/$1 [P,L]
+  RewriteRule ^admin/api/(.*)$ http://127.0.0.1:5000/admin/api/$1 [P,L,E=HTTP_ORIGIN:https://globeflight.co.ke]
 
   # Proxy /uploads/* → Node app on localhost:5000 (for uploaded files)
   RewriteCond %{REQUEST_URI} ^/uploads/ [NC]
-  RewriteRule ^uploads/(.*)$ http://127.0.0.1:5000/uploads/$1 [P,L]
+  RewriteRule ^uploads/(.*)$ http://127.0.0.1:5000/uploads/$1 [P,L,E=HTTP_ORIGIN:https://globeflight.co.ke]
 
   # A new article is added to the sitemap for whatever address this site is using.
   RewriteCond %{HTTP_HOST} ^([^:]+)
-  RewriteRule ^sitemap\.xml$ http://127.0.0.1:5000/sitemap.xml?host=%1 [P,QSA,L]
+  RewriteRule ^sitemap\.xml$ http://127.0.0.1:5000/sitemap.xml?host=%1 [P,QSA,L,E=HTTP_ORIGIN:https://globeflight.co.ke]
   RewriteCond %{HTTP_HOST} ^([^:]+)
-  RewriteRule ^rss\.xml$ http://127.0.0.1:5000/rss.xml?host=%1 [P,QSA,L]
+  RewriteRule ^rss\.xml$ http://127.0.0.1:5000/rss.xml?host=%1 [P,QSA,L,E=HTTP_ORIGIN:https://globeflight.co.ke]
   RewriteCond %{HTTP_HOST} ^([^:]+)
-  RewriteRule ^robots\.txt$ http://127.0.0.1:5000/robots.txt?host=%1 [P,QSA,L]
+  RewriteRule ^robots\.txt$ http://127.0.0.1:5000/robots.txt?host=%1 [P,QSA,L,E=HTTP_ORIGIN:https://globeflight.co.ke]
 
   # Required for LiteSpeed proxying (preserves Authorization headers)
   RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
@@ -288,6 +295,9 @@ ErrorDocument 500 /index.html
   
   # Permissions Policy
   Header always set Permissions-Policy "geolocation=(), microphone=(), camera=()"
+
+  # Same reason as the proxy rules above: the API rejects this subdomain.
+  RequestHeader set Origin "https://globeflight.co.ke"
 </IfModule>
 
 # =============================================================================
