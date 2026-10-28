@@ -29,6 +29,7 @@ export default function LiveChat() {
   const openRef = useRef(false);
   const seenRef = useRef(0);
   const sessionRef = useRef(0);
+  const [hasChat, setHasChat] = useState(() => Boolean(localStorage.getItem(TOKEN_KEY)));
   openRef.current = open;
 
   function currentToken() {
@@ -42,19 +43,7 @@ export default function LiveChat() {
   async function load() {
     const session = sessionRef.current;
     const token = currentToken();
-    if (!token) {
-      try {
-        const status = await fetch("/admin/api/chat/status");
-        if (!stillThisChat(session, token)) return;
-        if (status.ok) {
-          const body = await status.json();
-          setStaffOnline(Boolean(body.data && body.data.staffOnline));
-        }
-      } catch {
-        /* The window still opens if the status check fails. */
-      }
-      return;
-    }
+    if (!token) return;
     try {
       const response = await fetch("/admin/api/chat", {
         headers: { "X-Chat-Token": token },
@@ -62,8 +51,10 @@ export default function LiveChat() {
       if (!stillThisChat(session, token)) return;
       if (response.status === 404) {
         localStorage.removeItem(TOKEN_KEY);
+        setHasChat(false);
         return;
       }
+      if (response.status === 429) return;
       if (!response.ok) return;
       const body = await response.json();
       const next = (body.data && body.data.messages) || [];
@@ -81,10 +72,11 @@ export default function LiveChat() {
   }
 
   useEffect(() => {
+    if (!hasChat) return undefined;
     load();
-    const timer = setInterval(load, open ? 2500 : 15000);
+    const timer = setInterval(load, open ? 10000 : 30000);
     return () => clearInterval(timer);
-  }, [open]);
+  }, [open, hasChat]);
 
   useEffect(() => {
     if (open && scroller.current) {
@@ -107,6 +99,7 @@ export default function LiveChat() {
   function newChat() {
     sessionRef.current += 1;
     localStorage.removeItem(TOKEN_KEY);
+    setHasChat(false);
     setReady(false);
     setMessages([]);
     setName("");
@@ -141,7 +134,10 @@ export default function LiveChat() {
         setError(body.message || "Enter your email and phone number.");
         return;
       }
-      if (body.data && body.data.token) localStorage.setItem(TOKEN_KEY, body.data.token);
+      if (body.data && body.data.token) {
+        localStorage.setItem(TOKEN_KEY, body.data.token);
+        setHasChat(true);
+      }
       setReady(Boolean(body.data && body.data.hasContact));
       setMessages((body.data && body.data.messages) || []);
       setStaffOnline(Boolean(body.data && body.data.staffOnline));
