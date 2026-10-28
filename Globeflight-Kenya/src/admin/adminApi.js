@@ -39,3 +39,22 @@ export async function api(path, options = {}) {
   }
   return data;
 }
+
+export async function uploadImage(file) {
+  const headers = { Accept: 'application/json' };
+  const token = getToken();
+  if (token) headers.Authorization = `Bearer ${token}`;
+  const body = new FormData();
+  body.append('image', file);
+  let response;
+  try {
+    response = await fetch('/admin/api/uploads', { method: 'POST', headers, body });
+  } catch {
+    throw new Error('The local admin API is not running. Start it with npm run server.');
+  }
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok || data.success === false) {
+    throw new Error(data.message || 'Image upload failed.');
+  }
+  return data.data.url;
+}

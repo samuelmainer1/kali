@@ -17,10 +17,8 @@ import PublicTrackingTimeline from '@/components/PublicTrackingTimeline'
 import { useSearchParams } from 'react-router-dom'
 import io from 'socket.io-client'
 
-const API_BASE = import.meta.env.DEV
-  ? '/admin/api'
-  : 'https://globeflight.co.ke/admin/api'
-const SOCKET_URL = import.meta.env.DEV ? 'http://127.0.0.1:5000' : 'https://globeflight.co.ke'
+import { API_BASE } from "@/constants/api";
+const SOCKET_URL = import.meta.env.DEV ? "http://127.0.0.1:5000" : "";
 
 export default function TrackShipment() {
   const [searchParams] = useSearchParams();

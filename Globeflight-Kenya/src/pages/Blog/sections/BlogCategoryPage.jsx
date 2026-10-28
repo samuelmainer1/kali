@@ -6,18 +6,12 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Calendar as CalendarIcon, User as UserIcon, ArrowLeft, Tag as TagIcon } from "lucide-react"
-import { useParams, useNavigate } from "react-router-dom"
+import { Link, useParams, useNavigate } from "react-router-dom"
 import { Helmet } from "react-helmet-async"
 import { getApiImageUrl, handleImageError } from '@/utils/imageUtils'
 
 // API Configuration
-const API_BASE = import.meta.env.DEV
-  ? '/admin/api'
-  : 'https://globeflight.co.ke/admin/api';
-
-const Link = ({ to, children, className }) => (
-  <a href={to} className={className}>{children}</a>
-)
+import { API_BASE } from "@/constants/api";
 
 const BlogCategoryPage = () => {
   const { slug } = useParams()
@@ -107,6 +101,12 @@ const BlogCategoryPage = () => {
   if (error || !category) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
+        <Helmet>
+          <title>Category not found | Globeflight Kenya</title>
+          <meta name="robots" content="noindex, follow" />
+          <link rel="canonical" href="https://globeflight.co.ke/blog" />
+          <meta property="og:url" content="https://globeflight.co.ke/blog" />
+        </Helmet>
         <div className="text-center p-8 max-w-md">
           <div className="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-6">
             <svg className="w-10 h-10 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -125,7 +125,7 @@ const BlogCategoryPage = () => {
     )
   }
 
-  const pageTitle = `${category.name} Updates | Blog | Globeflight Kenya`;
+  const pageTitle = `${category.name} | Blog | Globeflight Kenya`;
   const pageDesc = category.description || `Read the latest updates about ${category.name} from Globeflight Kenya.`;
   const canonicalUrl = `https://globeflight.co.ke/blog/category/${category.slug}`;
 

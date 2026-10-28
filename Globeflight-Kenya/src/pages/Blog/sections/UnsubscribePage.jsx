@@ -1,20 +1,19 @@
 'use client'
 
-import React, { useState, useEffect } from "react"
-import { useSearchParams } from "react-router-dom"
+import React, { useState } from "react"
+import { Link, useSearchParams } from "react-router-dom"
 import axios from "axios"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Mail, CheckCircle, XCircle, AlertCircle } from "lucide-react"
+import { Helmet } from "react-helmet-async"
 
-const API_BASE = import.meta.env.DEV
-  ? '/admin/api'
-  : 'https://globeflight.co.ke/admin/api';
+import { API_BASE } from "@/constants/api";
 
 const UnsubscribePage = () => {
-  const searchParams = useSearchParams()
-  const emailFromUrl = searchParams.get('email')
+  const [searchParams] = useSearchParams()
+  const emailFromUrl = searchParams.get('email') || ''
   
   const [email, setEmail] = useState(emailFromUrl || '')
   const [status, setStatus] = useState('idle') // idle, loading, success, error
@@ -67,7 +66,12 @@ const UnsubscribePage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white flex items-center justify-center px-4 pt-36 pb-16">
+      <Helmet>
+        <title>Unsubscribe | Globeflight Kenya</title>
+        <meta name="robots" content="noindex, nofollow" />
+        <link rel="canonical" href="https://globeflight.co.ke/unsubscribe" />
+      </Helmet>
       <Card className="w-full max-w-md shadow-xl">
         <CardHeader className="text-center pb-4">
           <div className="mx-auto w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-4">
@@ -100,12 +104,8 @@ const UnsubscribePage = () => {
                 >
                   Resubscribe
                 </Button>
-                <Button 
-                  variant="outline" 
-                  onClick={() => window.location.href = '/blog'}
-                  className="w-full"
-                >
-                  Back to Blog
+                <Button variant="outline" asChild className="w-full">
+                  <Link to="/blog">Back to Blog</Link>
                 </Button>
               </div>
             </div>
@@ -142,13 +142,8 @@ const UnsubscribePage = () => {
               </Button>
 
               <div className="text-center">
-                <Button 
-                  type="button"
-                  variant="ghost" 
-                  onClick={() => window.location.href = '/blog'}
-                  className="text-gray-600 hover:text-gray-800"
-                >
-                  Cancel
+                <Button type="button" variant="ghost" asChild className="text-gray-600 hover:text-gray-800">
+                  <Link to="/blog">Cancel</Link>
                 </Button>
               </div>
             </form>

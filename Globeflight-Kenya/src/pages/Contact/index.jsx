@@ -29,10 +29,10 @@ const index = () => {
   return (
     <>
       <Helmet>
-        <title>Contact Us | Globeflight Kenya</title>
-        <meta name="description" content="Contact Globeflight Kenya for all your logistics, shipping, and courier needs. Get in touch for quotes, support, and more." />
-        <meta property="og:title" content="Contact Us | Globeflight Kenya" />
-        <meta property="og:description" content="Contact Globeflight Kenya for all your logistics, shipping, and courier needs. Get in touch for quotes, support, and more." />
+        <title>Contact Us | Frequently Asked Questions | Globeflight Kenya</title>
+        <meta name="description" content="Contact Globeflight Kenya for logistics, shipping, and courier quotes. The same page answers common questions on safety, logistics, importer of record, freight, and customs." />
+        <meta property="og:title" content="Contact Us | Frequently Asked Questions | Globeflight Kenya" />
+        <meta property="og:description" content="Contact Globeflight Kenya for logistics, shipping, and courier quotes. The same page answers common questions on safety, logistics, importer of record, freight, and customs." />
         <link rel="canonical" href="https://globeflight.co.ke/contact-us" />
       </Helmet>
       <div className="main-container">

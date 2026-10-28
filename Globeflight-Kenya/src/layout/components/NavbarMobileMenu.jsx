@@ -126,9 +126,9 @@ const NavbarMobileMenu = ({ isMobileMenuOpen, toggleMobileMenu, data, pathname, 
                       : "text-gray-700 hover:text-[#88C300] hover:bg-[#88C300]/10"
                   }`}
                   onClick={toggleMobileMenu}
-                  title="News Updates & Blogs - Globeflight Kenya"
+                  title="Blog - Globeflight Kenya"
                 >
-                  Updates
+                  Blog
                 </Link>
               </motion.li>
 

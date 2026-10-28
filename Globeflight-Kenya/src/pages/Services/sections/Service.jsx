@@ -95,22 +95,6 @@ export default function Service() {
   return (
     <>
       <Helmet>
-        <title>International Logistics Services | Global Shipping, Air & Sea Freight - Globeflight Kenya</title>
-        <meta name="description" content="Globeflight Kenya offers international logistics services worldwide. Air freight, sea freight, road transport, warehousing, customs clearance across Africa, Europe, Asia, Americas. Global shipping solutions from Kenya to the world." />
-        <meta name="keywords" content="international logistics services, global shipping Kenya, worldwide freight forwarding, Africa logistics services, international air freight, global sea freight, Kenya to Europe shipping, Kenya to USA shipping, Kenya to Asia logistics, Africa to world shipping, international cargo services, global warehousing, worldwide customs clearance, international shipping company Kenya, Africa freight forwarding, global transportation services, continental logistics Africa, Globeflight international services" />
-        
-        <meta property="og:title" content="International Logistics Services - Globeflight Kenya | Global Shipping Solutions" />
-        <meta property="og:description" content="Professional international air freight, sea freight, warehousing, and customs clearance services. Your trusted global logistics partner connecting Kenya and Africa to the world." />
-        <meta property="og:type" content="website" />
-        <meta property="og:url" content="https://globeflight.co.ke/services" />
-        <meta property="og:image" content="https://globeflight.co.ke/services-hero.jpg" />
-        
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="International Logistics Services - Globeflight Kenya" />
-        <meta name="twitter:description" content="Global shipping solutions: Air & sea freight, warehousing & customs clearance. Connecting Africa to the world." />
-        
-        <link rel="canonical" href="https://globeflight.co.ke/services" />
-        
         <script type="application/ld+json">
           {JSON.stringify(generateServiceSchema())}
         </script>
@@ -128,9 +112,9 @@ export default function Service() {
                 GLOBAL LOGISTICS SOLUTIONS
               </span>
             </div>*/}
-            <h1 className="text-4xl md:text-6xl font-bold mb-6">
+            <h2 className="text-4xl md:text-6xl font-bold mb-6">
               International <span className="text-transparent bg-clip-text" style={{ backgroundImage: 'linear-gradient(to right, #3B82F6, #88C300)' }}>Logistics Services</span>
-            </h1>
+            </h2>
             <h2 className="text-xl text-gray-600 leading-relaxed">
               Fast, reliable, and cost-effective shipping from Kenya to anywhere in the world. 
               Connecting Africa to Europe, Asia, Americas, and beyond.

@@ -5,8 +5,7 @@ import {
   ChevronUp, 
   X, 
   Phone, 
-  Mail, 
-  MessageSquare
+  Mail
 } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import whatsapp from "@/assets/whatsapp.svg"
@@ -45,7 +44,7 @@ const ScrollOnSideSection = () => {
   const contactMethods = [
     {
       id: 'whatsapp',
-      icon: MessageSquare,
+      icon: null,
       label: 'WhatsApp',
       href: 'https://wa.me/254729341277',
       color: 'bg-[#25D366]',
@@ -108,9 +107,7 @@ const ScrollOnSideSection = () => {
             </button>
             
             <div className="flex flex-col items-center mb-4">
-              <div className="w-12 h-12 bg-[#25D366] rounded-full flex items-center justify-center mb-3">
-                <MessageSquare className="w-6 h-6 text-white" />
-              </div>
+              <img src={whatsapp} alt="" className="mb-3 h-12 w-12" />
               <h3 className="font-bold text-lg text-gray-900 mb-1">Chat with us on WhatsApp</h3>
               <p className="text-gray-600 text-sm text-center">Fill in your details and we'll respond instantly!</p>
             </div>
@@ -136,7 +133,7 @@ const ScrollOnSideSection = () => {
                 className="w-full py-3 rounded-lg bg-[#25D366] text-white font-semibold shadow-md hover:bg-[#128C7E] transition-all"
               >
                 <span className="flex items-center justify-center gap-2">
-                  <MessageSquare className="w-5 h-5" /> Send via WhatsApp
+                  <img src={whatsapp} alt="" className="h-5 w-5" /> Send via WhatsApp
                 </span>
               </button>
             </form>
@@ -173,9 +170,7 @@ const ScrollOnSideSection = () => {
             onClick={() => setShowWhatsAppModal(true)}
             aria-label="Open WhatsApp chat"
           >
-            <div className="relative bg-[#25D366] hover:bg-[#128C7E] rounded-full p-4 shadow-xl hover:shadow-2xl transition-all duration-300">
-              <MessageSquare className="w-8 h-8 text-white" />
-            </div>
+            <img src={whatsapp} alt="" className="h-16 w-16 rounded-full shadow-xl" />
           </button>
         </motion.div>
       </div>
@@ -233,7 +228,11 @@ const ScrollOnSideSection = () => {
                   onMouseEnter={() => setActiveTab(method.id)}
                   aria-label={method.label}
                 >
-                  <method.icon className="w-5 h-5" />
+                  {method.id === 'whatsapp' ? (
+                    <img src={whatsapp} alt="" className="h-5 w-5" />
+                  ) : (
+                    <method.icon className="h-5 w-5" />
+                  )}
                 </button>
               ))}
             </div>

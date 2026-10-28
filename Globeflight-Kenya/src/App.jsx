@@ -2,6 +2,8 @@
 import React, { Suspense } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import MainLayout from './layout/MainLayout';
+import ScrollToTop from './components/ScrollToTop';
+import NotFound from './pages/NotFound';
 import Landing from '@/pages/Landing'; // New IOR-focused landing page
 import Home from '@/pages/Home'; // Original home page moved to /home
 import Services from '@/pages/Services';
@@ -16,10 +18,12 @@ import BlogHome from "@/pages/Blog/BlogHome"; // <-- Import BlogHome
 import BlogCategoryPage from "@/pages/Blog/sections/BlogCategoryPage"; // <-- Import BlogCategoryPage
 const JobPage = React.lazy(() => import('@/pages/JobPage')); // <-- Add this line
 const JobDetail = React.lazy(() => import('@/pages/JobDetail')); // <-- Add this line
+const UnsubscribePage = React.lazy(() => import('@/pages/Blog/sections/UnsubscribePage'));
 
 function App() {
   return (
     <BrowserRouter>
+      <ScrollToTop />
       <Routes>
         <Route path="/" element={<MainLayout />}>
           {/* New IOR-focused landing page as the default route */}
@@ -68,6 +72,15 @@ function App() {
               </Suspense>
             }
           />
+          <Route
+            path="unsubscribe"
+            element={
+              <Suspense fallback={<div className="py-20 text-center">Loading...</div>}>
+                <UnsubscribePage />
+              </Suspense>
+            }
+          />
+          <Route path="*" element={<NotFound />} />
         </Route>
       </Routes>
     </BrowserRouter>

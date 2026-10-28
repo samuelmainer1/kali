@@ -3,9 +3,7 @@ import { Link } from "react-router-dom";
 import axios from "axios";
 import { Helmet } from "react-helmet-async";
 
-const API_BASE = import.meta.env.DEV
-  ? '/admin/api'
-  : 'https://globeflight.co.ke/admin/api';
+import { API_BASE } from "@/constants/api";
 
 console.log('JobPage API_BASE:', API_BASE);
 
@@ -60,7 +58,8 @@ function JobPage() {
         <meta name="description" content="Explore exciting career opportunities at Globeflight Kenya. Join our team and grow your career in logistics and express delivery." />
         <meta property="og:title" content="Careers at Globeflight Kenya | Join Our Team" />
         <meta property="og:description" content="Explore exciting career opportunities at Globeflight Kenya. Join our team and grow your career in logistics and express delivery." />
-        <link rel="canonical" href="https://globeflight.co.ke/careers" />
+        <meta property="og:url" content="https://globeflight.co.ke/jobs" />
+        <link rel="canonical" href="https://globeflight.co.ke/jobs" />
       </Helmet>
       
       <div className="min-h-screen mt-16 bg-gray-50">

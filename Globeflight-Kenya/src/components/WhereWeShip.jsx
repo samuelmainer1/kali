@@ -12,6 +12,7 @@ import {
   Truck,
   CheckCircle
 } from "lucide-react"
+import { Link } from "react-router-dom"
 import { MapContainer, TileLayer, Marker, Popup, Polyline } from "react-leaflet"
 import { motion, AnimatePresence } from "framer-motion"
 import L from "leaflet"
@@ -512,20 +513,20 @@ export default function WorldShippingMap() {
                 Join thousands of satisfied customers who trust Globeflight for their international shipping needs. Fast, secure, and reliable delivery guaranteed.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <a 
-                  href="/contact-us"
+                <Link 
+                  to="/contact-us"
                   className="bg-white text-gray-900 px-10 py-4 rounded-xl font-bold hover:bg-gray-100 transition-all duration-300 flex items-center justify-center gap-3 shadow-2xl group"
                 >
                   <Package className="w-5 h-5" />
                   Get Quote Now
-                </a>
-                <a 
-                  href="/track"
+                </Link>
+                <Link 
+                  to="/track"
                   className="border-2 border-white text-white px-10 py-4 rounded-xl font-bold hover:bg-white hover:text-gray-900 transition-all duration-300 flex items-center justify-center gap-3"
                 >
                   <MapPin className="w-5 h-5" />
                   Track Package
-                </a>
+                </Link>
               </div>
               <div className="flex flex-wrap justify-center gap-8 mt-10 text-white/80 text-sm">
                 <div className="flex items-center gap-2">

@@ -17,6 +17,7 @@ import {
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useMediaQuery } from "@/hooks/use-media-query"
+import { API_BASE } from "@/constants/api"
 
 // Custom rating stars component
 const RatingStars = ({ rating, size = "md", className = "" }) => {
@@ -114,10 +115,6 @@ const TestimonialCard = ({ testimonial, isActive }) => {
     </motion.div>
   )
 }
-
-const API_BASE = import.meta.env.DEV
-  ? '/admin/api'
-  : 'https://globeflight.co.ke/admin/api';
 
 const Testimonials = () => {
   const [activeIndex, setActiveIndex] = useState(0)

@@ -24,13 +24,21 @@
   # BACKEND PROXY RULES - MUST COME BEFORE REACT ROUTER RULES
   # =============================================================================
 
-  # Proxy /admin/api/* → Node app on localhost:5000
+  # The API crashes when the browser says new.globeflight.co.ke.
+  # gf-proxy.php forwards the call and presents the main site address.
   RewriteCond %{REQUEST_URI} ^/admin/api/ [NC]
-  RewriteRule ^admin/api/(.*)$ http://127.0.0.1:5000/admin/api/$1 [P,L]
+  RewriteRule ^admin/api/(.*)$ /gf-proxy.php?gf_forward=admin/api/$1 [B,QSA,L]
 
-  # Proxy /uploads/* → Node app on localhost:5000 (for uploaded files)
   RewriteCond %{REQUEST_URI} ^/uploads/ [NC]
-  RewriteRule ^uploads/(.*)$ http://127.0.0.1:5000/uploads/$1 [P,L]
+  RewriteRule ^uploads/(.*)$ /gf-proxy.php?gf_forward=uploads/$1 [B,QSA,L]
+
+  # A new article is added to the sitemap for whatever address this site is using.
+  RewriteCond %{HTTP_HOST} ^([^:]+)
+  RewriteRule ^sitemap\.xml$ http://127.0.0.1:5000/sitemap.xml?host=%1 [P,QSA,L]
+  RewriteCond %{HTTP_HOST} ^([^:]+)
+  RewriteRule ^rss\.xml$ http://127.0.0.1:5000/rss.xml?host=%1 [P,QSA,L]
+  RewriteCond %{HTTP_HOST} ^([^:]+)
+  RewriteRule ^robots\.txt$ http://127.0.0.1:5000/robots.txt?host=%1 [P,QSA,L]
 
   # Required for LiteSpeed proxying (preserves Authorization headers)
   RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
@@ -51,11 +59,12 @@
   # MAIN WEBSITE - React Router Support
   # =============================================================================
 
-  # Handle React Router - send all requests to index.html
+  # Known public pages stay on the React app. Any other missing address
+  # falls through to the 404 page instead of pretending to be a real page.
   RewriteCond %{REQUEST_FILENAME} !-f
   RewriteCond %{REQUEST_FILENAME} !-d
   RewriteCond %{REQUEST_URI} !^/admin [NC]
-  RewriteRule . /index.html [L]
+  RewriteRule ^(home|about-us|contact-us|track|blog|jobs|unsubscribe|services)(/.*)?$ /index.html [L]
 </IfModule>
 
 # =============================================================================
@@ -81,6 +90,11 @@
   
   # Permissions Policy
   Header always set Permissions-Policy "geolocation=(), microphone=(), camera=()"
+
+  # The API crashes when it sees new.globeflight.co.ke. Replace that
+  # address with the main site address before the request is passed on.
+  RequestHeader unset Origin
+  RequestHeader set Origin "https://globeflight.co.ke"
 </IfModule>
 
 # =============================================================================
@@ -178,7 +192,7 @@ Options -Indexes
 # ERROR PAGES
 # =============================================================================
 
-ErrorDocument 404 /index.html
+ErrorDocument 404 /404.html
 ErrorDocument 500 /index.html
 
 
@@ -214,13 +228,21 @@ ErrorDocument 500 /index.html
   # BACKEND PROXY RULES - MUST COME BEFORE REACT ROUTER RULES
   # =============================================================================
 
-  # Proxy /admin/api/* → Node app on localhost:5000
+  # The API crashes when the browser says new.globeflight.co.ke.
+  # gf-proxy.php forwards the call and presents the main site address.
   RewriteCond %{REQUEST_URI} ^/admin/api/ [NC]
-  RewriteRule ^admin/api/(.*)$ http://127.0.0.1:5000/admin/api/$1 [P,L]
+  RewriteRule ^admin/api/(.*)$ /gf-proxy.php?gf_forward=admin/api/$1 [B,QSA,L]
 
-  # Proxy /uploads/* → Node app on localhost:5000 (for uploaded files)
   RewriteCond %{REQUEST_URI} ^/uploads/ [NC]
-  RewriteRule ^uploads/(.*)$ http://127.0.0.1:5000/uploads/$1 [P,L]
+  RewriteRule ^uploads/(.*)$ /gf-proxy.php?gf_forward=uploads/$1 [B,QSA,L]
+
+  # A new article is added to the sitemap for whatever address this site is using.
+  RewriteCond %{HTTP_HOST} ^([^:]+)
+  RewriteRule ^sitemap\.xml$ http://127.0.0.1:5000/sitemap.xml?host=%1 [P,QSA,L]
+  RewriteCond %{HTTP_HOST} ^([^:]+)
+  RewriteRule ^rss\.xml$ http://127.0.0.1:5000/rss.xml?host=%1 [P,QSA,L]
+  RewriteCond %{HTTP_HOST} ^([^:]+)
+  RewriteRule ^robots\.txt$ http://127.0.0.1:5000/robots.txt?host=%1 [P,QSA,L]
 
   # Required for LiteSpeed proxying (preserves Authorization headers)
   RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
@@ -241,11 +263,12 @@ ErrorDocument 500 /index.html
   # MAIN WEBSITE - React Router Support
   # =============================================================================
 
-  # Handle React Router - send all requests to index.html
+  # Known public pages stay on the React app. Any other missing address
+  # falls through to the 404 page instead of pretending to be a real page.
   RewriteCond %{REQUEST_FILENAME} !-f
   RewriteCond %{REQUEST_FILENAME} !-d
   RewriteCond %{REQUEST_URI} !^/admin [NC]
-  RewriteRule . /index.html [L]
+  RewriteRule ^(home|about-us|contact-us|track|blog|jobs|unsubscribe|services)(/.*)?$ /index.html [L]
 </IfModule>
 
 # =============================================================================
@@ -270,6 +293,11 @@ ErrorDocument 500 /index.html
   
   # Permissions Policy
   Header always set Permissions-Policy "geolocation=(), microphone=(), camera=()"
+
+  # The API crashes when it sees new.globeflight.co.ke. Replace that
+  # address with the main site address before the request is passed on.
+  RequestHeader unset Origin
+  RequestHeader set Origin "https://globeflight.co.ke"
 </IfModule>
 
 # =============================================================================
@@ -364,6 +392,6 @@ Options -Indexes
 # ERROR PAGES
 # =============================================================================
 
-ErrorDocument 404 /index.html
+ErrorDocument 404 /404.html
 ErrorDocument 500 /index.html
 

@@ -1,9 +1,11 @@
 'use client'
 
 import React from "react"
+import { useMatch } from "react-router-dom"
 import { motion } from "framer-motion"
 
 const Hero = ({ children }) => {
+  const blogIndex = useMatch({ path: "/blog", end: true })
   return (
     <section
       className="relative w-screen mt-16 min-h-[70vh] overflow-hidden"
@@ -104,7 +106,14 @@ const Hero = ({ children }) => {
             className="max-w-4xl mx-auto text-center"
           >
             <div className="space-y-4 sm:space-y-6">
-              
+              {blogIndex && (
+                <h1
+                  className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-white"
+                  style={{ textShadow: '2px 2px 8px rgba(0,0,0,0.5)' }}
+                >
+                  Our Blog
+                </h1>
+              )}
 
               {/* Subtitle */}
               <motion.p

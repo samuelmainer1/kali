@@ -1,4 +1,5 @@
 import React from "react"
+import { Link } from "react-router-dom"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Send } from "lucide-react"
@@ -64,6 +65,9 @@ const FooterNewsletter = ({
             Subscription successful! Welcome to our newsletter.
           </motion.p>
         )}
+        <p className="mt-4 text-sm text-white/85">
+          <Link to="/unsubscribe" className="underline hover:text-white">Unsubscribe</Link>
+        </p>
       </div>
     </div>
   </div>

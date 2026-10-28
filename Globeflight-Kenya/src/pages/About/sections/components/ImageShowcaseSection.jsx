@@ -2,7 +2,6 @@ import React from 'react'
 import { motion } from 'framer-motion'
 import { Button } from '@/components/ui/button'
 import { Globe } from 'lucide-react'
-import { Helmet } from 'react-helmet-async'
 
 const ImageShowcaseSection = ({ setSelectedImage }) => {
   return (
@@ -13,16 +12,6 @@ const ImageShowcaseSection = ({ setSelectedImage }) => {
       transition={{ duration: 0.7 }}
       className="mb-32"
     >
-      <Helmet>
-        <title>Worldwide Logistics Excellence | Globeflight Kenya</title>
-        <meta name="description" content="Discover our global logistics operations: air freight, sea cargo, warehousing, customs clearance, and more. Experience modern, efficient, and secure shipping solutions with Globeflight Kenya." />
-        <meta property="og:title" content="Worldwide Logistics Excellence | Globeflight Kenya" />
-        <meta property="og:description" content="Discover our global logistics operations: air freight, sea cargo, warehousing, customs clearance, and more. Experience modern, efficient, and secure shipping solutions with Globeflight Kenya." />
-        <meta property="og:image" content="/globe.jpg" />
-        <meta property="og:type" content="website" />
-        <meta property="og:url" content="https://globeflight.co.ke/about" />
-        <link rel="canonical" href="https://globeflight.co.ke/about" />
-      </Helmet>
       <div className="text-center mt-12 mb-12">
         {/*<motion.div
           initial={{ opacity: 0, y: 20 }}
