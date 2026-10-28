@@ -193,14 +193,14 @@ export default function LiveChat() {
 
   return (
     <div
-      className="pointer-events-none fixed inset-x-0 bottom-28 z-[80] flex justify-end px-3 sm:bottom-14 sm:px-5"
+      className={`pointer-events-none fixed inset-x-0 bottom-28 flex justify-end px-3 sm:bottom-14 sm:px-5 ${open ? "z-[1100]" : "z-[80]"}`}
     >
       <div className="pointer-events-auto flex w-[min(380px,100%)] flex-col items-end">
       {open && (
         <section
           role="dialog"
           aria-label="Live chat"
-          className="mb-3 flex h-[min(560px,calc(100dvh-11rem))] w-full flex-col overflow-hidden rounded-2xl border border-[#d7e7b0] bg-white shadow-2xl"
+          className="mb-3 flex h-[calc(100dvh-12rem)] w-full flex-col overflow-hidden rounded-2xl border border-[#d7e7b0] bg-white shadow-2xl sm:h-[calc(100dvh-8.5rem)]"
         >
           <header className={`flex items-center justify-between gap-2 px-3 py-2.5 text-white ${ready ? "bg-[#88C300]" : "bg-[#1a202c]"}`}>
             {ready ? (
