@@ -193,7 +193,7 @@ export default function LiveChat() {
 
   return (
     <div
-      className="pointer-events-none fixed inset-x-0 bottom-36 z-[80] flex justify-end px-3 sm:bottom-24 sm:px-5"
+      className="pointer-events-none fixed inset-x-0 bottom-28 z-[80] flex justify-end px-3 sm:bottom-14 sm:px-5"
     >
       <div className="pointer-events-auto flex w-[min(380px,100%)] flex-col items-end">
       {open && (
