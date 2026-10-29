@@ -59,6 +59,13 @@
   # MAIN WEBSITE - React Router Support
   # =============================================================================
 
+  # An article published after the site was built has no page file of its own.
+  # Read the live article and put its hero image on the link.
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteCond %{DOCUMENT_ROOT}/gf-article.php -f
+  RewriteRule ^blog/([^/]+)/?$ /gf-article.php?slug=$1 [L]
+
   # Known public pages stay on the React app. Any other missing address
   # falls through to the 404 page instead of pretending to be a real page.
   RewriteCond %{REQUEST_FILENAME} !-f
@@ -262,6 +269,13 @@ ErrorDocument 500 /index.html
   # =============================================================================
   # MAIN WEBSITE - React Router Support
   # =============================================================================
+
+  # An article published after the site was built has no page file of its own.
+  # Read the live article and put its hero image on the link.
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteCond %{DOCUMENT_ROOT}/gf-article.php -f
+  RewriteRule ^blog/([^/]+)/?$ /gf-article.php?slug=$1 [L]
 
   # Known public pages stay on the React app. Any other missing address
   # falls through to the 404 page instead of pretending to be a real page.
